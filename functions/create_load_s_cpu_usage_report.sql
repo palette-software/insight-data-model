@@ -1,4 +1,4 @@
-CREATE or replace function create_load_p_cpu_usage_report(p_schema_name text) returns int	
+CREATE or replace function create_load_s_cpu_usage_report(p_schema_name text) returns int	
 AS $$
 declare	
 	rec record;
