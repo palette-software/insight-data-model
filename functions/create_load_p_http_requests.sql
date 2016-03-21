@@ -17,8 +17,8 @@ begin
 						information_schema.columns c
 					where
 						table_schema = p_schema_name and
-						table_name = 'p_http_requests' and
-						column_name not in ('p_id')		
+						table_name = 'http_requests' and
+						column_name not in ('id', 'p_id', 'p_filepath', 'p_cre_date')		
 					order by						
 						ordinal_position)
 		loop			
@@ -42,10 +42,34 @@ begin
 				';
 					
 					
-		v_sql := v_sql || 'insert into #schema_name#.p_http_requests(';	
+		v_sql := v_sql || 'insert into #schema_name#.p_http_requests(http_requests_id,';	
 		
-		v_sql := v_sql || rtrim(v_insert_part, ',');		
-		v_sql := v_sql || ') 
+		v_sql := v_sql || v_insert_part;
+		v_sql := v_sql || '
+				 "site_name",
+				 "interactor_user_id",
+				 "interactor_system_users_id",
+				 "interactor_username",
+				 "interactor_friendly_name",
+				 "workbook_id",
+				 "workbook_name",
+				 "workbook_repository_url",
+				 "publisher_user_id",
+				 "project_id",
+				 "publisher_system_users_id",
+				 "publisher_username",
+				 "publisher_friendly_name",
+				 "project_name",
+				 "created_at_month",
+				 "h_projects_p_id",
+				 "publisher_h_users_p_id",
+				 "publisher_h_system_users_p_id",
+				 "h_sites_p_id",
+				 "h_workbooks_p_id",
+				 "interactor_h_users_p_id",
+				 "interactor_h_system_users_p_id")';
+						
+		v_sql := v_sql || '
 			with t_requests as 
 				(select t.*, 
 						SPLIT_PART(t.currentsheet,''''/'''',1) workbook_url 
@@ -53,10 +77,8 @@ begin
 					#schema_name#.http_requests t)
 					
 				SELECT
+					r.id,
   		';
-		
-		v_select_part := substr(v_select_part, 1, position(',r.site_name,' in v_select_part));
-		v_select_part := replace(v_select_part, 'r.http_requests_id', 'r.id');
 		
 		v_sql := v_sql || v_select_part;
 		

@@ -17,8 +17,8 @@ begin
 						information_schema.columns c
 					where
 						table_schema = p_schema_name and
-						table_name = 'p_background_jobs' and
-						column_name not in ('p_id')		
+						table_name = 'background_jobs' and
+						column_name not in ('id', 'p_id', 'p_filepath', 'p_cre_date')
 					order by						
 						ordinal_position)
 		loop			
@@ -42,14 +42,28 @@ begin
 				';
 					
 					
-		v_sql := v_sql || 'insert into #schema_name#.p_background_jobs(';	
+		v_sql := v_sql || 'insert into #schema_name#.p_background_jobs(background_jobs_id,';
 		
-		v_sql := v_sql || rtrim(v_insert_part, ',');		
-		v_sql := v_sql || ') select distinct ';
+		v_sql := v_sql || v_insert_part;
+		v_sql := v_sql || '
+				"date_hour",
+				"workbooks_datasources_id",
+				"workbooks_datasources_name",
+				"publisher_name",
+				"publisher_friendlyname",
+				"project_name",
+				"site_name",
+				"wd_type",
+				"h_projects_p_id",
+				"h_workbooks_datasources_p_id",
+				"h_system_users_p_id",
+				"h_users_p_id",
+				"h_sites_p_id")
+		';
 		
-		v_select_part := substr(v_select_part, 1, position(',bj.date_hour,' in v_select_part));
-		v_select_part := replace(v_select_part, 'bj.background_jobs_id', 'bj.id');
 		
+		
+		v_sql := v_sql || ' select distinct bj.id,';		
 		v_sql := v_sql || v_select_part;
 		
 		v_sql := v_sql || '				
