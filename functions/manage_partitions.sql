@@ -29,7 +29,7 @@ BEGIN
 							schemaname = ''#schema_name#'' and
 							tablename = ''#table_name#'' and
 							partitionlevel = 1 and
-							partitionname <> ''init''
+							partitionname not in (''init'', ''new_host'')
 					order by 1';
 					
 		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
