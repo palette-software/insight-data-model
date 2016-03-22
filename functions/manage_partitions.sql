@@ -12,19 +12,28 @@ BEGIN
 		if p_table_name in ('p_threadinfo', 'threadinfo') then
 			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.threadinfo 
 							where p_id > coalesce((select max(threadinfo_id) 
-										  from #schema_name#.p_threadinfo), 0)
-							 order by 1';
+										  from #schema_name#.p_threadinfo), 0)';
 										  
 		elseif p_table_name in ('p_cpu_usage') then
-			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.s_cpu_usage							
-							order by 1';
+			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.s_cpu_usage';
 			
 		elseif p_table_name in ('p_cpu_usage_report') then
-					v_sql_cur := 'select distinct cpu_usage_host_name::text as host_name from #schema_name#.s_cpu_usage_report							
-								order by 1';						
+					v_sql_cur := 'select distinct cpu_usage_host_name::text as host_name from #schema_name#.s_cpu_usage_report';						
 		end if;
 		
+		v_sql_cur := v_sql_cur || 
+					' union
+						select distinct partitionname 
+						from pg_partitions
+						where 
+							schemaname = ''#schema_name#'' and
+							tablename = ''#table_name#'' and
+							partitionlevel = 1 and
+							partitionname <> ''init''
+					order by 1';
+					
 		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
+		v_sql_cur := replace(v_sql_cur, '#table_name#', decode(p_table_name, 'threadinfo', 'p_threadinfo', p_table_name));
 		
 		v_sql := 'ALTER TABLE #schema_name#.#table_name# SET SUBPARTITION TEMPLATE (';		
 
@@ -41,7 +50,8 @@ BEGIN
 		
 		v_sql := replace(v_sql, '#schema_name#', p_schema_name);
 		v_sql := replace(v_sql, '#table_name#', decode(p_table_name, 'threadinfo', 'p_threadinfo', p_table_name));
-		v_sql := rtrim(v_sql, ',') || ')';
+		v_sql := v_sql || ' DEFAULT SUBPARTITION new_host WITH (appendonly=true, orientation=column, compresstype=quicklz))';
+		
 		raise notice 'I: %', v_sql;
 		
 		if (v_sql like '%SUBPARTITION%VALUES%')
