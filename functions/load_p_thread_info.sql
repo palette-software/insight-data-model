@@ -81,7 +81,7 @@ BEGIN
 						 -- sampling interval
 						 -- If it is ok, then simply take current measurement timestamp minus thread start timestamp
 						THEN ts_int - start_ts_int			 
-			        WHEN (lag_cpu_time IS NULL OR (ts_int - start_ts_int) <= 160000000) AND  tid <> -1
+			        WHEN (lag_cpu_time IS NULL OR (ts_int - start_ts_int) > 160000000)
 			           -- Looks like a new thread but with issues (most probably caused by agent restart or failure) 
 					   -- Simply omit the record and analyze later, exclude from reporting
 			           THEN NULL

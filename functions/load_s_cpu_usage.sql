@@ -210,6 +210,7 @@ begin
 								where
 									ts_date >= #v_max_ts_date#
 									and host_name = ''#host_name#''
+									and ts_interval_ticks is not null
 								) tri
 								left outer join t_slogs slogs ON (
 												tri.host_name = slogs.host_name AND
