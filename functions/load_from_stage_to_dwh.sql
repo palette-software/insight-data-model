@@ -9,8 +9,8 @@ declare
 	v_cols text;
 begin	
 		v_sql_cur := 'select distinct 
-							#column_host_name#,
-							#column_ts_date#,
+							#column_host_name# as host_name,
+							#column_ts_date# as ts_date,
 							''truncate table #schema_name#."p_#table_name#_1_prt_'' || to_char(#column_ts_date#, ''yyyymmdd'') || ''_2_prt_'' || #column_host_name# || ''"'' as truncate_partition
 					 from 
 						#schema_name#.s_#table_name#';
@@ -36,10 +36,21 @@ begin
 			  v_sql := rec.truncate_partition;
 			  raise notice 'I: %', v_sql;
 			  
-			  execute v_sql;			  
+			  begin
+			  	execute v_sql;			  
+			  exception when undefined_table 
+			  		-- the partition is not there (only possible when a new host's just installed)
+			  		then null;
+			  end;
+			  			  
+			  v_sql := 'truncate table #schema_name#."p_#table_name#_1_prt_' || to_char(rec.ts_date, 'yyyymmdd') || '_2_prt_new_host"';
+			  v_sql := replace(v_sql, '#schema_name#', p_schema_name);
+			  v_sql := replace(v_sql, '#table_name#', substr(p_table_name, 3));
+				
+			  execute v_sql;
 			  
 		end loop;
-		close c;			
+		close c;									
 		
 		v_cols := '';
 		
