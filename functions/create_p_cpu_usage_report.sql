@@ -76,7 +76,7 @@ begin
 		v_sql := rtrim(v_sql, ',\n') || ')
 		WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 		DISTRIBUTED BY (cpu_usage_p_id)
-		PARTITION BY RANGE (cpu_usage_ts_date)
+		PARTITION BY RANGE (cpu_usage_ts_rounded_15_secs)
 		SUBPARTITION BY LIST (cpu_usage_host_name)
 		SUBPARTITION TEMPLATE (SUBPARTITION init VALUES (''init'')
 		WITH (appendonly=true, orientation=column, compresstype=quicklz))
