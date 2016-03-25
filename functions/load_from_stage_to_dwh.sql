@@ -11,7 +11,7 @@ begin
 		v_sql_cur := 'select distinct 
 							#column_host_name# as host_name,
 							#column_ts_date# as ts_date,
-							''truncate table #schema_name#."p_#table_name#_1_prt_'' || to_char(#column_ts_date#, ''yyyymmdd'') || ''_2_prt_'' || #column_host_name# || ''"'' as truncate_partition
+							''delete from #schema_name#."p_#table_name#_1_prt_'' || to_char(#column_ts_date#, ''yyyymmdd'') || ''_2_prt_'' || #column_host_name# || ''"'' as delete_partition
 					 from 
 						#schema_name#.s_#table_name#';
 	
@@ -33,7 +33,7 @@ begin
 			  fetch c into rec;
 			  exit when not found;
 			  			  
-			  v_sql := rec.truncate_partition;
+			  v_sql := rec.delete_partition;
 			  raise notice 'I: %', v_sql;
 			  
 			  begin
@@ -43,7 +43,7 @@ begin
 			  		then null;
 			  end;
 			  			  
-			  v_sql := 'truncate table #schema_name#."p_#table_name#_1_prt_' || to_char(rec.ts_date, 'yyyymmdd') || '_2_prt_new_host"';
+			  v_sql := 'delete from #schema_name#."p_#table_name#_1_prt_' || to_char(rec.ts_date, 'yyyymmdd') || '_2_prt_new_host"';
 			  v_sql := replace(v_sql, '#schema_name#', p_schema_name);
 			  v_sql := replace(v_sql, '#table_name#', substr(p_table_name, 3));
 				
@@ -79,7 +79,7 @@ begin
 		
 		raise notice 'I: %', v_sql;
 		execute v_sql;
-		
+				
 		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;			
 		return v_num_inserted;
 END;
