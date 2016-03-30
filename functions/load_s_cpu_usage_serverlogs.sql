@@ -26,7 +26,8 @@ begin
 				  duration,
 				  site,
 				  username,
-				  ts_destroy_sess
+				  ts_destroy_sess,
+				  keys
 			)
 
 			with t_slogs as
@@ -40,7 +41,8 @@ begin
 					sess,
 					ts,					
 					lag(sess) over (partition by host_name, pid, tid order by ts) as lag_sess,
-					ts_destroy_sess
+					ts_destroy_sess,
+					k
 			from
 				(select 	
 					host_name,
@@ -56,8 +58,9 @@ begin
 													ts
 										order by 
 												case when sess not in (''-'', ''default'') then 1 else 0 end 
-												desc, sess) as rn,
-					ts_destroy_sess
+												desc, sess desc, site desc, k) as rn,
+					ts_destroy_sess,
+					k
 				from
 						(select distinct 
 									host_name,
@@ -67,7 +70,8 @@ begin
 									tid,
 									sess,
 									ts,
-									max(case when k = ''destroy-session'' then ts end) over (partition by host_name, sess) ts_destroy_sess
+									max(case when k = ''destroy-session'' then ts end) over (partition by host_name, sess) ts_destroy_sess,
+									k
 						from
 								#schema_name#.p_serverlogs
 						where
@@ -90,7 +94,8 @@ begin
 					max(ts) - min(ts) as duration,
 					site,
 					username_without_domain,
-					ts_destroy_sess
+					ts_destroy_sess,
+					regexp_replace(string_agg(case when k = lag_k then '''' else k end, '';''), '';+'', '';'', ''g'') as keys
 			from
 			(
 				select
@@ -102,7 +107,17 @@ begin
 						sess,
 						ts,						
 						ts_claster,
-						ts_destroy_sess
+						ts_destroy_sess,
+						k,
+						lag(k) over (PARTITION BY host_name,
+												site,
+												username_without_domain,
+												pid,
+												tid,
+												sess,
+												ts_claster,
+												ts_destroy_sess	 
+									order by ts) as lag_k
 				from
 					(
 					select 
@@ -120,7 +135,8 @@ begin
 										1
 								end	
 								) over (PARTITION BY host_name, pid, tid, sess order by ts ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as ts_claster,
-							ts_destroy_sess
+							ts_destroy_sess,
+							k
 					from
 						t_slogs
 					) a	

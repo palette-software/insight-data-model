@@ -99,7 +99,7 @@ begin
 						  thread_with_sess.ts_rounded_15_secs,
 						  thread_with_sess.ts_rounded_15_secs::date as ts_date,
 						  DATE_TRUNC(''hour'', thread_with_sess.ts) as ts_day_hour,
-						  thread_with_sess.session,
+						  case when thread_with_sess.session in (''-'', ''default'') then thread_with_sess.keys else thread_with_sess.session end as vizql_session,
 						  http_req_wb.repository_url,
 						  http_req_wb.user_ip,
 						  http_req_wb.site_id,
@@ -186,6 +186,7 @@ begin
 																						  else 2 
 																					  end asc, 																		  
 																					  slogs.session_start_ts desc) as rn
+									,slogs.keys																					  
 							from	
 								(select 
 									p_id
@@ -204,7 +205,7 @@ begin
 								   ,case when tid = -1 then ''Process Level'' else ''Thread Level'' end as process_level
 								   ,is_thread_level
 								   ,case when is_thread_level = ''Y'' and tid = -1 then false else true end as max_reporting_granuralty
-								   ,start_ts
+								   ,start_ts								   
 								from
 									#schema_name#.p_threadinfo
 								where

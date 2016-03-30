@@ -10,7 +10,9 @@ create table s_cpu_usage_serverlogs
 	  duration interval,
 	  site text,
 	  username text,
-	  ts_destroy_sess timestamp
+	  ts_destroy_sess timestamp,
+	  keys text
 )
 WITH (appendonly=true, orientation=column, compresstype=quicklz)
 DISTRIBUTED BY (host_name, pid, tid);
+
