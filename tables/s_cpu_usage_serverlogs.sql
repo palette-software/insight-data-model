@@ -1,8 +1,8 @@
 create table s_cpu_usage_serverlogs
 (
 	  host_name text,
-	  pid bigint,
-	  tid bigint,
+	  process_id bigint,
+	  thread_id bigint,
 	  session text,
 	  ts_cluster bigint,
 	  session_start_ts timestamp,  
@@ -14,5 +14,5 @@ create table s_cpu_usage_serverlogs
 	  keys text
 )
 WITH (appendonly=true, orientation=column, compresstype=quicklz)
-DISTRIBUTED BY (host_name, pid, tid);
+DISTRIBUTED BY (host_name, process_id, thread_id);
 

@@ -20,8 +20,8 @@ BEGIN
 				ts,
 				ts_date,
 				ts_rounded_15_secs,
-				pid,
-				tid,
+				process_id,
+				thread_id,
 				start_ts,
 				cpu_time_ticks,
 				cpu_time_delta_ticks,
@@ -174,8 +174,8 @@ BEGIN
 							       , host_name
 							       , process_name
 							       , ts
-							       , pid
-							       , tid
+							       , process_id
+							       , thread_id
 							       , cpu_time_ticks
 							       , null as poll_cycle_ts
 							       , start_ts
@@ -186,7 +186,7 @@ BEGIN
 							from
 								(
 								select last_ti.*,
-									   row_number() over (PARTITION BY host_name,pid,process_name,tid,start_ts ORDER BY ts DESC) rn
+									   row_number() over (PARTITION BY host_name,process_id,process_name,thread_id,start_ts ORDER BY ts DESC) rn
 								from
 									#schema_name#.p_threadinfo last_ti
 								where

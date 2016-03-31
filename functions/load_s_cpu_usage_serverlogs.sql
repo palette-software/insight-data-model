@@ -17,8 +17,8 @@ begin
 			v_sql := 
 			'insert into #schema_name#.s_cpu_usage_serverlogs (
 				  host_name,
-				  pid,
-				  tid,	  
+				  process_id,
+				  thread_id,	  
 				  session,
 				  ts_cluster,
 				  session_start_ts,  
@@ -36,11 +36,11 @@ begin
 					host_name,
 					site,
 					username_without_domain,
-					pid,
-					tid,
+					process_id,
+					thread_id,
 					sess,
 					ts,					
-					lag(sess) over (partition by host_name, pid, tid order by ts) as lag_sess,
+					lag(sess) over (partition by host_name, process_id, thread_id order by ts) as lag_sess,
 					ts_destroy_sess,
 					k
 			from
@@ -48,13 +48,13 @@ begin
 					host_name,
 					site,
 					username_without_domain,
-					pid,
-					tid,
+					process_id,
+					thread_id,
 					sess,
 					ts,					
 					row_number() over (partition by host_name,
-													pid,
-													tid,																
+													process_id,
+													thread_id,																
 													ts
 										order by 
 												case when sess not in (''-'', ''default'') then 1 else 0 end 
@@ -66,8 +66,8 @@ begin
 									host_name,
 									site,
 									username_without_domain,
-									pid,
-									tid,
+									process_id,
+									thread_id,
 									sess,
 									ts,
 									max(case when k = ''destroy-session'' then ts end) over (partition by host_name, sess) ts_destroy_sess,
@@ -85,8 +85,8 @@ begin
 				  
 			select	
 					host_name,		
-					pid,
-					tid,
+					process_id,
+					thread_id,
 					sess,					
 					ts_claster,
 					min(ts) as session_start_ts,
@@ -102,8 +102,8 @@ begin
 						host_name,
 						site,
 						username_without_domain,
-						pid,
-						tid,
+						process_id,
+						thread_id,
 						sess,
 						ts,						
 						ts_claster,
@@ -112,8 +112,8 @@ begin
 						lag(k) over (PARTITION BY host_name,
 												site,
 												username_without_domain,
-												pid,
-												tid,
+												process_id,
+												thread_id,
 												sess,
 												ts_claster,
 												ts_destroy_sess	 
@@ -124,8 +124,8 @@ begin
 							host_name,
 							site,
 							username_without_domain,
-							pid,
-							tid,
+							process_id,
+							thread_id,
 							sess,
 							ts,							
 							sum(case when sess = lag_sess
@@ -134,7 +134,7 @@ begin
 									else 
 										1
 								end	
-								) over (PARTITION BY host_name, pid, tid, sess order by ts ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as ts_claster,
+								) over (PARTITION BY host_name, process_id, thread_id, sess order by ts ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as ts_claster,
 							ts_destroy_sess,
 							k
 					from
@@ -145,8 +145,8 @@ begin
 					host_name,
 					site,
 					username_without_domain,
-					pid,
-					tid,
+					process_id,
+					thread_id,
 					sess,
 					ts_claster,
 					ts_destroy_sess
