@@ -28,6 +28,6 @@ SELECT p_id
        , "user" as username
 	   , substr("user", position('\\' in "user") + 1) as username_without_domain
        , k
-       , v
+       , v::varchar(1000000) as v
  FROM serverlogs;
  

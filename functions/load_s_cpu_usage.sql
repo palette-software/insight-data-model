@@ -99,7 +99,7 @@ begin
 						  thread_with_sess.ts_rounded_15_secs,
 						  thread_with_sess.ts_rounded_15_secs::date as ts_date,
 						  DATE_TRUNC(''hour'', thread_with_sess.ts) as ts_day_hour,
-						  case when thread_with_sess.session in (''-'', ''default'') then thread_with_sess.keys else thread_with_sess.session end as vizql_session,
+						  case when thread_with_sess.session in (''-'', ''default'') then ''Non-Interactor Vizql'' else thread_with_sess.session end as vizql_session,
 						  http_req_wb.repository_url,
 						  http_req_wb.user_ip,
 						  http_req_wb.site_id,
@@ -128,7 +128,12 @@ begin
 													''vizportal'',
 													''vizqlserver'',
 													''wgserver'',
-													''zookeeper'') then 
+													''zookeeper'',
+													''tabspawn'',
+													''tabadmwrk'',
+													''tabadmsvc'',
+													''tdeserver64''
+													) then 
 									''Tableau''
 						  else 
 						  			''Non-Tableau''
