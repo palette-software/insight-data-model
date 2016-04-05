@@ -1,0 +1,12 @@
+after_success:
+- zip insight-reporting.zip $TRAVIS_BUILD_DIR/tables/*.sql
+deploy:
+  provider: releases
+  api_key:
+    secure: SsFDMxXEMPWGfF/STq6Ik2XbVBI4bZHt9UbjRSN2Id8St5pdTSowSTCcGIHC42JTXfSPVUSSex4D4f/c5avISpqz5m3MWug6wR5da6QTJ16phlRWUlcFHIkwJGqtlkWXwGDBO1GGN1tpknmM9Q41p2QLkTM2ycq1TFCFSIs0J8HanBoYqjfl/JgVaYcZuUkP/XuB/PIS3HNgbwLit2zKBK/mxSNhb1D0GKKoHQXGKxC1OPjXa4z7AjwowqWLWH+3lMl3xtmIMjXg8xJRkWrw4Q6EH+iY9zqvAnOGqUrEtAN3KCVjV7c2+JBc/7ObRk4Zk9L4lJxZxAR5ZFbP8EwwlXiYF0Wxtpa9OxeaLpkHAxFGjeDZS6HzRKa0pU+Coc0ERll3ibZf5jehdLzQ7Q7N7AzXxtLSwChE+WYzEdGTLT7avar3ZieUy5t38+WPEEhPryDoh6GAAWCPctsnvoqeLUs+EO2qvxLqLfEXNth1tMx8tiNkB8KQtknCpUftmuvsJNXQtz8Qe4CDMfasfeecYTz3XauwtbjeDH65Xzc2UwBt6uRNdk3fuG4tnLyuVoTGCCM+uNk2AC/d1EXGJKzEU/bz/fTfim4/nD2jtDANN8Z7m/aHSJTIPoK60mL/OdyVtZT80Pq1Mo2XGBT90sS/Z45txiRAdK+u9KCJww/c9jo=
+  file: insight-server.zip
+  on:
+    repo: palette-software/palette-insight-reporting
+  skip_cleanup: true
+  on:
+      tags: true
