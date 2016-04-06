@@ -1,12 +1,8 @@
 script:
   - sed -i "s/#version_number#/$TRAVIS_TAG/g" ./full_install.sql
   - cat full_install.sql
-  - zip insight-reporting-full-install-$TRAVIS_TAG.zip $TRAVIS_BUILD_DIR/functions/*.sql $TRAVIS_BUILD_DIR/tables/*.sql $TRAVIS_BUILD_DIR/views/*.sql full_install.sql
-  - echo "Git tag:" $TRAVIS_TAG
-  - ls -lah insight-reporting-full-install-$TRAVIS_TAG.zip
+  - zip -r -j insight-reporting-full-install-$TRAVIS_TAG.zip functions/*.sql tables/*.sql views/*.sql full_install.sql
 deploy:
-  script:
-    - zip insight-reporting-full-install-$TRAVIS_TAG.zip $TRAVIS_BUILD_DIR/functions/*.sql $TRAVIS_BUILD_DIR/tables/*.sql $TRAVIS_BUILD_DIR/views/*.sql full_install.sql
   provider: releases
   api_key:
     secure: fijIdjBYXx4TUmQk2Z8qsYAYtHFwLvbkiKAfmg8P1Pv02AflwuXBlNF5aBGu9QfjaZ8WuKa6/w8w+Xsr8f+FnlQUHIPyWdaOGY4vrUKMGkj+nFY6LNydfHUjUx20EIisUyo4v6wuWXC6BPTWVm3VfuzSSQAjdolX1K1YrecB5vdgt72wcH95zhC7ydjNidFyY2NmFGEW68YphvhpqrdN7qRKZebCtTsXjWItu7ei22HQ1TYgkVuuPlvO6TZGPGK1JwGD7RAp+pv0TZzu+pvXS/ec0P5tkh8vHHnyWhW3OT5Sh3pm/mXVKwcr3gmXQrOZcTcyizc9wFQsLvgLxite77xM7Vzd791MihdxM6CZL6C+GhMytSf9cjRi8cxrc3NZEHIRMNHHmyn4fXlO/bJi4OURddf3Oj7CnJyh01ZKlHI1ZdFlWb/TOe30PJXe/CvH2+pwlqFsO9iKE9aTo2RbNN27dT08cqgSmd36lhV+q8tXm0XOHmfOYM0+xLYI1AuiPF7rmW5czd7pbLvvIRtZoZEBIvMPoVOehCfbbXKKYlM3/YagTsLcPO827syIm/OW+Gh/RQ0KmjlMSOB2ZMYvmSOupcyzg8zCTvNRUjUID3Z/8hUjEdTj7cRlO6ybUFPU21TbIhaGnurAFXufG9QPlYNUZ7scRRWsQ1dLw1pfyts=
