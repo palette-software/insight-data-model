@@ -2,7 +2,7 @@ script:
   - echo "Nothing to build in this project. Done."
   - zip insight-reporting-full-install-$TRAVIS_TAG.zip $TRAVIS_BUILD_DIR/functions/*.sql $TRAVIS_BUILD_DIR/tables/*.sql $TRAVIS_BUILD_DIR/views/*.sql full_install.sql
   - echo "Git tag:" $TRAVIS_TAG
-  - ll insight-reporting-full-install-$TRAVIS_TAG.zip
+  - ls -lah insight-reporting-full-install-$TRAVIS_TAG.zip
 deploy:
   script:
     - sed -i "s/#version_number#/$TRAVIS_TAG/g" ./full_install.sql
