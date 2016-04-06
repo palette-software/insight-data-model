@@ -1,6 +1,8 @@
 env:
 - FULL_INSTALL_ZIP=palette-insight-reporting-$TRAVIS_TAG-full-install.zip
 - INCREMENTAL_INSTALL_ZIP=palette-insight-reporting-$TRAVIS_TAG-install.zip
+script:
+- echo "Nothing to be built. Done."
 before_deploy:
   # Create the full installer
 - sed -i "s/#version_number#/$TRAVIS_TAG/g" ./full_install.sql
