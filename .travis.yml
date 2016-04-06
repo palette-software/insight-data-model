@@ -1,6 +1,7 @@
 env:
-- FULL_INSTALL_ZIP=palette-insight-reporting-$TRAVIS_TAG-full-install.zip
-- INCREMENTAL_INSTALL_ZIP=palette-insight-reporting-$TRAVIS_TAG-install.zip
+  global:
+  - FULL_INSTALL_ZIP=palette-insight-reporting-$TRAVIS_TAG-full-install.zip
+  - INCREMENTAL_INSTALL_ZIP=palette-insight-reporting-$TRAVIS_TAG-install.zip
 script:
 - echo "Nothing to be built. Done."
 before_deploy:
@@ -9,8 +10,8 @@ before_deploy:
 - cat full_install.sql
 - zip -r -j $FULL_INSTALL_ZIP functions/*.sql tables/*.sql views/*.sql full_install.sql
   # Create the incremental installer
-# - zip -r -j migrations/$LATEST_MIGRATION_VERSION/*.sql
-- echo "This is a beginning of a beautiful era." > $INCREMENTAL_INSTALL_ZIP
+- export LATEST_MIGRATION_VERSION=`./maxversions.sh`
+- zip -r -j $INCREMENTAL_INSTALL_ZIP migrations/$LATEST_MIGRATION_VERSION/*.sql
 deploy:
   provider: releases
   draft: true
