@@ -1,11 +1,11 @@
 script:
-  - echo "Nothing to build in this project. Done."
+  - sed -i "s/#version_number#/$TRAVIS_TAG/g" ./full_install.sql
+  - cat full_install.sql
   - zip insight-reporting-full-install-$TRAVIS_TAG.zip $TRAVIS_BUILD_DIR/functions/*.sql $TRAVIS_BUILD_DIR/tables/*.sql $TRAVIS_BUILD_DIR/views/*.sql full_install.sql
   - echo "Git tag:" $TRAVIS_TAG
   - ls -lah insight-reporting-full-install-$TRAVIS_TAG.zip
 deploy:
   script:
-    - sed -i "s/#version_number#/$TRAVIS_TAG/g" ./full_install.sql
     - zip insight-reporting-full-install-$TRAVIS_TAG.zip $TRAVIS_BUILD_DIR/functions/*.sql $TRAVIS_BUILD_DIR/tables/*.sql $TRAVIS_BUILD_DIR/views/*.sql full_install.sql
   provider: releases
   api_key:
