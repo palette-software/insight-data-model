@@ -1,10 +1,14 @@
+env:
+- FULL_INSTALL_ZIP=palette-insight-reporting-$TRAVIS_TAG-full-install.zip
 script:
-- zip insight-reporting.zip $TRAVIS_BUILD_DIR/tables/*.sql
+- sed -i "s/#version_number#/$TRAVIS_TAG/g" ./full_install.sql
+- cat full_install.sql
+- zip -r -j $FULL_INSTALL_ZIP functions/*.sql tables/*.sql views/*.sql full_install.sql
 deploy:
   provider: releases
   api_key:
-    secure: SsFDMxXEMPWGfF/STq6Ik2XbVBI4bZHt9UbjRSN2Id8St5pdTSowSTCcGIHC42JTXfSPVUSSex4D4f/c5avISpqz5m3MWug6wR5da6QTJ16phlRWUlcFHIkwJGqtlkWXwGDBO1GGN1tpknmM9Q41p2QLkTM2ycq1TFCFSIs0J8HanBoYqjfl/JgVaYcZuUkP/XuB/PIS3HNgbwLit2zKBK/mxSNhb1D0GKKoHQXGKxC1OPjXa4z7AjwowqWLWH+3lMl3xtmIMjXg8xJRkWrw4Q6EH+iY9zqvAnOGqUrEtAN3KCVjV7c2+JBc/7ObRk4Zk9L4lJxZxAR5ZFbP8EwwlXiYF0Wxtpa9OxeaLpkHAxFGjeDZS6HzRKa0pU+Coc0ERll3ibZf5jehdLzQ7Q7N7AzXxtLSwChE+WYzEdGTLT7avar3ZieUy5t38+WPEEhPryDoh6GAAWCPctsnvoqeLUs+EO2qvxLqLfEXNth1tMx8tiNkB8KQtknCpUftmuvsJNXQtz8Qe4CDMfasfeecYTz3XauwtbjeDH65Xzc2UwBt6uRNdk3fuG4tnLyuVoTGCCM+uNk2AC/d1EXGJKzEU/bz/fTfim4/nD2jtDANN8Z7m/aHSJTIPoK60mL/OdyVtZT80Pq1Mo2XGBT90sS/Z45txiRAdK+u9KCJww/c9jo=
-  file: insight-server.zip
+    secure: qVurNxNaTatjAER0EHig4UYPAAYg4EvUbcwoEBRqcpgZRXCtz4bxHNzHn65PRmqYOJNaAjxm8pYfxM/+up7eqABV3vD8q5LOQz42y7Gl6lESq7X+CJ4C9xqW0UEcg6/AiWgQLLM4hceloOEpOQirOTv3+SdCuUdZfREW1lfvFggXQRrFmgX9GU8GsaV59F6XscSHvur0GCKNzrxUwTl8EYWFDmy3+o2xTyLCMM3u8udsLQ76PijcWTT4eXoA6eryW4CGjq9L4QpSorq38lKVlEtxjt1Jo4GeUaOpoyrTy2tgwP9aNnTdLbWov6oRN6R8geVp2gdgV376O5nyJnukxHxlMbtAX8oPNext547WTT8pewv8+JvahasczPHhWku4koRBK7enXFnzkrj2D431SIUhra1BWym6Uk9WU82B8glqmon1BWp2uSh5L7AQ2ys1cZ1NimS9DMJ6e3+o/HBfqFhh+lSKuHhI1m7Q8i8C0uT+nCFNXwotWQ+kFlpWS2CR3zXu/iShOleEt7us1EV7SeEwXRVBua6dFyJIicP7SOlFmA5EbN0vILpVkS0GpSTQZ70k7BTlCakiNRBDj3SfE2RLIpJ3NYLre0+Xh6Of+puRPVmI4a7gJ5ANeVbc60lvHTFFjvCNNQQhOb3vNqdYBp/C3TxQTF3BS2SgyRaaOYE=
+  file: $FULL_INSTALL_ZIP
   on:
     repo: palette-software/palette-insight-reporting
   skip_cleanup: true
