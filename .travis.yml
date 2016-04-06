@@ -1,12 +1,14 @@
+env:
+- FULL_INSTALL_ZIP=palette-insight-reporting-$TRAVIS_TAG-full-install.zip
 script:
-  - sed -i "s/#version_number#/$TRAVIS_TAG/g" ./full_install.sql
-  - cat full_install.sql
-  - zip -r -j insight-reporting-full-install-$TRAVIS_TAG.zip functions/*.sql tables/*.sql views/*.sql full_install.sql
+- sed -i "s/#version_number#/$TRAVIS_TAG/g" ./full_install.sql
+- cat full_install.sql
+- zip -r -j $FULL_INSTALL_ZIP functions/*.sql tables/*.sql views/*.sql full_install.sql
 deploy:
   provider: releases
   api_key:
-    secure: fijIdjBYXx4TUmQk2Z8qsYAYtHFwLvbkiKAfmg8P1Pv02AflwuXBlNF5aBGu9QfjaZ8WuKa6/w8w+Xsr8f+FnlQUHIPyWdaOGY4vrUKMGkj+nFY6LNydfHUjUx20EIisUyo4v6wuWXC6BPTWVm3VfuzSSQAjdolX1K1YrecB5vdgt72wcH95zhC7ydjNidFyY2NmFGEW68YphvhpqrdN7qRKZebCtTsXjWItu7ei22HQ1TYgkVuuPlvO6TZGPGK1JwGD7RAp+pv0TZzu+pvXS/ec0P5tkh8vHHnyWhW3OT5Sh3pm/mXVKwcr3gmXQrOZcTcyizc9wFQsLvgLxite77xM7Vzd791MihdxM6CZL6C+GhMytSf9cjRi8cxrc3NZEHIRMNHHmyn4fXlO/bJi4OURddf3Oj7CnJyh01ZKlHI1ZdFlWb/TOe30PJXe/CvH2+pwlqFsO9iKE9aTo2RbNN27dT08cqgSmd36lhV+q8tXm0XOHmfOYM0+xLYI1AuiPF7rmW5czd7pbLvvIRtZoZEBIvMPoVOehCfbbXKKYlM3/YagTsLcPO827syIm/OW+Gh/RQ0KmjlMSOB2ZMYvmSOupcyzg8zCTvNRUjUID3Z/8hUjEdTj7cRlO6ybUFPU21TbIhaGnurAFXufG9QPlYNUZ7scRRWsQ1dLw1pfyts=
-  file: insight-reporting-full-install-$TRAVIS_TAG.zip
+    secure: qVurNxNaTatjAER0EHig4UYPAAYg4EvUbcwoEBRqcpgZRXCtz4bxHNzHn65PRmqYOJNaAjxm8pYfxM/+up7eqABV3vD8q5LOQz42y7Gl6lESq7X+CJ4C9xqW0UEcg6/AiWgQLLM4hceloOEpOQirOTv3+SdCuUdZfREW1lfvFggXQRrFmgX9GU8GsaV59F6XscSHvur0GCKNzrxUwTl8EYWFDmy3+o2xTyLCMM3u8udsLQ76PijcWTT4eXoA6eryW4CGjq9L4QpSorq38lKVlEtxjt1Jo4GeUaOpoyrTy2tgwP9aNnTdLbWov6oRN6R8geVp2gdgV376O5nyJnukxHxlMbtAX8oPNext547WTT8pewv8+JvahasczPHhWku4koRBK7enXFnzkrj2D431SIUhra1BWym6Uk9WU82B8glqmon1BWp2uSh5L7AQ2ys1cZ1NimS9DMJ6e3+o/HBfqFhh+lSKuHhI1m7Q8i8C0uT+nCFNXwotWQ+kFlpWS2CR3zXu/iShOleEt7us1EV7SeEwXRVBua6dFyJIicP7SOlFmA5EbN0vILpVkS0GpSTQZ70k7BTlCakiNRBDj3SfE2RLIpJ3NYLre0+Xh6Of+puRPVmI4a7gJ5ANeVbc60lvHTFFjvCNNQQhOb3vNqdYBp/C3TxQTF3BS2SgyRaaOYE=
+  file: $FULL_INSTALL_ZIP
   on:
     repo: palette-software/palette-insight-reporting
   skip_cleanup: true
