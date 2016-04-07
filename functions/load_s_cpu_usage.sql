@@ -132,7 +132,9 @@ begin
 													''tabspawn'',
 													''tabadmwrk'',
 													''tabadmsvc'',
-													''tdeserver64''
+													''tdeserver64'',
+													''tabadmin'',
+													''redis-server''
 													) then 
 									''Tableau''
 						  else 
