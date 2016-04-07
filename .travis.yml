@@ -24,3 +24,7 @@ deploy:
     repo: palette-software/palette-insight-reporting
     tags: true
   skip_cleanup: true
+notifications:
+  email:
+    on_success: never
+    on_failure: never
