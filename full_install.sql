@@ -42,3 +42,4 @@ select create_load_p_background_jobs('#schema_name#');
 \i create_load_s_cpu_usage_report.sql
 select create_load_s_cpu_usage_report('#schema_name#');
 \i load_from_stage_to_dwh.sql
+select grant_objects_to_looker_role('#schema_name#');
