@@ -1,0 +1,1 @@
+drop view p_cpu_usage_report_last_24_hours;
