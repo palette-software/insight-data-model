@@ -8,6 +8,7 @@ GRANT  palette_#schema_name#_looker TO palette_looker WITH ADMIN OPTION ;
 CREATE ROLE palette_#schema_name#_updater; 
 GRANT  palette_#schema_name#_updater TO palette_updater WITH ADMIN OPTION;
 grant palette_#schema_name#_looker to readonly_#schema_name#;
+grant usage on schema #schema_name# to readonly_#schema_name#;
 
 set search_path = '#schema_name#';
 \i create_roles.sql
