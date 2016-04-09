@@ -57,8 +57,8 @@ begin
 							process_level,
 							is_thread_level,				
 							host_name,
-							pid,
-							tid,	
+							process_id,
+							thread_id,	
 							start_ts,
 							end_ts,
 							username,	
@@ -78,7 +78,7 @@ begin
 							slogs.*	
 						from 
 							#schema_name#.s_cpu_usage_serverlogs slogs
-						inner join (select distinct host_name, pid, tid
+						inner join (select distinct host_name, process_id, thread_id
 									from
 										#schema_name#.p_threadinfo
 									where 
@@ -87,8 +87,8 @@ begin
 									)  ti
 							on  
 									ti.host_name = slogs.host_name and
-									ti.pid = slogs.pid and
-									ti.tid = slogs.tid 
+									ti.process_id = slogs.process_id and
+									ti.thread_id = slogs.thread_id 
 						where
 							slogs.host_name = ''#host_name#''
 						)
@@ -99,7 +99,7 @@ begin
 						  thread_with_sess.ts_rounded_15_secs,
 						  thread_with_sess.ts_rounded_15_secs::date as ts_date,
 						  DATE_TRUNC(''hour'', thread_with_sess.ts) as ts_day_hour,
-						  case when thread_with_sess.session in (''-'', ''default'') then thread_with_sess.keys else thread_with_sess.session end as vizql_session,
+						  case when thread_with_sess.session in (''-'', ''default'') then ''Non-Interactor Vizql'' else thread_with_sess.session end as vizql_session,
 						  http_req_wb.repository_url,
 						  http_req_wb.user_ip,
 						  http_req_wb.site_id,
@@ -128,7 +128,14 @@ begin
 													''vizportal'',
 													''vizqlserver'',
 													''wgserver'',
-													''zookeeper'') then 
+													''zookeeper'',
+													''tabspawn'',
+													''tabadmwrk'',
+													''tabadmsvc'',
+													''tdeserver64'',
+													''tabadmin'',
+													''redis-server''
+													) then 
 									''Tableau''
 						  else 
 						  			''Non-Tableau''
@@ -146,8 +153,8 @@ begin
 						  thread_with_sess.process_level,
 						  thread_with_sess.is_thread_level,			  
 						  thread_with_sess.host_name,
-						  thread_with_sess.pid,
-						  thread_with_sess.tid,  
+						  thread_with_sess.process_id,
+						  thread_with_sess.thread_id,  
 						  null as /*tst.*/start_ts,
 						  null as /*tst.*/end_ts,
 						  thread_with_sess.username, 
@@ -167,8 +174,8 @@ begin
 							       ,tri.process_name
 							       ,tri.ts
 								   ,tri.ts_rounded_15_secs
-							       ,tri.pid
-							       ,tri.tid
+							       ,tri.process_id
+							       ,tri.thread_id
 							       ,tri.cpu_time_ticks
 							       ,tri.cpu_time_delta_ticks
 							       ,tri.ts_interval_ticks
@@ -195,16 +202,16 @@ begin
 							       ,process_name
 							       ,ts
 								   ,ts_rounded_15_secs
-							       ,pid
-							       ,tid
+							       ,process_id
+							       ,thread_id
 							       ,cpu_time_ticks
 							       ,cpu_time_delta_ticks
 							       ,ts_interval_ticks
 							       ,cpu_core_consumption
 								   ,memory_usage_delta_bytes
-								   ,case when tid = -1 then ''Process Level'' else ''Thread Level'' end as process_level
+								   ,case when thread_id = -1 then ''Process Level'' else ''Thread Level'' end as process_level
 								   ,is_thread_level
-								   ,case when is_thread_level = ''Y'' and tid = -1 then false else true end as max_reporting_granuralty
+								   ,case when is_thread_level = ''Y'' and thread_id = -1 then false else true end as max_reporting_granuralty
 								   ,start_ts								   
 								from
 									#schema_name#.p_threadinfo
@@ -215,8 +222,8 @@ begin
 								) tri
 								left outer join t_slogs slogs ON (
 												tri.host_name = slogs.host_name AND
-							    				tri.pid = slogs.pid AND 
-							    				tri.tid = slogs.tid AND
+							    				tri.process_id = slogs.process_id AND 
+							    				tri.thread_id = slogs.thread_id AND
 												slogs.session_start_ts between tri.start_ts and tri.ts + interval ''15 sec'' AND
 												tri.ts <= coalesce(slogs.ts_destroy_sess, tri.ts)
 							  				)
