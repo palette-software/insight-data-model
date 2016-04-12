@@ -135,7 +135,7 @@ begin
 								from
 									#schema_name#.p_cpu_usage
 								where
-									ts_date >= #v_max_ts_date#
+									ts_rounded_15_secs >= #v_max_ts_date#
 								)
 				),
 				t_interactor_h_users as 
@@ -153,7 +153,7 @@ begin
 								from
 									#schema_name#.p_cpu_usage
 								where
-									ts_date >= #v_max_ts_date#
+									ts_rounded_15_secs >= #v_max_ts_date#
 								)									
 				),								
 				t_interactor_h_system_users as 
@@ -171,7 +171,7 @@ begin
 								from
 									#schema_name#.p_cpu_usage
 								where
-									ts_date >= #v_max_ts_date#
+									ts_rounded_15_secs >= #v_max_ts_date#
 								)									
 				),	
 				t_publisher_h_users as 
@@ -189,7 +189,7 @@ begin
 								from
 									#schema_name#.p_cpu_usage
 								where
-									ts_date >= #v_max_ts_date#
+									ts_rounded_15_secs >= #v_max_ts_date#
 								)									
 				),								
 				t_publisher_h_system_users as 
@@ -207,7 +207,7 @@ begin
 								from
 									#schema_name#.p_cpu_usage
 								where
-									ts_date >= #v_max_ts_date#
+									ts_rounded_15_secs >= #v_max_ts_date#
 								)									
 				)
 							
@@ -224,7 +224,7 @@ begin
 					left outer join t_publisher_h_users u_pub on (u_pub.p_id = cpu.publisher_h_users_p_id) 
 					left outer join t_publisher_h_system_users us_pub on (us_pub.p_id = cpu.publisher_h_system_users_p_id)
 				WHERE
-					cpu.ts_date >= #v_max_ts_date#
+					cpu.ts_rounded_15_secs >= #v_max_ts_date#
 		';
 		
 		v_sql := v_sql || '
