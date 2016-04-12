@@ -1,4 +1,4 @@
-CREATE or replace function load_s_cpu_usage(p_schema_name text) returns bigint
+CREATE or replace function load_s_cpu_usage_tabproto(p_schema_name text) returns bigint
 AS $$
 declare
 	v_sql text;
@@ -8,13 +8,11 @@ declare
 	c refcursor;
 	rec record;
 	v_max_ts_date text;
-begin		
-
-			execute 'select ' || p_schema_name || '.load_s_cpu_usage_tabproto(''' || p_schema_name || ''')';		
+begin	
 
 			v_sql_cur := 'select to_char(coalesce((select max(ts_date) from #schema_name#.p_cpu_usage), date''1001-01-01''), ''yyyy-mm-dd'')';
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
-			
+		
 			execute v_sql_cur into v_max_ts_date;
 			v_max_ts_date := 'date''' || v_max_ts_date || '''';
 
@@ -79,19 +77,19 @@ begin
 						select
 							slogs.*	
 						from 
-							#schema_name#.s_cpu_usage_serverlogs slogs
-						inner join (select distinct host_name, process_id, thread_id
+							#schema_name#.s_serverlogs_tabproto_compressed slogs
+						inner join (select distinct host_name, process_id, -1 as thread_id
 									from
 										#schema_name#.p_threadinfo
 									where 
 										ts_date >= #v_max_ts_date#
 										and host_name = ''#host_name#''
-										and process_name = ''vizqlserver''
+										and process_name = ''tabprotosrv''
 									)  ti
 							on  
 									ti.host_name = slogs.host_name and
 									ti.process_id = slogs.process_id and
-									ti.thread_id = slogs.thread_id 
+									ti.thread_id = slogs.thread_id
 						where
 							slogs.host_name = ''#host_name#''
 						)
@@ -195,8 +193,7 @@ begin
 								   													      then 1 
 																						  else 2 
 																					  end asc, 																		  
-																					  slogs.session_start_ts desc) as rn
-									,slogs.keys																					  
+																					  slogs.session_start_ts desc) as rn									
 							from	
 								(select 
 									p_id
@@ -206,7 +203,7 @@ begin
 							       ,ts
 								   ,ts_rounded_15_secs
 							       ,process_id
-							       ,thread_id
+							       ,-1 as thread_id
 							       ,cpu_time_ticks
 							       ,cpu_time_delta_ticks
 							       ,ts_interval_ticks
@@ -222,14 +219,13 @@ begin
 									ts_date >= #v_max_ts_date#
 									and host_name = ''#host_name#''
 									and ts_interval_ticks is not null
-									and process_name <> ''tabprotosrv''
+									and process_name = ''tabprotosrv''
 								) tri
 								left outer join t_slogs slogs ON (
 												tri.host_name = slogs.host_name AND
 							    				tri.process_id = slogs.process_id AND 
 							    				tri.thread_id = slogs.thread_id AND
-												slogs.session_start_ts between tri.start_ts and tri.ts + interval ''15 sec'' AND
-												tri.ts <= coalesce(slogs.ts_destroy_sess, tri.ts)
+												slogs.session_start_ts between tri.start_ts and tri.ts + interval ''15 sec''												
 							  				)
 								left outer join #schema_name#.h_sites sites on (sites.name = slogs.site and slogs.session_start_ts between sites.p_valid_from and sites.p_valid_to)
 						   ) thread_with_sess

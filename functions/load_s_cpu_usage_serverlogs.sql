@@ -8,6 +8,12 @@ declare
 	
 begin	
 
+			execute 'truncate table ' || p_schema_name || '.s_serverlogs_tabproto';
+			execute 'select ' || p_schema_name || '.load_s_serverlogs_tabproto(''' || p_schema_name || ''')';
+			
+			execute 'truncate table ' || p_schema_name || '.s_serverlogs_tabproto_compressed';
+			execute 'select ' || p_schema_name || '.load_s_serverlogs_tabproto_compressed(''' || p_schema_name|| ''')';			
+
 			v_sql_cur := 'select to_char(coalesce((select max(ts_date) from #schema_name#.p_cpu_usage), date''1001-01-01''), ''yyyy-mm-dd'')';									
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 		
