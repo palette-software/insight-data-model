@@ -8,6 +8,7 @@ begin
 			
 			v_sql := 
 			'insert into #schema_name#.s_serverlogs_tabproto_compressed (
+				  spawner_process_type,
 				  host_name,
 				  process_id,
 				  thread_id,	  
@@ -23,6 +24,7 @@ begin
 			with t_slogs as
 			(
 			select 
+					spawner_process_type,
 					host_name,
 					site,
 					username,
@@ -30,9 +32,10 @@ begin
 					thread_id,
 					sess,
 					ts,					
-					lag(sess) over (partition by host_name, process_id, thread_id order by ts) as lag_sess
+					lag(sess) over (partition by spawner_process_type, host_name, process_id, thread_id order by ts) as lag_sess
 			from
-				(select 	
+				(select
+					spawner_process_type,
 					host_name,
 					site,
 					username,
@@ -40,7 +43,8 @@ begin
 					thread_id,
 					sess,
 					ts,					
-					row_number() over (partition by host_name,
+					row_number() over (partition by spawner_process_type,
+													host_name,
 													process_id,
 													thread_id,																
 													ts
@@ -49,12 +53,13 @@ begin
 												desc, sess desc, site desc) as rn
 				from
 						(select distinct 
+									spawner_process_type,
 									host_name,
 									site,
 									username,
 									process_id,
 									-1 as thread_id,
-									spawner_vizql_session as sess,
+									spawner_session as sess,
 									ts
 						from
 								#schema_name#.s_serverlogs_tabproto						
@@ -65,6 +70,7 @@ begin
 			)
 				  
 			select	
+					spawner_process_type,
 					host_name,		
 					process_id,
 					thread_id,
@@ -77,7 +83,8 @@ begin
 					username
 			from
 			(
-				select
+				select	
+						spawner_process_type,
 						host_name,
 						site,
 						username,
@@ -89,6 +96,7 @@ begin
 				from
 					(
 					select 
+							spawner_process_type,
 							host_name,
 							site,
 							username,
@@ -102,12 +110,13 @@ begin
 									else 
 										1
 								end	
-								) over (PARTITION BY host_name, process_id, thread_id, sess order by ts ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as ts_claster
+								) over (PARTITION BY spawner_process_type, host_name, process_id, thread_id, sess order by ts ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as ts_claster
 					from
 						t_slogs
 					) a	
 				) g
 			group by
+					spawner_process_type,
 					host_name,
 					site,
 					username,

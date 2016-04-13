@@ -1,6 +1,7 @@
 CREATE TABLE s_serverlogs_tabproto
 (
-	spawner_vizql_session text,
+	spawner_process_type text,
+	spawner_session text,
 	spawned_tabproto_process_id_ts timestamp without time zone,
 	start_ts timestamp without time zone,
 	p_id bigint,	

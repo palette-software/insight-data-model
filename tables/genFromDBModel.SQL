@@ -1,4 +1,4 @@
-﻿/*
+/*
 Created: 2016.03.02.
 Modified: 2016.03.31.
 Project: Palette
@@ -49,7 +49,8 @@ CREATE TABLE "p_cpu_usage"(
  "h_sites_p_id" Bigint,
  "interactor_h_users_p_id" Bigint,
  "interactor_h_system_users_p_id" Bigint,
- "max_reporting_granuralty" Boolean
+ "max_reporting_granuralty" Boolean,
+ "dataserver_session" text
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (p_id)
@@ -105,7 +106,7 @@ ETL: DATE_TRUNC(''hour'', p_threadinfo.ts)'
 ;
 COMMENT ON COLUMN "p_cpu_usage"."vizql_session" IS '
 
-ETL: serverlogs.sess'
+ETL: serverlogs.sess if filename like vizqlserver'
 ;
 COMMENT ON COLUMN "p_cpu_usage"."repository_url" IS '
 
@@ -247,6 +248,11 @@ COMMENT ON COLUMN "p_cpu_usage"."interactor_h_system_users_p_id" IS '
 
 ETL: p_http_requests.interactor_h_system_users_p_id'
 ;
+COMMENT ON COLUMN "p_cpu_usage"."dataserver_session" IS '
+
+ETL: serverlogs.sess if filename like dataserver'
+;
+
 
 -- Table p_threadinfo
 

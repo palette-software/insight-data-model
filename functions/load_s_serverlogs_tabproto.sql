@@ -15,7 +15,8 @@ begin
 
 			v_sql := 
 			'insert into #schema_name#.s_serverlogs_tabproto (
-				  	spawner_vizql_session,
+				    spawner_process_type,
+				  	spawner_session,
 					spawned_tabproto_process_id_ts,
 					start_ts,
 					p_id,
@@ -35,20 +36,25 @@ begin
 			
 			with t_s_spawner as
 				(select 
+					sl.spawner_process_type,
 					sl.spawner_host_name,
-					sl.spawner_vizql_session,
+					sl.spawner_session,
 					sl.spawned_tabproto_process_id,
 					sl.spawned_tabproto_process_id_ts,
 					tinfo.start_ts	
 				from
-					(select distinct 
+					(select distinct 								
+								case when substr(filename, 1, 11) = ''vizqlserver'' then ''vizqlserver''
+									 when substr(filename, 1, 10) = ''dataserver'' then ''dataserver'' 
+									 else ''?''
+								end as spawner_process_type,
 								slog.host_name as spawner_host_name,
-								slog.sess as spawner_vizql_session,
+								slog.sess as spawner_session,
 								(replace(substr(slog.v, position(''pid'' in slog.v) + 4), ''"'', ''''))::bigint as spawned_tabproto_process_id,
 								slog.ts as spawned_tabproto_process_id_ts
 					from #schema_name#.p_serverlogs slog
 					where
-						substr(filename, 1, 11) = ''vizqlserver'' and
+						(substr(filename, 1, 11) = ''vizqlserver'' or substr(filename, 1, 10) = ''dataserver'') and
 						v like ''%CreateServerProcess%''
 						and ts >= #v_max_ts_date# - interval''60 minutes''
 					) sl	
@@ -60,16 +66,18 @@ begin
 									#schema_name#.p_threadinfo
 								where
 									thread_id = -1 and
-									ts >= #v_max_ts_date# - interval''60 minutes''
+									ts >= #v_max_ts_date# - interval''60 minutes'' and
+									process_name = ''tabprotosrv''
 								) tinfo on (tinfo.host_name = sl.spawner_host_name and 
 											tinfo.process_id = sl.spawned_tabproto_process_id)		 
 				)
 
-				select  		
-						case when start_ts = min(start_ts) over (partition by spawner_vizql_session, spawned_tabproto_process_id_ts, host_name, process_id) then
-								spawner_vizql_session
+				select 
+						spawner_process_type,
+						case when start_ts = min(start_ts) over (partition by spawner_process_type, spawner_session, spawned_tabproto_process_id_ts, host_name, process_id) then
+								spawner_session
 							else ''-'' 
-						 end as spawner_vizql_session 
+						 end as spawner_session 
 						, spawned_tabproto_process_id_ts
 						, start_ts
 						, p_id		
@@ -88,7 +96,8 @@ begin
 				from
 					(
 					select 	
-							  s_spawner.spawner_vizql_session		
+							  s_spawner.spawner_process_type
+							, s_spawner.spawner_session		
 							, s_spawner.spawned_tabproto_process_id_ts
 							, s_spawner.start_ts
 							, s_tabproto.p_id		
@@ -111,7 +120,7 @@ begin
 						inner join t_s_spawner s_spawner on (s_tabproto.host_name = s_spawner.spawner_host_name and 
 															 s_tabproto.process_id = s_spawner.spawned_tabproto_process_id and
 															 s_tabproto.ts >= s_spawner.spawned_tabproto_process_id_ts and
-															 s_tabproto.ts >= s_spawner.start_ts) 
+															 s_tabproto.ts >= s_spawner.start_ts)
 					where
 						substr(s_tabproto.filename, 1, 11) = ''tabprotosrv''
 						and ts >= #v_max_ts_date# - interval''60 minutes''
@@ -121,8 +130,6 @@ begin
 				'
 				;
 
-
-
 		
 		v_sql := replace(v_sql, '#schema_name#', p_schema_name);
 		v_sql := replace(v_sql, '#v_max_ts_date#', v_max_ts_date);
@@ -131,6 +138,7 @@ begin
 
 		execute v_sql;		
 		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;			
+
 		return v_num_inserted;
 END;
 $$ LANGUAGE plpgsql;

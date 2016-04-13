@@ -40,7 +40,7 @@ begin
 							ts_rounded_15_secs,
 							ts_date,
 							ts_day_hour,
-							vizql_session,	
+							vizql_session,
 							repository_url,
 							user_ip,
 							site_id,
@@ -69,7 +69,8 @@ begin
 							h_sites_p_id,
 							interactor_h_users_p_id,
 							interactor_h_system_users_p_id,
-							max_reporting_granuralty
+							max_reporting_granuralty,
+							dataserver_session
 						)
 								
 						with t_slogs as
@@ -100,7 +101,14 @@ begin
 						  thread_with_sess.ts_rounded_15_secs,
 						  thread_with_sess.ts_rounded_15_secs::date as ts_date,
 						  DATE_TRUNC(''hour'', thread_with_sess.ts) as ts_day_hour,
-						  case when thread_with_sess.session in (''-'', ''default'') then ''Non-Interactor Vizql'' else thread_with_sess.session end as vizql_session,
+						  case when spawner_process_type = ''vizqlserver'' then
+								  	case when thread_with_sess.session in (''-'', ''default'') 
+										then 
+											''Non-Interactor Vizql'' 
+										else 
+											thread_with_sess.session
+									end								
+						  end as vizql_session,
 						  http_req_wb.repository_url,
 						  http_req_wb.user_ip,
 						  http_req_wb.site_id,
@@ -166,7 +174,8 @@ begin
 						  http_req_wb.h_sites_p_id,    
 						  u.p_id as interactor_h_users_p_id,
 						  su.p_id as interactor_h_system_users_p_id,
-						  thread_with_sess.max_reporting_granuralty
+						  thread_with_sess.max_reporting_granuralty,
+						  case when spawner_process_type = ''dataserver'' then thread_with_sess.session end as dataserver_session
 						FROM 
 							(select
 									tri.p_id
@@ -193,7 +202,8 @@ begin
 								   													      then 1 
 																						  else 2 
 																					  end asc, 																		  
-																					  slogs.session_start_ts desc) as rn									
+																					  slogs.session_start_ts desc) as rn
+									,slogs.spawner_process_type
 							from	
 								(select 
 									p_id

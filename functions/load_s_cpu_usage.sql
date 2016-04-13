@@ -71,7 +71,8 @@ begin
 							h_sites_p_id,
 							interactor_h_users_p_id,
 							interactor_h_system_users_p_id,
-							max_reporting_granuralty
+							max_reporting_granuralty,
+							dataserver_session
 						)
 								
 						with t_slogs as
@@ -168,7 +169,8 @@ begin
 						  http_req_wb.h_sites_p_id,    
 						  u.p_id as interactor_h_users_p_id,
 						  su.p_id as interactor_h_system_users_p_id,
-						  thread_with_sess.max_reporting_granuralty
+						  thread_with_sess.max_reporting_granuralty,
+						  null as dataserver_session
 						FROM 
 							(select
 									tri.p_id
