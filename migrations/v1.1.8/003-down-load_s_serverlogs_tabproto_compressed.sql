@@ -1,0 +1,1 @@
+drop function load_s_serverlogs_tabproto_compressed(p_schema_name text);

@@ -1,0 +1,1 @@
+drop TABLE s_serverlogs_tabproto;

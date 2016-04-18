@@ -1,0 +1,1 @@
+drop table s_serverlogs_tabproto_compressed;
