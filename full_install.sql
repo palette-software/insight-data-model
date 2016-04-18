@@ -11,7 +11,6 @@ grant palette_#schema_name#_looker to readonly_#schema_name#;
 grant usage on schema #schema_name# to readonly_#schema_name#;
 
 set search_path = '#schema_name#';
-\i create_roles.sql
 \i db_version_meta.sql
 insert into db_version_meta(version_number) values ('#version_number#');
 \i genFromDBModel.SQL
@@ -44,3 +43,9 @@ select create_load_p_background_jobs('#schema_name#');
 select create_load_s_cpu_usage_report('#schema_name#');
 \i load_from_stage_to_dwh.sql
 select grant_objects_to_looker_role('#schema_name#');
+\i s_serverlogs_tabproto.sql
+\i s_serverlogs_tabproto_compressed.sql
+\i load_s_serverlogs_tabproto.sql
+\i load_s_serverlogs_tabproto_compressed.sql
+
+

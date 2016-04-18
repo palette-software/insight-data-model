@@ -233,9 +233,10 @@ begin
 								) tri
 								left outer join t_slogs slogs ON (
 												tri.host_name = slogs.host_name AND
-							    				tri.process_id = slogs.process_id AND 
+							    				tri.process_id = slogs.process_id AND
 							    				tri.thread_id = slogs.thread_id AND
-												slogs.session_start_ts between tri.start_ts and tri.ts + interval ''15 sec''												
+												slogs.session_start_ts between tri.start_ts and tri.ts + interval ''15 sec'' AND
+												tri.ts <= coalesce(slogs.spawner_ts_destroy_sess, tri.ts)
 							  				)
 								left outer join #schema_name#.h_sites sites on (sites.name = slogs.site and slogs.session_start_ts between sites.p_valid_from and sites.p_valid_to)
 						   ) thread_with_sess

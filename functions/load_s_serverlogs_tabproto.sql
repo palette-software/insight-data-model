@@ -18,6 +18,7 @@ begin
 				    spawner_process_type,
 				  	spawner_session,
 					spawned_tabproto_process_id_ts,
+					spawner_ts_destroy_sess,
 					start_ts,
 					p_id,
 					filename,
@@ -41,7 +42,8 @@ begin
 					sl.spawner_session,
 					sl.spawned_tabproto_process_id,
 					sl.spawned_tabproto_process_id_ts,
-					tinfo.start_ts	
+					tinfo.start_ts,
+					sl.spawner_ts_destroy_sess					
 				from
 					(select distinct 								
 								case when substr(filename, 1, 11) = ''vizqlserver'' then ''vizqlserver''
@@ -50,13 +52,15 @@ begin
 								end as spawner_process_type,
 								slog.host_name as spawner_host_name,
 								slog.sess as spawner_session,
-								(replace(substr(slog.v, position(''pid'' in slog.v) + 4), ''"'', ''''))::bigint as spawned_tabproto_process_id,
-								slog.ts as spawned_tabproto_process_id_ts
+								case when v like ''%CreateServerProcess%'' then (replace(substr(slog.v, position(''pid'' in slog.v) + 4), ''"'', ''''))::bigint end as spawned_tabproto_process_id,
+								slog.ts as spawned_tabproto_process_id_ts,
+								max(case when k = ''destroy-session'' then ts end) over (partition by host_name, sess) spawner_ts_destroy_sess,
+								case when v like ''%CreateServerProcess%'' then true else false end as keep_this_line
 					from #schema_name#.p_serverlogs slog
 					where
-						(substr(filename, 1, 11) = ''vizqlserver'' or substr(filename, 1, 10) = ''dataserver'') and
-						v like ''%CreateServerProcess%''
-						and ts >= #v_max_ts_date# - interval''60 minutes''
+						(substr(filename, 1, 11) = ''vizqlserver'' or substr(filename, 1, 10) = ''dataserver'') and 
+						(v like ''%CreateServerProcess%'' or k = ''destroy-session'') and 
+						ts >= #v_max_ts_date# - interval''60 minutes''
 					) sl	
 					left outer join	(select distinct 
 										host_name, 
@@ -69,7 +73,9 @@ begin
 									ts >= #v_max_ts_date# - interval''60 minutes'' and
 									process_name = ''tabprotosrv''
 								) tinfo on (tinfo.host_name = sl.spawner_host_name and 
-											tinfo.process_id = sl.spawned_tabproto_process_id)		 
+											tinfo.process_id = sl.spawned_tabproto_process_id)
+					where
+						sl.keep_this_line
 				)
 
 				select 
@@ -79,6 +85,7 @@ begin
 							else ''-'' 
 						 end as spawner_session 
 						, spawned_tabproto_process_id_ts
+						, spawner_ts_destroy_sess
 						, start_ts
 						, p_id		
 						, filename
@@ -99,6 +106,7 @@ begin
 							  s_spawner.spawner_process_type
 							, s_spawner.spawner_session		
 							, s_spawner.spawned_tabproto_process_id_ts
+							, s_spawner.spawner_ts_destroy_sess
 							, s_spawner.start_ts
 							, s_tabproto.p_id		
 							, s_tabproto.filename

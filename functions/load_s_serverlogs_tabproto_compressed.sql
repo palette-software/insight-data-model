@@ -9,6 +9,7 @@ begin
 			v_sql := 
 			'insert into #schema_name#.s_serverlogs_tabproto_compressed (
 				  spawner_process_type,
+				  spawner_ts_destroy_sess,
 				  host_name,
 				  process_id,
 				  thread_id,	  
@@ -25,6 +26,7 @@ begin
 			(
 			select 
 					spawner_process_type,
+					spawner_ts_destroy_sess,
 					host_name,
 					site,
 					username,
@@ -36,6 +38,7 @@ begin
 			from
 				(select
 					spawner_process_type,
+					spawner_ts_destroy_sess,
 					host_name,
 					site,
 					username,
@@ -54,13 +57,14 @@ begin
 				from
 						(select distinct 
 									spawner_process_type,
+									spawner_ts_destroy_sess,
 									host_name,
 									site,
 									username,
 									process_id,
 									-1 as thread_id,
 									spawner_session as sess,
-									ts
+									ts									
 						from
 								#schema_name#.s_serverlogs_tabproto						
 						 ) slogs
@@ -71,6 +75,7 @@ begin
 				  
 			select	
 					spawner_process_type,
+					spawner_ts_destroy_sess,
 					host_name,		
 					process_id,
 					thread_id,
@@ -85,6 +90,7 @@ begin
 			(
 				select	
 						spawner_process_type,
+						spawner_ts_destroy_sess,
 						host_name,
 						site,
 						username,
@@ -97,6 +103,7 @@ begin
 					(
 					select 
 							spawner_process_type,
+							spawner_ts_destroy_sess,
 							host_name,
 							site,
 							username,
@@ -117,6 +124,7 @@ begin
 				) g
 			group by
 					spawner_process_type,
+					spawner_ts_destroy_sess,
 					host_name,
 					site,
 					username,
