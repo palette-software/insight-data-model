@@ -41,6 +41,7 @@ select create_load_p_background_jobs('#schema_name#');
 \i create_load_s_cpu_usage_report.sql
 select create_load_s_cpu_usage_report('#schema_name#');
 \i load_from_stage_to_dwh.sql
+\i grant_objects_to_looker_role.sql
 select grant_objects_to_looker_role('#schema_name#');
 \i s_serverlogs_tabproto.sql
 \i s_serverlogs_tabproto_compressed.sql
