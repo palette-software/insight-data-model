@@ -1,5 +1,4 @@
 \set ON_ERROR_STOP on
-create schema #schema_name#;
 create role readonly_#schema_name# with login password 'onlyread';
 create role palette_looker;
 create role palette_updater;
