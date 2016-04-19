@@ -22,6 +22,19 @@ begin
 			execute v_sql;			
 		end loop;
 		
+		for rec in (select 'grant select on ' || schemaname || '.' || viewname || ' to palette_' || schemaname || '_looker' as grt
+					from pg_views
+					where
+						schemaname = p_schema_name
+					)
+		loop
+		
+			v_sql := rec.grt;
+			raise notice 'I: %', v_sql;
+						
+			execute v_sql;			
+		end loop;
+		
 		return 0;
 END;
 $$ LANGUAGE plpgsql;
