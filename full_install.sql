@@ -49,4 +49,19 @@ select grant_objects_to_looker_role('#schema_name#');
 \i load_s_serverlogs_tabproto.sql
 \i load_s_serverlogs_tabproto_compressed.sql
 
+alter table threadinfo rename to threadinfo_old;
 
+CREATE TABLE threadinfo
+(LIKE threadinfo_old INCLUDING DEFAULTS)
+WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
+DISTRIBUTED BY (p_id)
+PARTITION BY RANGE (ts)
+SUBPARTITION BY LIST (host_name)
+SUBPARTITION TEMPLATE (SUBPARTITION init VALUES ('init')
+WITH (appendonly=true, orientation=column, compresstype=quicklz))
+(PARTITION "10010101" START (date '1001-01-01') INCLUSIVE
+	END (date '1001-01-02') EXCLUSIVE 
+WITH (appendonly=true, orientation=column, compresstype=quicklz)	
+);
+alter sequence threadinfo_p_id_seq owned by threadinfo.p_id;
+drop table threadinfo_old;
