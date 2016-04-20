@@ -6,16 +6,14 @@ declare
 	rec record;
 	v_sql text;
 BEGIN
-						
 		v_sql_cur := '';
 		v_sql := '';
 		
-		if p_table_name in ('threadinfo') then
-			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.ext_threadinfo';
-		elseif p_table_name in ('p_threadinfo') then
+		if p_table_name in ('p_threadinfo', 'threadinfo') then
 			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.threadinfo 
 							where p_id > coalesce((select max(threadinfo_id) 
 										  from #schema_name#.p_threadinfo), 0)';
+										  
 		elseif p_table_name in ('p_cpu_usage') then
 			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.s_cpu_usage';
 			
@@ -35,7 +33,7 @@ BEGIN
 					order by 1';
 					
 		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
-		v_sql_cur := replace(v_sql_cur, '#table_name#', p_table_name);
+		v_sql_cur := replace(v_sql_cur, '#table_name#', decode(p_table_name, 'threadinfo', 'p_threadinfo', p_table_name));
 		
 		v_sql := 'ALTER TABLE #schema_name#.#table_name# SET SUBPARTITION TEMPLATE (';		
 
@@ -51,7 +49,7 @@ BEGIN
 		close c;
 		
 		v_sql := replace(v_sql, '#schema_name#', p_schema_name);
-		v_sql := replace(v_sql, '#table_name#', p_table_name);
+		v_sql := replace(v_sql, '#table_name#', decode(p_table_name, 'threadinfo', 'p_threadinfo', p_table_name));
 		v_sql := v_sql || ' DEFAULT SUBPARTITION new_host WITH (appendonly=true, orientation=column, compresstype=quicklz))';
 		
 		raise notice 'I: %', v_sql;
@@ -64,14 +62,12 @@ BEGIN
 		v_sql_cur := '';
 		v_sql := '';
 		
-		if p_table_name in ('threadinfo') then
-			v_sql_cur := 'select distinct ts::date d from #schema_name#.ext_threadinfo
-							 order by 1';
-		elseif p_table_name in ('p_threadinfo') then
+		if p_table_name in ('p_threadinfo', 'threadinfo') then
 			v_sql_cur := 'select distinct ts::date d from #schema_name#.threadinfo 
 							where p_id > coalesce((select max(threadinfo_id) 
 										  from #schema_name#.p_threadinfo), 0)
 							 order by 1';
+										  
 		elseif p_table_name in ('p_cpu_usage') then
 			v_sql_cur := 'select distinct ts_date d from #schema_name#.s_cpu_usage							
 							order by 1';
@@ -82,7 +78,7 @@ BEGIN
 		end if;
 		
 		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
-		v_sql_cur := replace(v_sql_cur, '#table_name#',  p_table_name);
+		v_sql_cur := replace(v_sql_cur, '#table_name#',  decode(p_table_name, 'threadinfo', 'p_threadinfo', p_table_name));
 		
 		open c for execute (v_sql_cur);
 			loop
@@ -93,7 +89,7 @@ BEGIN
 				  		         ADD PARTITION "#partition_name#" START (date''#start_date#'') INCLUSIVE END (date''#end_date#'') EXCLUSIVE WITH (appendonly=true, orientation=column, compresstype=quicklz)';
 						
 				  v_sql := replace(v_sql, '#schema_name#', p_schema_name);
-				  v_sql := replace(v_sql, '#table_name#', p_table_name);		
+				  v_sql := replace(v_sql, '#table_name#', decode(p_table_name, 'threadinfo', 'p_threadinfo', p_table_name));		
 				  v_sql := replace(v_sql, '#partition_name#', to_char(rec.d, 'yyyymmdd'));
 				  v_sql := replace(v_sql, '#start_date#', to_char(rec.d, 'yyyy-mm-dd'));
 				  v_sql := replace(v_sql, '#end_date#', to_char(rec.d + 1, 'yyyy-mm-dd'));				  			  			  				  
