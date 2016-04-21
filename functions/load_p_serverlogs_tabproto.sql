@@ -7,22 +7,7 @@ declare
 	v_sql_cur text;	
 begin	
 
-			v_sql_cur := 'select to_char(coalesce((
-													select min(ts)
-													from
-														(select 
-																parent_process_type,
-																coalesce(max(spawned_by_parent_ts), date''1001-01-01'') as ts
-														from 
-															#schema_name#.p_serverlogs_kgz
-														where
-															substr(filename, 1, 11) = ''tabprotosrv'' and														
-															(parent_vizql_session is not null or parent_dataserver_session is not null) and
-															spawned_by_parent_ts is not null
-														group by
-															parent_process_type
-														) a													
-													), date''1001-01-01''), ''yyyy-mm-dd'')';									
+			v_sql_cur := 'select to_char(coalesce((select max(ts_date) from #schema_name#.p_cpu_usage), date''1001-01-01''), ''yyyy-mm-dd'')';								
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 		
 			execute v_sql_cur into v_max_ts_date;

@@ -7,15 +7,7 @@ declare
 	v_sql_cur text;	
 begin	
 
-			v_sql_cur := 'select to_char(coalesce((
-													select max(spawned_by_parent_ts)
-													from 
-														#schema_name#.p_serverlogs_kgz
-													where 
-														substr(filename, 1, 10) = ''dataserver'' and
-														parent_vizql_session is not null and
-														spawned_by_parent_ts is not null
-												), date''1001-01-01''), ''yyyy-mm-dd'')';
+			v_sql_cur := 'select to_char(coalesce((select max(ts_date) from #schema_name#.p_cpu_usage), date''1001-01-01''), ''yyyy-mm-dd'')';
 												
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 		
