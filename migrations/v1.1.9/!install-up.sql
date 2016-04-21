@@ -54,7 +54,7 @@ alter sequence threadinfo_p_id_seq owned by threadinfo.p_id;
 \i 001-up-manage_partitions.sql
 \i 002-up-manage_partitions_for_recreate_threadinfo.sql
 
-select manage_partitions_for_recreate_threadinfo('staging', 'threadinfo_old', 'threadinfo');
+select manage_partitions_for_recreate_threadinfo('#schema_name#', 'threadinfo_old', 'threadinfo');
 insert into threadinfo select * from threadinfo_old;
 drop table threadinfo_old;
 drop function manage_partitions_for_recreate_threadinfo(p_schema_name text, p_base_table_name text, p_target_table_name text);
