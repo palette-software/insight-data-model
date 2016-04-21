@@ -11,7 +11,9 @@ BEGIN
 		v_sql := '';
 		
 		if p_table_name in ('threadinfo') then
-			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.ext_threadinfo';
+			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.ext_threadinfo';			
+		elseif p_table_name in ('p_serverlogs_kgz') then
+			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.serverlogs';
 		elseif p_table_name in ('p_threadinfo') then
 			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.threadinfo 
 							where p_id > coalesce((select max(threadinfo_id) 
@@ -66,6 +68,9 @@ BEGIN
 		
 		if p_table_name in ('threadinfo') then
 			v_sql_cur := 'select distinct ts::date d from #schema_name#.ext_threadinfo
+							 order by 1';
+		elseif p_table_name in ('p_serverlogs_kgz') then
+			v_sql_cur := 'select distinct ts::date d from #schema_name#.serverlogs
 							 order by 1';
 		elseif p_table_name in ('p_threadinfo') then
 			v_sql_cur := 'select distinct ts::date d from #schema_name#.threadinfo 

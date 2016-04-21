@@ -1,21 +1,28 @@
-CREATE TABLE p_serverlogs
+drop table p_serverlogs_kgz;
+
+CREATE TABLE p_serverlogs_kgz
 (
 	p_id bigserial,
+	serverlogs_id bigint,	
 	p_filepath CHARACTER VARYING(500),
 	filename TEXT,
 	host_name TEXT,
 	ts timestamp without time zone,
-	pid bigint,
-	tid bigint,
+	process_id bigint,
+	thread_id bigint,	
 	sev TEXT,
 	req TEXT,
-	sess TEXT,
+	sess TEXT, 
 	site TEXT,
-	user TEXT,
+	username TEXT,
+	username_without_domain TEXT,
 	k TEXT,
 	v TEXT,
 	parent_vizql_session text,
+	parent_vizql_destroy_sess_ts timestamp without time zone,
 	parent_dataserver_session text,
+	spawned_by_parent_ts timestamp without time zone,
+	parent_process_type text,
 	p_cre_date timestamp without time zone default now()
 )
 DISTRIBUTED BY (host_name, process_id, thread_id)
@@ -27,4 +34,3 @@ WITH (appendonly=true, orientation=column, compresstype=quicklz))
 	END (date '1001-01-02') EXCLUSIVE 
 WITH (appendonly=true, orientation=column, compresstype=quicklz)
 );
-
