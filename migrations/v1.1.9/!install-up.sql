@@ -49,6 +49,7 @@ WITH (appendonly=true, orientation=column, compresstype=quicklz))
 WITH (appendonly=true, orientation=column, compresstype=quicklz)	
 );
 
+alter table threadinfo owner to palette;
 alter sequence threadinfo_p_id_seq owned by threadinfo.p_id;
 
 \i 001-up-manage_partitions.sql
@@ -58,3 +59,5 @@ select manage_partitions_for_recreate_threadinfo('#schema_name#', 'threadinfo_ol
 insert into threadinfo select * from threadinfo_old;
 drop table threadinfo_old;
 drop function manage_partitions_for_recreate_threadinfo(p_schema_name text, p_base_table_name text, p_target_table_name text);
+
+select grant_objects_to_looker_role('#schema_name#');
