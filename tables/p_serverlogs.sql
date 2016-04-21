@@ -19,7 +19,7 @@ CREATE TABLE p_serverlogs
 	p_cre_date timestamp without time zone default now()
 )
 DISTRIBUTED BY (host_name, process_id, thread_id)
-PARTITION BY RANGE (ts_rounded_15_secs)
+PARTITION BY RANGE (ts)
 SUBPARTITION BY LIST (host_name)
 SUBPARTITION TEMPLATE (SUBPARTITION init VALUES ('init')
 WITH (appendonly=true, orientation=column, compresstype=quicklz))
@@ -27,3 +27,4 @@ WITH (appendonly=true, orientation=column, compresstype=quicklz))
 	END (date '1001-01-02') EXCLUSIVE 
 WITH (appendonly=true, orientation=column, compresstype=quicklz)
 );
+
