@@ -14,7 +14,7 @@ begin
 			v_max_ts_date := 'date''' || v_max_ts_date || '''';
 
 			v_sql := 
-			'insert into #schema_name#.p_serverlogs_kgz (
+			'insert into #schema_name#.p_serverlogs (
 					serverlogs_id,
 					p_filepath,
 					filename,
@@ -72,7 +72,7 @@ begin
 									#schema_name#.p_threadinfo
 								where
 									thread_id = -1 and
-									ts >= #v_max_ts_date# - interval''24 hours'' and
+									ts_rounded_15_secs >= #v_max_ts_date# - interval''24 hours'' and
 									process_name = ''tabprotosrv''
 								) tinfo on (tinfo.host_name = sl.spawner_host_name and 
 											tinfo.process_id = sl.spawned_tabproto_process_id)
@@ -81,32 +81,44 @@ begin
 				)
 
 				select 
-						  p_id		
-						, p_filepath
-						, filename
-						, host_name
-						, ts
-						, process_id
-						, thread_id
-						, sev
-						, req
-						, sess
-						, site
-						, "user"
-						, substr("user", position(''\\\\'' in "user") + 1) as username_without_domain
-						, k
-						, v						
-						, decode(spawner_process_type, ''vizqlserver'', case when start_ts = min(start_ts) over (partition by spawner_process_type, spawner_session, spawned_tabproto_process_id_ts, host_name, process_id) then
-								spawner_session
-							else ''-'' 
-						  end, null) as parent_vizql_session
-						 , decode(spawner_process_type, ''dataserver'', case when start_ts = min(start_ts) over (partition by spawner_process_type, spawner_session, spawned_tabproto_process_id_ts, host_name, process_id) then
-								spawner_session
+						  a.p_id		
+						, a.p_filepath
+						, a.filename
+						, a.host_name
+						, a.ts
+						, a.process_id
+						, a.thread_id
+						, a.sev
+						, a.req
+						, a.sess
+						, a.site
+						, a."user"
+						, substr(a."user", position(''\\\\'' in a."user") + 1) as username_without_domain
+						, a.k
+						, a.v						
+						, decode(a.spawner_process_type, 
+									''vizqlserver'', 
+										case when a.ts > a.spawner_ts_destroy_sess then null
+											 when a.start_ts = min(a.start_ts) over (partition by a.spawner_process_type, a.spawner_session, a.spawned_tabproto_process_id_ts, a.host_name, a.process_id) then
+												a.spawner_session
+											else ''-'' 
+						  				end
+									,''dataserver'',
+										s_datasrv.parent_vizql_session
+								, null) as parent_vizql_session
+						 , decode(a.spawner_process_type, ''dataserver'', case when a.start_ts = min(a.start_ts) over (partition by a.spawner_process_type, a.spawner_session, a.spawned_tabproto_process_id_ts, a.host_name, a.process_id) then
+								a.spawner_session
 							else ''-''
 						  end, null) as parent_dataserver_session
-						, spawned_tabproto_process_id_ts						
-						, spawner_ts_destroy_sess						
-						, spawner_process_type
+						, case when a.spawner_process_type = ''vizqlserver'' and a.ts > a.spawner_ts_destroy_sess then null
+								else a.spawned_tabproto_process_id_ts
+						  end as spawned_by_parent_ts
+						, case when a.spawner_process_type = ''vizqlserver'' and a.ts > a.spawner_ts_destroy_sess then null 
+								else a.spawner_ts_destroy_sess
+						  end as parent_vizql_destroy_sess_ts
+						, case when a.spawner_process_type = ''vizqlserver'' and a.ts > a.spawner_ts_destroy_sess then null 
+								else a.spawner_process_type
+						  end as parent_process_type
 				from
 					(
 					select 	
@@ -136,16 +148,31 @@ begin
 						left outer join t_s_spawner s_spawner on (s_tabproto.host_name = s_spawner.spawner_host_name and 
 																 s_tabproto.pid = s_spawner.spawned_tabproto_process_id and 
 																 s_tabproto.ts >= s_spawner.spawned_tabproto_process_id_ts and 
-																 s_tabproto.ts >= s_spawner.start_ts)
+																 s_tabproto.ts >= s_spawner.start_ts)						
 					where
 						substr(s_tabproto.filename, 1, 11) = ''tabprotosrv'' and
 						s_tabproto.p_id > coalesce((select max(serverlogs_id)
 														from 
-															#schema_name#.p_serverlogs_kgz
+															#schema_name#.p_serverlogs
 														where 
 															  substr(filename, 1, 11) = ''tabprotosrv'')
 													,0)
 					) a
+					left outer join  (select 
+											host_name,
+											sess,
+											max(parent_vizql_session) as parent_vizql_session
+									  from
+											#schema_name#.p_serverlogs															
+									  where
+									  		substr(filename, 1, 10) = ''dataserver'' and
+											ts >= #v_max_ts_date# - interval''24 hours''
+								     group by
+									 	host_name,
+										sess
+									  ) s_datasrv on (a.spawner_process_type = ''dataserver'' and
+									  				  s_datasrv.host_name = a.host_name and													  				  
+													  s_datasrv.sess = a.spawner_session)
 				where 
 					rn = 1
 				'

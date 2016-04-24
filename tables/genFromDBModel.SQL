@@ -50,7 +50,12 @@ CREATE TABLE "p_cpu_usage"(
  "interactor_h_users_p_id" Bigint,
  "interactor_h_system_users_p_id" Bigint,
  "max_reporting_granuralty" Boolean,
- "dataserver_session" text
+ "dataserver_session" Text,
+ "parent_vizql_session" Text,
+ "parent_dataserver_session" Text,
+ "spawned_by_parent_ts" Text,
+ "parent_vizql_destroy_sess_ts" Text,
+ "parent_process_type" Text
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (p_id)

@@ -12,7 +12,7 @@ BEGIN
 		
 		if p_table_name in ('threadinfo') then
 			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.ext_threadinfo';			
-		elseif p_table_name in ('p_serverlogs_kgz') then
+		elseif p_table_name in ('p_serverlogs') then
 			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.serverlogs';
 		elseif p_table_name in ('p_threadinfo') then
 			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.threadinfo 
@@ -69,7 +69,7 @@ BEGIN
 		if p_table_name in ('threadinfo') then
 			v_sql_cur := 'select distinct ts::date d from #schema_name#.ext_threadinfo
 							 order by 1';
-		elseif p_table_name in ('p_serverlogs_kgz') then
+		elseif p_table_name in ('p_serverlogs') then
 			v_sql_cur := 'select distinct ts::date d from #schema_name#.serverlogs
 							 order by 1';
 		elseif p_table_name in ('p_threadinfo') then

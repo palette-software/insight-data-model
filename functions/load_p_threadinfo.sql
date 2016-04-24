@@ -1,4 +1,4 @@
-CREATE or replace function load_p_thread_info(p_schema_name text, p_load_type text) returns bigint
+CREATE or replace function load_p_threadinfo(p_schema_name text, p_load_type text) returns bigint
 AS $$
 declare
 	v_sql text;
@@ -190,7 +190,7 @@ BEGIN
 								from
 									#schema_name#.p_threadinfo last_ti
 								where
-									last_ti.ts_date >= (select max(ts_date) max_date from #schema_name#.p_threadinfo) - 1
+									last_ti.ts_rounded_15_secs >= (select max(ts_date) max_date from #schema_name#.p_threadinfo) - 1
 								) a 
 							where rn = 1');														
 			end if;

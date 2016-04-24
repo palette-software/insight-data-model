@@ -1,4 +1,4 @@
-CREATE or replace function load_p_serverlogs_rest(p_schema_name text) returns bigint
+CREATE or replace function load_p_serverlogs_vizql(p_schema_name text) returns bigint
 AS $$
 declare
 	v_sql text;
@@ -53,15 +53,11 @@ begin
 			from
 				#schema_name#.serverlogs sl
 			where
-				substr(sl.filename, 1, 11) <> ''tabprotosrv'' and
-				substr(sl.filename, 1, 10) <> ''dataserver'' and
-				substr(sl.filename, 1, 11) <> ''vizqlserver'' and
+				substr(sl.filename, 1, 11) = ''vizqlserver'' and				
 				sl.p_id > coalesce((select max(serverlogs_id)
 							from 
 								#schema_name#.p_serverlogs 
-							where substr(filename, 1, 11) <> ''tabprotosrv'' and
-								  substr(filename, 1, 10) <> ''dataserver''), 0) and
-								  substr(sl.filename, 1, 11) <> ''vizqlserver''
+							where substr(filename, 1, 11) = ''vizqlserver''), 0)
 			'	
 			;
 

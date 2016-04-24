@@ -13,9 +13,9 @@ begin
 		
 			execute v_sql_cur into v_max_ts_date;
 			v_max_ts_date := 'date''' || v_max_ts_date || '''';
-
+			
 			v_sql := 
-			'insert into #schema_name#.p_serverlogs_kgz (
+			'insert into #schema_name#.p_serverlogs (
 					serverlogs_id,
 					p_filepath,
 					filename,
@@ -83,7 +83,7 @@ begin
 						, null as parent_dataserver_session
 						, s_spawner.spawned_by_parent_ts
 						, s_spawner.parent_vizql_destroy_sess_ts
-						, ''vizqlserver'' as parent_process_type
+						, case when s_spawner.spawner_session is not null then ''vizqlserver'' end as parent_process_type
 				from
 					#schema_name#.serverlogs s_dataserver
 					left outer join t_s_spawner s_spawner on (s_spawner.spawner_host_name = s_dataserver.host_name and
@@ -93,7 +93,7 @@ begin
 					substr(s_dataserver.filename, 1, 10) = ''dataserver'' and
 					s_dataserver.p_id > coalesce((select max(serverlogs_id)
 										from 
-											#schema_name#.p_serverlogs_kgz
+											#schema_name#.p_serverlogs
 										where 
 											  substr(filename, 1, 10) = ''dataserver''), 0)
 				';

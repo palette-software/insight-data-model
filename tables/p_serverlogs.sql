@@ -1,6 +1,4 @@
-drop table p_serverlogs_kgz;
-
-CREATE TABLE p_serverlogs_kgz
+CREATE TABLE p_serverlogs
 (
 	p_id bigserial,
 	serverlogs_id bigint,	

@@ -1,4 +1,4 @@
-CREATE or replace function load_s_cpu_usage_tabproto(p_schema_name text) returns bigint
+CREATE or replace function load_s_cpu_usage_vizql(p_schema_name text) returns bigint
 AS $$
 declare
 	v_sql text;
@@ -8,11 +8,11 @@ declare
 	c refcursor;
 	rec record;
 	v_max_ts_date text;
-begin	
+begin		
 
 			v_sql_cur := 'select to_char(coalesce((select max(ts_date) from #schema_name#.p_cpu_usage), date''1001-01-01''), ''yyyy-mm-dd'')';
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
-		
+			
 			execute v_sql_cur into v_max_ts_date;
 			v_max_ts_date := 'date''' || v_max_ts_date || '''';
 
@@ -40,7 +40,7 @@ begin
 							ts_rounded_15_secs,
 							ts_date,
 							ts_day_hour,
-							vizql_session,
+							vizql_session,	
 							repository_url,
 							user_ip,
 							site_id,
@@ -70,12 +70,12 @@ begin
 							interactor_h_users_p_id,
 							interactor_h_system_users_p_id,
 							max_reporting_granuralty,
-							dataserver_session,
+							dataserver_session,							
 							parent_vizql_session,
 							parent_dataserver_session,
 							spawned_by_parent_ts,
 							parent_vizql_destroy_sess_ts,
-							parent_process_type							
+							parent_process_type
 						)
 								
 						with t_slogs as
@@ -84,20 +84,20 @@ begin
 							slogs.*	
 						from 
 							#schema_name#.s_serverlogs_compressed slogs
-						inner join (select distinct host_name, process_id, -1 as thread_id
+						inner join (select distinct host_name, process_id, thread_id
 									from
 										#schema_name#.p_threadinfo
 									where 
 										ts_rounded_15_secs >= #v_max_ts_date#
 										and host_name = ''#host_name#''
-										and process_name = ''tabprotosrv''
+										and process_name = ''vizqlserver''
 									)  ti
 							on  
 									ti.host_name = slogs.host_name and
 									ti.process_id = slogs.process_id and
-									ti.thread_id = slogs.thread_id
+									ti.thread_id = slogs.thread_id 
 						where
-							slogs.process_name = ''tabprotosrv'' and
+							slogs.process_name = ''vizqlserver'' and
 							slogs.host_name = ''#host_name#''
 						)
 						
@@ -107,21 +107,7 @@ begin
 						  thread_with_sess.ts_rounded_15_secs,
 						  thread_with_sess.ts_rounded_15_secs::date as ts_date,
 						  DATE_TRUNC(''hour'', thread_with_sess.ts) as ts_day_hour,
-						  case when parent_process_type = ''vizqlserver'' then
-								  	case when thread_with_sess.session in (''-'', ''default'') 
-										then 
-											''Non-Interactor Vizql'' 
-										else 
-											thread_with_sess.session
-									end
-								when  parent_process_type = ''dataserver'' then
-									case when thread_with_sess.parent_vizql_session in (''-'', ''default'') 
-										then 
-											''Non-Interactor Vizql'' 
-										else 
-											thread_with_sess.parent_vizql_session
-									end
-						  end as vizql_session,
+						  case when thread_with_sess.session in (''-'', ''default'') then ''Non-Interactor Vizql'' else thread_with_sess.session end as vizql_session,
 						  http_req_wb.repository_url,
 						  http_req_wb.user_ip,
 						  http_req_wb.site_id,
@@ -167,7 +153,7 @@ begin
 													  ''tdeserver'')
 									then ''Y''
 									
-								when process_name = ''vizqlserver'' and thread_with_sess.session is not null
+								when  process_name = ''vizqlserver'' and thread_with_sess.session is not null
 									then ''Y''
 						  else 
 						  	''N''
@@ -188,12 +174,12 @@ begin
 						  u.p_id as interactor_h_users_p_id,
 						  su.p_id as interactor_h_system_users_p_id,
 						  thread_with_sess.max_reporting_granuralty,
-						  case when parent_process_type = ''dataserver'' then thread_with_sess.session end as dataserver_session,
-						  parent_vizql_session,
-						  parent_dataserver_session,
-						  spawned_by_parent_ts,
-						  parent_vizql_destroy_sess_ts,
-						  parent_process_type	
+						  null as dataserver_session,
+						  null as parent_vizql_session,
+						  null as parent_dataserver_session,
+						  null as spawned_by_parent_ts,
+						  null as parent_vizql_destroy_sess_ts,
+						  null as parent_process_type
 						FROM 
 							(select
 									tri.p_id
@@ -220,12 +206,7 @@ begin
 								   													      then 1 
 																						  else 2 
 																					  end asc, 																		  
-																					  slogs.session_start_ts desc) as rn
-									,slogs.parent_vizql_session
-									,slogs.parent_dataserver_session
-									,slogs.spawned_by_parent_ts
-									,slogs.parent_vizql_destroy_sess_ts
-									,slogs.parent_process_type																		
+																					  slogs.session_start_ts desc) as rn									
 							from	
 								(select 
 									p_id
@@ -251,14 +232,14 @@ begin
 									ts_rounded_15_secs >= #v_max_ts_date#
 									and host_name = ''#host_name#''
 									and ts_interval_ticks is not null
-									and process_name = ''tabprotosrv''
+									and process_name = ''vizqlserver''
 								) tri
 								left outer join t_slogs slogs ON (
 												tri.host_name = slogs.host_name AND
-							    				tri.process_id = slogs.process_id AND
+							    				tri.process_id = slogs.process_id AND 
 							    				tri.thread_id = slogs.thread_id AND
 												slogs.session_start_ts between tri.start_ts and tri.ts + interval ''15 sec'' AND
-												tri.ts <= coalesce(slogs.parent_vizql_destroy_sess_ts, tri.ts)
+												tri.ts <= coalesce(slogs.ts_destroy_sess, tri.ts)
 							  				)
 								left outer join #schema_name#.h_sites sites on (sites.name = slogs.site and slogs.session_start_ts between sites.p_valid_from and sites.p_valid_to)
 						   ) thread_with_sess
