@@ -45,9 +45,11 @@ begin
 					sl.spawned_tabproto_process_id,
 					sl.spawned_tabproto_process_id_ts,
 					tinfo.start_ts,
-					sl.spawner_ts_destroy_sess
+					case when spawner_process_type = ''vizqlserver'' then sl.spawner_vizql_destroy_sess_ts
+						 when spawner_process_type = ''dataserver'' then ds.parent_vizql_destroy_sess_ts
+					end as spawner_ts_destroy_sess
 				from
-					(select distinct 								
+					(select distinct
 								case when substr(filename, 1, 11) = ''vizqlserver'' then ''vizqlserver''
 									 when substr(filename, 1, 10) = ''dataserver'' then ''dataserver'' 
 									 else ''?''
@@ -55,15 +57,29 @@ begin
 								slog.host_name as spawner_host_name,
 								slog.sess as spawner_session,
 								case when v like ''%CreateServerProcess%'' then (replace(substr(slog.v, position(''pid'' in slog.v) + 4), ''"'', ''''))::bigint end as spawned_tabproto_process_id,
-								slog.ts as spawned_tabproto_process_id_ts,
-								max(case when k = ''destroy-session'' then ts end) over (partition by host_name, sess) spawner_ts_destroy_sess,
+								slog.ts as spawned_tabproto_process_id_ts,								
+								max(case when k = ''destroy-session'' then ts end) over (partition by host_name, sess) as spawner_vizql_destroy_sess_ts,
+								parent_vizql_destroy_sess_ts,
 								case when v like ''%CreateServerProcess%'' then true else false end as keep_this_line
 					from #schema_name#.p_serverlogs slog
 					where
 						(substr(filename, 1, 11) = ''vizqlserver'' or substr(filename, 1, 10) = ''dataserver'') and 
 						(v like ''%CreateServerProcess%'' or k = ''destroy-session'') and 
 						ts >= #v_max_ts_date# - interval''24 hours''
-					) sl	
+					) sl
+					left outer join (select host_name,
+											sess,
+											max(parent_vizql_destroy_sess_ts) as parent_vizql_destroy_sess_ts
+									from									
+										#schema_name#.p_serverlogs
+									where
+										substr(filename, 1, 10) = ''dataserver'' and
+										ts >= #v_max_ts_date# - interval''24 hours''
+									group by
+										  host_name,
+										  sess
+									) ds on (ds.host_name = sl.spawner_host_name and
+											 ds.sess = sl.spawner_session)
 					left outer join	(select distinct 
 										host_name, 
 										process_id, 
