@@ -5,10 +5,14 @@ truncate table s_cpu_usage;
 
 select manage_partitions('staging', 'p_serverlogs');
 
-select load_p_serverlogs_rest('staging');
+
+select load_p_serverlogs('staging');
+/*select load_p_serverlogs_rest('staging');
 select load_p_serverlogs_vizql('staging');
-select load_p_serverlogs_dataserver('staging');
-select load_p_serverlogs_tabproto('staging');
+select load_p_serverlogs_dataserver('staging'); -- Ha to come after vizql
+select load_p_serverlogs_tabproto('staging'); -- Have to come after dataserver 
+*/
+
 
 select load_s_serverlogs_vizql_compressed('staging');
 select load_s_serverlogs_tabproto_compressed('staging');
