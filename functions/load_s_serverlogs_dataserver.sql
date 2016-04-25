@@ -1,4 +1,4 @@
-CREATE or replace function load_p_serverlogs_dataserver(p_schema_name text) returns bigint
+CREATE or replace function load_s_serverlogs_dataserver(p_schema_name text) returns bigint
 AS $$
 declare
 	v_sql text;
@@ -7,7 +7,7 @@ declare
 	v_sql_cur text;	
 begin	
 
-			v_sql_cur := 'select to_char(coalesce((select max(ts_date) from #schema_name#.p_cpu_usage), date''1001-01-01''), ''yyyy-mm-dd'')';
+			v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_cpu_usage'')), ''yyyy-mm-dd'')';
 												
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 		
@@ -15,7 +15,7 @@ begin
 			v_max_ts_date := 'date''' || v_max_ts_date || '''';
 			
 			v_sql := 
-			'insert into #schema_name#.p_serverlogs (
+			'insert into #schema_name#.s_serverlogs (
 					serverlogs_id,
 					p_filepath,
 					filename,

@@ -1,6 +1,17 @@
-truncate table p_serverlogs;
 truncate table s_serverlogs_compressed;
 truncate table s_cpu_usage;
+
+
+delete from staging."p_serverlogs_1_prt_20160425_2_prt_WIN-FPC6VT52C21";
+
+delete from staging.p_serverlogs
+				 where 
+					(substr(filename, 1, 11) = 'tabprotosrv' or substr(filename, 1, 10) = 'dataserver')
+					and ts >= (select staging.get_max_ts_date('staging', 'p_serverlogs'))
+						
+					
+
+vacuum staging.p_serverlogs;
 
 
 select manage_partitions('staging', 'p_serverlogs');
@@ -9,10 +20,13 @@ select manage_partitions('staging', 'p_serverlogs');
 select load_p_serverlogs('staging');
 /*select load_p_serverlogs_rest('staging');
 select load_p_serverlogs_vizql('staging');
-select load_p_serverlogs_dataserver('staging'); -- Ha to come after vizql
-select load_p_serverlogs_tabproto('staging'); -- Have to come after dataserver 
+select load_s_serverlogs_dataserver('staging'); -- Ha to come after vizql
+select load_s_serverlogs_tabproto('staging'); -- Have to come after dataserver 
 */
 
+
+
+select * from staging.s_serverlogs;
 
 select load_s_serverlogs_vizql_compressed('staging');
 select load_s_serverlogs_tabproto_compressed('staging');

@@ -22,20 +22,10 @@ begin
 		end loop;					
 	
 		if (v_max_date is null) then
-			RAISE EXCEPTION 'get_max_ts_date() could not get proper date for %', p_table_name;
+			execute 'select coalesce((select max(ts) from ' || p_schema_name || '.'  || p_table_name || '), date''1001-01-01'')' into v_max_date;
 		end if;
 
 		return v_max_date;		
 		
 end;
 $$ language plpgsql;
-
-select get_max_ts_date('prod', 'p_threadinfo');
-
-
-select max(ts) from prod.p_cpu_usage
-
-select max(ts) from prod."p_cpu_usage_1_prt_10010101";
-
-
-
