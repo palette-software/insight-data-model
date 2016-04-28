@@ -34,6 +34,7 @@ begin
 										serverlogs_id
 								       , p_filepath
 								       , filename
+									   , process_name
 								       , host_name
 								       , ts
 								       , process_id
@@ -60,6 +61,7 @@ begin
 		        serverlogs_id
 		       , p_filepath
 		       , filename
+			   , process_name
 		       , host_name
 		       , ts
 		       , process_id
@@ -93,6 +95,7 @@ begin
 										serverlogs_id
 								       , p_filepath
 								       , filename
+									   , process_name
 								       , host_name
 								       , ts
 								       , process_id
@@ -119,6 +122,7 @@ begin
 		        serverlogs_id
 		       , p_filepath
 		       , filename
+			   , process_name
 		       , host_name
 		       , ts
 		       , process_id

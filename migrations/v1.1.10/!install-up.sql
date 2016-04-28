@@ -91,3 +91,4 @@ select create_load_s_cpu_usage_report('#schema_name#');
 \i 025-up-load_s_cpu_usage.sql
 
 \i 050-up-manage_partitions.sql
+

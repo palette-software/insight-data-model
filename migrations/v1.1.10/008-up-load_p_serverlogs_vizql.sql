@@ -38,7 +38,7 @@ begin
 					p_id,
 					sl.p_filepath,
 					sl.filename,
-					substr(sl.filename, 1, position(''_'' in sl.filename) -1) as process_name,
+					case when position(''_'' in sl.filename) > 0 then substr(sl.filename, 1, position(''_'' in sl.filename) -1) else sl.filename end as process_name,
 					sl.host_name,
 					sl.ts,
 					sl.pid,
