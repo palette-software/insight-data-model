@@ -29,7 +29,14 @@ begin
 				  parent_vizql_session,
 				  parent_vizql_destroy_sess_ts,				  
 				  spawned_by_parent_ts,
-				  parent_process_type
+				  parent_process_type,
+				  parent_vizql_site,
+				  parent_vizql_username,
+				  parent_dataserver_site,
+				  parent_dataserver_username,
+				  whole_session_start_ts,
+				  whole_session_end_ts,
+				  whole_session_duration
 			)
 
 			with t_slogs as
@@ -46,7 +53,11 @@ begin
 					parent_vizql_session,
 					parent_vizql_destroy_sess_ts,				  
 					spawned_by_parent_ts,
-					parent_process_type
+					parent_process_type,
+					parent_vizql_site,
+				    parent_vizql_username,
+				    parent_dataserver_site,
+				    parent_dataserver_username					
 			from
 				(select 	
 					host_name,
@@ -56,17 +67,21 @@ begin
 					thread_id,
 					sess,
 					ts,					
+					parent_vizql_session,
+					parent_vizql_destroy_sess_ts,				  
+					spawned_by_parent_ts,
+					parent_process_type,
+					parent_vizql_site,
+				    parent_vizql_username,
+				    parent_dataserver_site,
+ 					parent_dataserver_username,
 					row_number() over (partition by host_name,
 													process_id,
 													thread_id,																
 													ts
 										order by 
 												case when sess not in (''-'', ''default'') then 1 else 0 end 
-												desc, sess desc, site desc) as rn,
-					parent_vizql_session,
-					parent_vizql_destroy_sess_ts,				  
-					spawned_by_parent_ts,
-					parent_process_type
+												desc, sess desc, site desc) as rn					
 				from
 						(select distinct 
 									host_name,
@@ -79,7 +94,11 @@ begin
 									parent_vizql_session,
 									parent_vizql_destroy_sess_ts,				  
 									spawned_by_parent_ts,
-									parent_process_type
+									parent_process_type,
+									parent_vizql_site,
+								    parent_vizql_username,
+ 								    parent_dataserver_site,
+ 								    parent_dataserver_username
 						from
 								#schema_name#.p_serverlogs
 						where
@@ -106,7 +125,14 @@ begin
 					parent_vizql_session,
 					parent_vizql_destroy_sess_ts,				  
 					spawned_by_parent_ts,
-					parent_process_type
+					parent_process_type,
+					parent_vizql_site,
+				    parent_vizql_username,
+				    parent_dataserver_site,
+				    parent_dataserver_username,
+					whole_session_start_ts,
+					whole_session_end_ts,
+					whole_session_end_ts - whole_session_start_ts as whole_session_duration
 			from
 			(
 				select
@@ -121,7 +147,13 @@ begin
 						parent_vizql_session,
 						parent_vizql_destroy_sess_ts,				  
 						spawned_by_parent_ts,
-						parent_process_type
+						parent_process_type,
+						parent_vizql_site,
+					    parent_vizql_username,
+					    parent_dataserver_site,
+					    parent_dataserver_username,
+						min(case when sess not in (''-'', ''default'') then ts end) over (partition by host_name, sess) as whole_session_start_ts,
+						max(case when sess not in (''-'', ''default'') then ts end) over (partition by host_name, sess) as whole_session_end_ts
 				from
 					(
 					select 
@@ -142,7 +174,11 @@ begin
 							parent_vizql_session,
 							parent_vizql_destroy_sess_ts,				  
 							spawned_by_parent_ts,
-							parent_process_type
+							parent_process_type,
+							parent_vizql_site,
+						    parent_vizql_username,
+						    parent_dataserver_site,
+						    parent_dataserver_username							
 					from
 						t_slogs
 					) a	
@@ -158,7 +194,13 @@ begin
 					parent_vizql_session,
 					parent_vizql_destroy_sess_ts,				  
 					spawned_by_parent_ts,
-					parent_process_type
+					parent_process_type,
+					parent_vizql_site,
+				    parent_vizql_username,
+				    parent_dataserver_site,
+				    parent_dataserver_username,
+					whole_session_start_ts,
+					whole_session_end_ts
 			';
 		
 		v_sql := replace(v_sql, '#schema_name#', p_schema_name);

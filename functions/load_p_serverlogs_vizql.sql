@@ -26,7 +26,11 @@ begin
 					parent_vizql_destroy_sess_ts,
 					parent_dataserver_session,
 					spawned_by_parent_ts,
-					parent_process_type
+					parent_process_type,
+					parent_vizql_site,
+					parent_vizql_username,
+					parent_dataserver_site,
+					parent_dataserver_username					
 			)			
 			
 			select 
@@ -49,7 +53,11 @@ begin
 					null as parent_vizql_destroy_sess_ts,
 					null as parent_dataserver_session,
 					null as spawned_by_parent_ts,
-					null as parent_process_type
+					null as parent_process_type,
+					null as parent_vizql_site,
+					null as parent_vizql_username,
+					null as parent_dataserver_site,
+					null as parent_dataserver_username	
 			from
 				#schema_name#.serverlogs sl
 			where

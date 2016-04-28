@@ -10,8 +10,8 @@ begin
 					where
 						schemaname = p_schema_name and
 						tablename not like 'ext%' and
-						tablename not like '%\_prt\_%' and
-						tablename not like 's\_%' and
+						tablename not like '%\\_prt\\_%' and
+						tablename not like 's\\_%' and
 						tablename not in ('db_version_meta', 'ptalend_flows', 'ptalend_logs', 'ptalend_stats')
 					)
 		loop

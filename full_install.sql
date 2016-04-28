@@ -29,25 +29,18 @@ select create_s_cpu_usage_report('#schema_name#');
 \i create_tableau_repo_views.sql
 select create_tableau_repo_views('#schema_name#');
 \i manage_partitions.sql
-\i load_p_thread_info.sql
+\i load_p_threadinfo.sql
 \i create_load_p_http_requests.sql
 select create_load_p_http_requests('#schema_name#');
 \i load_s_http_requests_with_workbooks.sql
 \i create_load_p_background_jobs.sql
 select create_load_p_background_jobs('#schema_name#');
-\i s_cpu_usage_serverlogs.sql
-\i load_s_cpu_usage_serverlogs.sql
 \i load_s_cpu_usage.sql
 \i create_load_s_cpu_usage_report.sql
 select create_load_s_cpu_usage_report('#schema_name#');
 \i load_from_stage_to_dwh.sql
 \i grant_objects_to_looker_role.sql
 select grant_objects_to_looker_role('#schema_name#');
-\i load_s_cpu_usage_tabproto.sql
-\i s_serverlogs_tabproto.sql
-\i s_serverlogs_tabproto_compressed.sql
-\i load_s_serverlogs_tabproto.sql
-\i load_s_serverlogs_tabproto_compressed.sql
 
 alter table threadinfo rename to threadinfo_old;
 
@@ -65,3 +58,25 @@ WITH (appendonly=true, orientation=column, compresstype=quicklz)
 );
 alter sequence threadinfo_p_id_seq owned by threadinfo.p_id;
 drop table threadinfo_old;
+
+\i get_max_ts_date.sql
+
+\i create_s_serverlogs.sql
+select create_s_serverlogs('#schema_name#');
+\i s_serverlogs_compressed.sql
+
+\i load_p_serverlogs_rest.sql
+\i load_p_serverlogs_vizql.sql
+\i load_s_serverlogs_tabproto.sql
+\i load_s_serverlogs_dataserver.sql
+\i load_p_serverlogs.sql
+
+\i load_s_serverlogs_dataserver_compressed.sql
+\i load_s_serverlogs_vizql_compressed.sql
+\i load_s_serverlogs_tabproto_compressed.sql
+\i load_s_serverlogs_compressed.sql
+
+\i load_s_cpu_usage_rest.sql
+\i load_s_cpu_usage_vizql.sql
+\i load_s_cpu_usage_dataserver.sql
+\i load_s_cpu_usage_tabproto.sql

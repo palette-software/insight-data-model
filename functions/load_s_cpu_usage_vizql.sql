@@ -163,8 +163,8 @@ begin
 						  thread_with_sess.host_name,
 						  thread_with_sess.process_id,
 						  thread_with_sess.thread_id,  
-						  null as /*tst.*/start_ts,
-						  null as /*tst.*/end_ts,
+						  thread_with_sess.whole_session_start_ts as start_ts,
+						  thread_with_sess.whole_session_end_ts as end_ts,
 						  thread_with_sess.username, 
 						  http_req_wb.h_workbooks_p_id,  
 						  http_req_wb.h_projects_p_id,
@@ -180,6 +180,7 @@ begin
 						  null as spawned_by_parent_ts,
 						  null as parent_vizql_destroy_sess_ts,
 						  null as parent_process_type
+						  --thread_with_sess.whole_session_duration as whole_session_duration
 						FROM 
 							(select
 									tri.p_id
@@ -201,12 +202,14 @@ begin
 								   ,slogs.session
 								   ,slogs.username
 								   ,slogs.session_start_ts as slog_session_start_ts
-								   ,sites.id as slog_site_id
+								   ,sites.id as slog_site_id							   
 								   ,row_number() over (partition by tri.p_id order by case when slogs.session_start_ts between tri.start_ts and tri.ts 
 								   													      then 1 
 																						  else 2 
 																					  end asc, 																		  
-																					  slogs.session_start_ts desc) as rn									
+																					  slogs.session_start_ts desc) as rn
+								   ,slogs.whole_session_start_ts
+								   ,slogs.whole_session_end_ts																					  
 							from	
 								(select 
 									p_id

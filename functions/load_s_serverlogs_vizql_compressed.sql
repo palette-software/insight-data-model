@@ -26,7 +26,10 @@ begin
 				  duration,
 				  site,
 				  username,
-				  ts_destroy_sess				  
+				  ts_destroy_sess,
+				  whole_session_start_ts,
+				  whole_session_end_ts,
+				  whole_session_duration				  
 			)
 
 			with t_slogs as
@@ -91,7 +94,10 @@ begin
 					max(ts) - min(ts) as duration,
 					site,
 					username_without_domain,
-					ts_destroy_sess					
+					ts_destroy_sess,
+					whole_session_start_ts,
+					whole_session_end_ts,
+					whole_session_end_ts - whole_session_start_ts as whole_session_duration									  
 			from
 			(
 				select
@@ -103,7 +109,9 @@ begin
 						sess,
 						ts,						
 						ts_claster,
-						ts_destroy_sess
+						ts_destroy_sess,
+						min(case when sess not in (''-'', ''default'') then ts end) over (partition by host_name, sess) as whole_session_start_ts,
+						max(case when sess not in (''-'', ''default'') then ts end) over (partition by host_name, sess) as whole_session_end_ts
 				from
 					(
 					select 
@@ -134,7 +142,9 @@ begin
 					thread_id,
 					sess,
 					ts_claster,
-					ts_destroy_sess
+					ts_destroy_sess,
+					whole_session_start_ts,
+					whole_session_end_ts
 			';
 		
 		v_sql := replace(v_sql, '#schema_name#', p_schema_name);

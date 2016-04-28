@@ -21,6 +21,10 @@ CREATE TABLE p_serverlogs
 	parent_dataserver_session text,
 	spawned_by_parent_ts timestamp without time zone,
 	parent_process_type text,
+	parent_vizql_site text,
+	parent_vizql_username text,
+	parent_dataserver_site text,
+	parent_dataserver_username text,	
 	p_cre_date timestamp without time zone default now()
 )
 DISTRIBUTED BY (host_name, process_id, thread_id)

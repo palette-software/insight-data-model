@@ -51,6 +51,10 @@ begin
 								       , parent_dataserver_session
 								       , spawned_by_parent_ts
 								       , parent_process_type
+									   , parent_vizql_site
+									   , parent_vizql_username
+									   , parent_dataserver_site
+									   , parent_dataserver_username
 									 )
 		SELECT 
 		        serverlogs_id
@@ -72,7 +76,11 @@ begin
 		       , parent_vizql_destroy_sess_ts
 		       , parent_dataserver_session
 		       , spawned_by_parent_ts
-		       , parent_process_type		       
+		       , parent_process_type
+			   , parent_vizql_site
+			   , parent_vizql_username
+			   , parent_dataserver_site
+			   , parent_dataserver_username			   
  		FROM ' || p_schema_name || '.s_serverlogs';
 		
 		execute 'truncate table ' || p_schema_name || '.s_serverlogs';
@@ -102,6 +110,10 @@ begin
 								       , parent_dataserver_session
 								       , spawned_by_parent_ts
 								       , parent_process_type
+									   , parent_vizql_site
+									   , parent_vizql_username
+									   , parent_dataserver_site
+									   , parent_dataserver_username									   
 									 )
 		SELECT 
 		        serverlogs_id
@@ -123,7 +135,11 @@ begin
 		       , parent_vizql_destroy_sess_ts
 		       , parent_dataserver_session
 		       , spawned_by_parent_ts
-		       , parent_process_type		       
+		       , parent_process_type
+			   , parent_vizql_site
+			   , parent_vizql_username
+			   , parent_dataserver_site
+			   , parent_dataserver_username			   
  		FROM ' || p_schema_name || '.s_serverlogs';
 								
 		return v_num_inserted_all;

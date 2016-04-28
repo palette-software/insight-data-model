@@ -30,7 +30,14 @@ begin
 				  parent_vizql_destroy_sess_ts,
 				  parent_dataserver_session,
 				  spawned_by_parent_ts,
-				  parent_process_type
+				  parent_process_type,
+				  parent_vizql_site,
+				  parent_vizql_username,
+				  parent_dataserver_site,
+				  parent_dataserver_username,
+				  whole_session_start_ts,
+				  whole_session_end_ts,
+				  whole_session_duration				  
 			)
 
 			with t_slogs as
@@ -48,7 +55,12 @@ begin
 					parent_vizql_destroy_sess_ts,
 					parent_dataserver_session,
 					spawned_by_parent_ts,
-					parent_process_type
+					parent_process_type,
+					parent_vizql_site,
+					parent_vizql_username,
+					parent_dataserver_site,
+					parent_dataserver_username
+					
 			from
 				(select										
 					host_name,
@@ -63,6 +75,10 @@ begin
 					parent_dataserver_session,
 					spawned_by_parent_ts,
 					parent_process_type,
+					parent_vizql_site,
+					parent_vizql_username,
+					parent_dataserver_site,
+					parent_dataserver_username,
 					row_number() over (partition by parent_process_type,
 													host_name,
 													process_id,
@@ -87,8 +103,11 @@ begin
 									parent_vizql_destroy_sess_ts,
 									parent_dataserver_session,
 									spawned_by_parent_ts,
-									parent_process_type
-									
+									parent_process_type,
+									parent_vizql_site,
+								    parent_vizql_username,
+ 								    parent_dataserver_site,
+ 								    parent_dataserver_username									
 						from
 								#schema_name#.p_serverlogs
 						where
@@ -116,7 +135,14 @@ begin
 				    parent_vizql_destroy_sess_ts,
 				    parent_dataserver_session,
 				    spawned_by_parent_ts,
-				    parent_process_type
+				    parent_process_type,
+					parent_vizql_site,
+					parent_vizql_username,
+					parent_dataserver_site,
+					parent_dataserver_username,
+					whole_session_start_ts,
+					whole_session_end_ts,
+					whole_session_end_ts - whole_session_start_ts as whole_session_duration
 			from
 			(
 				select	
@@ -132,7 +158,13 @@ begin
 					    parent_vizql_destroy_sess_ts,
 					    parent_dataserver_session,
 					    spawned_by_parent_ts,
-					    parent_process_type
+					    parent_process_type,
+						parent_vizql_site,
+						parent_vizql_username,
+						parent_dataserver_site,
+						parent_dataserver_username,
+						min(case when sess not in (''-'', ''default'') then ts end) over (partition by host_name, sess) as whole_session_start_ts,
+						max(case when sess not in (''-'', ''default'') then ts end) over (partition by host_name, sess) as whole_session_end_ts
 				from
 					(
 					select 
@@ -154,7 +186,11 @@ begin
 						    parent_vizql_destroy_sess_ts,
 						    parent_dataserver_session,
 						    spawned_by_parent_ts,
-						    parent_process_type								
+						    parent_process_type,
+							parent_vizql_site,
+							parent_vizql_username,
+							parent_dataserver_site,
+							parent_dataserver_username							
 					from
 						t_slogs
 					) a	
@@ -173,7 +209,13 @@ begin
 				    parent_vizql_destroy_sess_ts,
 				    parent_dataserver_session,
 				    spawned_by_parent_ts,
-				    parent_process_type
+				    parent_process_type,
+					parent_vizql_site,
+					parent_vizql_username,
+					parent_dataserver_site,
+					parent_dataserver_username,
+					whole_session_start_ts,
+					whole_session_end_ts
 			';
 
 		

@@ -35,7 +35,11 @@ begin
 					parent_dataserver_session,
 					spawned_by_parent_ts,
 					parent_vizql_destroy_sess_ts,
-					parent_process_type
+					parent_process_type,
+					parent_vizql_site,
+					parent_vizql_username,
+					parent_dataserver_site,
+					parent_dataserver_username
 			)			
 			
 			with t_s_spawner as
@@ -44,7 +48,9 @@ begin
 					sl.spawner_session,
 					sl.spawned_session,
 					sl.spawned_by_parent_ts,					
-					sl.parent_vizql_destroy_sess_ts					
+					sl.parent_vizql_destroy_sess_ts,
+					sl.parent_vizql_site,
+					sl.parent_vizql_username
 				from
 					(select distinct
 								slog.host_name as spawner_host_name,
@@ -52,7 +58,9 @@ begin
 								case when v like ''%Created new dataserver%'' then (replace(substr(slog.v, position(''Created new dataserver session:'' in slog.v) + 32), ''"'', ''''))::text end as spawned_session,
 								slog.ts as spawned_by_parent_ts,
 								max(case when k = ''destroy-session'' then ts end) over (partition by host_name, sess) as parent_vizql_destroy_sess_ts,
-								case when v like ''%Created new dataserver%'' then true else false end as keep_this_line
+								case when v like ''%Created new dataserver%'' then true else false end as keep_this_line,
+								slog.site as parent_vizql_site,
+								slog.username_without_domain as parent_vizql_username
 					from #schema_name#.p_serverlogs slog
 					where
 						substr(filename, 1, 11) = ''vizqlserver'' and 
@@ -84,6 +92,10 @@ begin
 						, s_spawner.spawned_by_parent_ts
 						, s_spawner.parent_vizql_destroy_sess_ts
 						, case when s_spawner.spawner_session is not null then ''vizqlserver'' end as parent_process_type
+						, s_spawner.parent_vizql_site as parent_vizql_site
+						, s_spawner.parent_vizql_username as parent_vizql_username
+						, null as parent_dataserver_site
+						, null as parent_dataserver_username
 				from
 					#schema_name#.serverlogs s_dataserver
 					left outer join t_s_spawner s_spawner on (s_spawner.spawner_host_name = s_dataserver.host_name and

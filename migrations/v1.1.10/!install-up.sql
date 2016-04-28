@@ -36,5 +36,20 @@ alter table p_cpu_usage_report add column cpu_usage_parent_vizql_destroy_sess_ts
 alter table p_cpu_usage_report add column cpu_usage_parent_process_type text default null;
 
 
+alter table s_serverlogs add column parent_vizql_site text default null;
+alter table s_serverlogs add column parent_vizql_username text default null;
+alter table s_serverlogs add column parent_dataserver_site text default null;
+alter table s_serverlogs add column parent_dataserver_username text default null;
+
+alter table p_serverlogs add column parent_vizql_site text default null;
+alter table p_serverlogs add column parent_vizql_username text default null;
+alter table p_serverlogs add column parent_dataserver_site text default null;
+alter table p_serverlogs add column parent_dataserver_username text default null;
+
+alter table s_serverlogs_compressed add column parent_vizql_site text default null;
+alter table s_serverlogs_compressed add column parent_vizql_username text default null;
+alter table s_serverlogs_compressed add column parent_dataserver_site text default null;
+alter table s_serverlogs_compressed add column parent_dataserver_username text default null;
+
 
 select create_load_s_cpu_usage_report('staging');

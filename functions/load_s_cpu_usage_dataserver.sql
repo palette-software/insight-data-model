@@ -163,8 +163,8 @@ begin
 						  thread_with_sess.host_name,
 						  thread_with_sess.process_id,
 						  thread_with_sess.thread_id,  
-						  null as /*tst.*/start_ts,
-						  null as /*tst.*/end_ts,
+						  thread_with_sess.whole_session_start_ts as start_ts,
+						  thread_with_sess.whole_session_end_ts as end_ts,
 						  thread_with_sess.username, 
 						  http_req_wb.h_workbooks_p_id,  
 						  http_req_wb.h_projects_p_id,
@@ -180,6 +180,7 @@ begin
 						  spawned_by_parent_ts as spawned_by_parent_ts,
 						  parent_vizql_destroy_sess_ts as parent_vizql_destroy_sess_ts,
 						  parent_process_type as parent_process_type
+						  --thread_with_sess.whole_session_duration as whole_session_duration
 						FROM 
 							(select
 									tri.p_id
@@ -211,7 +212,10 @@ begin
 									,slogs.parent_dataserver_session
 									,slogs.spawned_by_parent_ts
 									,slogs.parent_vizql_destroy_sess_ts
-									,slogs.parent_process_type																					  
+									,slogs.parent_process_type
+									,slogs.parent_vizql_username
+									,slogs.whole_session_start_ts
+								    ,slogs.whole_session_end_ts
 							from	
 								(select 
 									p_id
@@ -246,11 +250,11 @@ begin
 												slogs.session_start_ts between tri.start_ts and tri.ts + interval ''15 sec'' AND
 												tri.ts <= coalesce(slogs.parent_vizql_destroy_sess_ts, tri.ts)
 							  				)
-								left outer join #schema_name#.h_sites sites on (sites.name = slogs.site and slogs.session_start_ts between sites.p_valid_from and sites.p_valid_to)
+								left outer join #schema_name#.h_sites sites on (sites.name = slogs.parent_vizql_site and slogs.session_start_ts between sites.p_valid_from and sites.p_valid_to)
 						   ) thread_with_sess
-						   LEFT OUTER JOIN #schema_name#.s_http_requests_with_workbooks http_req_wb ON (http_req_wb.vizql_session = thread_with_sess.session)
+						   LEFT OUTER JOIN #schema_name#.s_http_requests_with_workbooks http_req_wb ON (http_req_wb.vizql_session = thread_with_sess.parent_vizql_session)
 						   
-						   left outer join #schema_name#.h_system_users su on (su.name = thread_with_sess.username and   												 
+						   left outer join #schema_name#.h_system_users su on (su.name = thread_with_sess.parent_vizql_username and   												 
 						   												 thread_with_sess.slog_session_start_ts between su.p_valid_from and su.p_valid_to
 						  												   )												   
 						   left outer join #schema_name#.h_users u on (u.system_user_id = su.id and
