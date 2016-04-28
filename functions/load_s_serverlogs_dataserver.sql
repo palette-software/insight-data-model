@@ -19,6 +19,7 @@ begin
 					serverlogs_id,
 					p_filepath,
 					filename,
+					process_name,					
 					host_name,
 					ts,
 					process_id,
@@ -74,7 +75,8 @@ begin
 				select 								  
 						  s_dataserver.p_id		
 						, s_dataserver.p_filepath
-						, s_dataserver.filename						
+						, s_dataserver.filename	
+						, substr(s_dataserver.filename, 1, position(''_'' in s_dataserver.filename) -1) as process_name
 						, s_dataserver.host_name
 						, s_dataserver.ts
 						, s_dataserver.pid as process_id

@@ -51,5 +51,12 @@ alter table s_serverlogs_compressed add column parent_vizql_username text defaul
 alter table s_serverlogs_compressed add column parent_dataserver_site text default null;
 alter table s_serverlogs_compressed add column parent_dataserver_username text default null;
 
-
 select create_load_s_cpu_usage_report('staging');
+
+alter table p_serverlogs add column process_name text default null;
+drop table s_serverlogs;
+select create_s_serverlogs('staging');
+
+
+
+

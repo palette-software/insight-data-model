@@ -4,6 +4,7 @@ CREATE TABLE p_serverlogs
 	serverlogs_id bigint,	
 	p_filepath CHARACTER VARYING(500),
 	filename TEXT,
+	process_name TEXT,
 	host_name TEXT,
 	ts timestamp without time zone,
 	process_id bigint,

@@ -18,6 +18,7 @@ begin
 					serverlogs_id,
 					p_filepath,
 					filename,
+					process_name,
 					host_name,
 					ts,
 					process_id,
@@ -123,6 +124,7 @@ begin
 						  a.p_id		
 						, a.p_filepath
 						, a.filename
+						, substr(a.filename, 1, position(''_'' in a.filename) -1) as process_name
 						, a.host_name
 						, a.ts
 						, a.process_id
