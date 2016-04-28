@@ -68,8 +68,8 @@ begin
 							from 
 								#schema_name#.p_serverlogs 
 							where substr(filename, 1, 11) <> ''tabprotosrv'' and
-								  substr(filename, 1, 10) <> ''dataserver''), 0) and
-								  substr(sl.filename, 1, 11) <> ''vizqlserver''
+								  substr(filename, 1, 10) <> ''dataserver'' and
+								  substr(filename, 1, 11) <> ''vizqlserver''), 0)
 			'	
 			;
 
