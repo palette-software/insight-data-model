@@ -1,4 +1,4 @@
-CREATE or replace function load_s_cpu_usage_serverlogs(p_schema_name text) returns bigint
+CREATE or replace function load_s_serverlogs_vizql_compressed(p_schema_name text) returns bigint
 AS $$
 declare
 	v_sql text;
@@ -6,22 +6,16 @@ declare
 	v_max_ts_date text;
 	v_sql_cur text;
 	
-begin	
-
-			execute 'truncate table ' || p_schema_name || '.s_serverlogs_tabproto';
-			execute 'select ' || p_schema_name || '.load_s_serverlogs_tabproto(''' || p_schema_name || ''')';
-			
-			execute 'truncate table ' || p_schema_name || '.s_serverlogs_tabproto_compressed';
-			execute 'select ' || p_schema_name || '.load_s_serverlogs_tabproto_compressed(''' || p_schema_name|| ''')';			
-
-			v_sql_cur := 'select to_char(coalesce((select max(ts_date) from #schema_name#.p_cpu_usage), date''1001-01-01''), ''yyyy-mm-dd'')';									
+begin
+			v_sql_cur := 'select to_char(coalesce((select max(ts_date) from #schema_name#.p_cpu_usage), date''1001-01-01''), ''yyyy-mm-dd'')';
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 		
 			execute v_sql_cur into v_max_ts_date;
 			v_max_ts_date := 'date''' || v_max_ts_date || '''';
 
 			v_sql := 
-			'insert into #schema_name#.s_cpu_usage_serverlogs (
+			'insert into #schema_name#.s_serverlogs_compressed (
+				  process_name,
 				  host_name,
 				  process_id,
 				  thread_id,	  
@@ -33,7 +27,9 @@ begin
 				  site,
 				  username,
 				  ts_destroy_sess,
-				  keys
+				  whole_session_start_ts,
+				  whole_session_end_ts,
+				  whole_session_duration				  
 			)
 
 			with t_slogs as
@@ -47,8 +43,7 @@ begin
 					sess,
 					ts,					
 					lag(sess) over (partition by host_name, process_id, thread_id order by ts) as lag_sess,
-					ts_destroy_sess,
-					k
+					ts_destroy_sess
 			from
 				(select 	
 					host_name,
@@ -64,9 +59,8 @@ begin
 													ts
 										order by 
 												case when sess not in (''-'', ''default'') then 1 else 0 end 
-												desc, sess desc, site desc, k) as rn,
-					ts_destroy_sess,
-					k
+												desc, sess desc, site desc) as rn,
+					ts_destroy_sess
 				from
 						(select distinct 
 									host_name,
@@ -76,8 +70,7 @@ begin
 									thread_id,
 									sess,
 									ts,
-									max(case when k = ''destroy-session'' then ts end) over (partition by host_name, sess) ts_destroy_sess,
-									k
+									max(case when k = ''destroy-session'' then ts end) over (partition by host_name, sess) ts_destroy_sess
 						from
 								#schema_name#.p_serverlogs
 						where
@@ -90,6 +83,7 @@ begin
 			)
 				  
 			select	
+					''vizqlserver'' as process_name,
 					host_name,		
 					process_id,
 					thread_id,
@@ -101,7 +95,9 @@ begin
 					site,
 					username_without_domain,
 					ts_destroy_sess,
-					regexp_replace(string_agg(case when k = lag_k then '''' else k end, '';''), '';+'', '';'', ''g'') as keys
+					whole_session_start_ts,
+					whole_session_end_ts,
+					whole_session_end_ts - whole_session_start_ts as whole_session_duration									  
 			from
 			(
 				select
@@ -114,16 +110,8 @@ begin
 						ts,						
 						ts_claster,
 						ts_destroy_sess,
-						k,
-						lag(k) over (PARTITION BY host_name,
-												site,
-												username_without_domain,
-												process_id,
-												thread_id,
-												sess,
-												ts_claster,
-												ts_destroy_sess	 
-									order by ts) as lag_k
+						min(case when sess not in (''-'', ''default'') then ts end) over (partition by host_name, sess) as whole_session_start_ts,
+						max(case when sess not in (''-'', ''default'') then ts end) over (partition by host_name, sess) as whole_session_end_ts
 				from
 					(
 					select 
@@ -141,8 +129,7 @@ begin
 										1
 								end	
 								) over (PARTITION BY host_name, process_id, thread_id, sess order by ts ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as ts_claster,
-							ts_destroy_sess,
-							k
+							ts_destroy_sess							
 					from
 						t_slogs
 					) a	
@@ -155,7 +142,9 @@ begin
 					thread_id,
 					sess,
 					ts_claster,
-					ts_destroy_sess
+					ts_destroy_sess,
+					whole_session_start_ts,
+					whole_session_end_ts
 			';
 		
 		v_sql := replace(v_sql, '#schema_name#', p_schema_name);

@@ -1,4 +1,4 @@
-CREATE or replace function load_p_thread_info(p_schema_name text, p_load_type text) returns bigint
+CREATE or replace function load_p_threadinfo(p_schema_name text, p_load_type text) returns bigint
 AS $$
 declare
 	v_sql text;
@@ -37,7 +37,7 @@ BEGIN
 			      process,
 			      ts,
 				  ts::date,
-				  date_trunc(''minutes'', ts) +  (15 * (floor(date_part(''seconds'', ts))::int / 15)) * interval ''1 second'' as ts_rounded_15_secs,	  
+				  poll_cycle_ts as ts_rounded_15_secs,	  
 			      pid,
 			      tid,
 				  start_ts,
@@ -104,7 +104,8 @@ BEGIN
 				  else
 				  	working_set - lag_working_set 
 				  end as working_set_delta,
-				  thread_level
+				  thread_level,
+				  poll_cycle_ts
 			    FROM
 			    (
 			      SELECT
@@ -134,7 +135,8 @@ BEGIN
 			          ORDER BY ts ASC
 			        ) as lag_working_set,			
 					(10000000*EXTRACT(EPOCH FROM start_ts))::bigint start_ts_int,
-					thread_level
+					thread_level,
+					poll_cycle_ts
 			      FROM (select 
 				  				p_id
 							   , p_filepath
@@ -190,7 +192,7 @@ BEGIN
 								from
 									#schema_name#.p_threadinfo last_ti
 								where
-									last_ti.ts_date >= (select max(ts_date) max_date from #schema_name#.p_threadinfo) - 1
+									last_ti.ts_rounded_15_secs >= (select max(ts_date) max_date from #schema_name#.p_threadinfo) - 1
 								) a 
 							where rn = 1');														
 			end if;
