@@ -1,0 +1,1 @@
+drop function create_s_serverlogs(p_schema_name text);
