@@ -41,7 +41,6 @@ drop table s_serverlogs_tabproto;
 drop table s_serverlogs_tabproto_compressed;
 drop function load_s_serverlogs_tabproto(p_schema_name text);
 drop function load_s_cpu_usage_tabproto(p_schema_name text);
-drop table s_cpu_usage_serverlogs;
 
 \i 002-up-s_serverlogs_compressed.sql
 drop function load_s_cpu_usage_serverlogs(p_schema_name text);
@@ -69,7 +68,7 @@ alter table p_cpu_usage_report add column cpu_usage_parent_process_type text def
 
 drop table s_cpu_usage_report;
 select create_s_cpu_usage_report('#schema_name#');
-select create_load_s_cpu_usage_report('staging');
+select create_load_s_cpu_usage_report('#schema_name#');
 
 \i 005-up-get_max_ts_date.sql
 \i 006-up-grant_objects_to_looker_role.sql
