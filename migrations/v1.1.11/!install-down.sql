@@ -39,9 +39,9 @@ alter table p_cpu_usage rename column max_reporting_granularity to max_reporting
 alter table s_cpu_usage_report rename column cpu_usage_max_reporting_granularity to cpu_usage_max_reporting_granuralty;
 alter table p_cpu_usage_report rename column cpu_usage_max_reporting_granularity to cpu_usage_max_reporting_granuralty;
 
-select create_load_s_cpu_usage_report('staging');
+select create_load_s_cpu_usage_report('#schema_name#');
 
-select 
+
 \i 001-down-load_p_serverlogs_vizql.sql
 \i 002-down-load_s_cpu_usage_dataserver.sql
 \i 003-down-load_s_cpu_usage_rest.sql

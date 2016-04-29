@@ -41,9 +41,8 @@ alter table p_cpu_usage_report rename column cpu_usage_max_reporting_granuralty 
 
 
 
-select create_load_s_cpu_usage_report('staging');
+select create_load_s_cpu_usage_report('#schema_name#');
 
-select 
 \i 001-up-load_p_serverlogs_vizql.sql
 \i 002-up-load_s_cpu_usage_dataserver.sql
 \i 003-up-load_s_cpu_usage_rest.sql
