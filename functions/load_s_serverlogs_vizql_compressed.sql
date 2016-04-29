@@ -27,6 +27,7 @@ begin
 				  site,
 				  username,
 				  ts_destroy_sess,
+				  parent_vizql_session,
 				  whole_session_start_ts,
 				  whole_session_end_ts,
 				  whole_session_duration				  
@@ -43,7 +44,8 @@ begin
 					sess,
 					ts,					
 					lag(sess) over (partition by host_name, process_id, thread_id order by ts) as lag_sess,
-					ts_destroy_sess
+					ts_destroy_sess,
+					parent_vizql_session
 			from
 				(select 	
 					host_name,
@@ -60,7 +62,8 @@ begin
 										order by 
 												case when sess not in (''-'', ''default'') then 1 else 0 end 
 												desc, sess desc, site desc) as rn,
-					ts_destroy_sess
+					ts_destroy_sess,
+					parent_vizql_session
 				from
 						(select distinct 
 									host_name,
@@ -70,7 +73,8 @@ begin
 									thread_id,
 									sess,
 									ts,
-									max(case when k = ''destroy-session'' then ts end) over (partition by host_name, sess) ts_destroy_sess
+									max(case when k = ''destroy-session'' then ts end) over (partition by host_name, sess) ts_destroy_sess,
+									parent_vizql_session
 						from
 								#schema_name#.p_serverlogs
 						where
@@ -95,9 +99,10 @@ begin
 					site,
 					username_without_domain,
 					ts_destroy_sess,
+					parent_vizql_session,
 					whole_session_start_ts,
 					whole_session_end_ts,
-					whole_session_end_ts - whole_session_start_ts as whole_session_duration									  
+					whole_session_end_ts - whole_session_start_ts as whole_session_duration
 			from
 			(
 				select
@@ -111,7 +116,8 @@ begin
 						ts_claster,
 						ts_destroy_sess,
 						min(case when sess not in (''-'', ''default'') then ts end) over (partition by host_name, sess) as whole_session_start_ts,
-						max(case when sess not in (''-'', ''default'') then ts end) over (partition by host_name, sess) as whole_session_end_ts
+						max(case when sess not in (''-'', ''default'') then ts end) over (partition by host_name, sess) as whole_session_end_ts,
+						parent_vizql_session
 				from
 					(
 					select 
@@ -129,7 +135,8 @@ begin
 										1
 								end	
 								) over (PARTITION BY host_name, process_id, thread_id, sess order by ts ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as ts_claster,
-							ts_destroy_sess							
+							ts_destroy_sess,
+							parent_vizql_session
 					from
 						t_slogs
 					) a	
@@ -144,7 +151,8 @@ begin
 					ts_claster,
 					ts_destroy_sess,
 					whole_session_start_ts,
-					whole_session_end_ts
+					whole_session_end_ts,
+					parent_vizql_session
 			';
 		
 		v_sql := replace(v_sql, '#schema_name#', p_schema_name);

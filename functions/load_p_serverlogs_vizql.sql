@@ -51,7 +51,7 @@ begin
 					substr(sl.user, position(''\\\\'' in sl.user) + 1) as username_without_domain,
 					sl.k,
 					sl.v,
-					null as parent_vizql_session,
+					case when sl.sess not in (''-'', ''default'') then sl.sess end as parent_vizql_session,
 					null as parent_vizql_destroy_sess_ts,
 					null as parent_dataserver_session,
 					null as spawned_by_parent_ts,
