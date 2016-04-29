@@ -49,7 +49,7 @@ CREATE TABLE "p_cpu_usage"(
  "h_sites_p_id" Bigint,
  "interactor_h_users_p_id" Bigint,
  "interactor_h_system_users_p_id" Bigint,
- "max_reporting_granuralty" Boolean,
+ "max_reporting_granularity" Boolean,
  "dataserver_session" Text,
  "parent_vizql_session" Text,
  "parent_dataserver_session" Text,
