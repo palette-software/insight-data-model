@@ -44,7 +44,8 @@ BEGIN
 			      cpu_time,
 			      cpu_time_delta,
 			      ts_interval,
-				  case when ts_interval::float = 0 then 0 else cpu_time_delta::float / ts_interval::float end cpu_core_consumption,
+				  case when ts_interval::float = 0 then 0 else cpu_time_delta::float / ts_interval::float end 
+				  		* (ts_interval::float / 150000000) as cpu_core_consumption,
 				  working_set,
 				  working_set_delta,
 				  case when thread_level
