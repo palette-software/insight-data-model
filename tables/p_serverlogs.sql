@@ -26,7 +26,8 @@ CREATE TABLE p_serverlogs
 	parent_vizql_username text,
 	parent_dataserver_site text,
 	parent_dataserver_username text,	
-	p_cre_date timestamp without time zone default now()
+	p_cre_date timestamp without time zone default now(),
+	thread_name text
 )
 DISTRIBUTED BY (host_name, process_id, thread_id)
 PARTITION BY RANGE (ts)
