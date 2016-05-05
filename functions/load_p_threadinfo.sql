@@ -3,12 +3,30 @@ AS $$
 declare
 	v_sql text;
 	v_num_inserted bigint;
+	v_max_ts_date_threadinfo text;
+	v_max_ts_date_p_threadinfo text;
+	v_sql_cur text;
+
 BEGIN	
 
 			if (upper(p_load_type) not in ('FULL', 'DELTA'))
 			then
 				raise EXCEPTION 'p_load_type has to be either FULL or DELTA';
 			end if;
+			
+			
+			v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''threadinfo'')), ''yyyy-mm-dd'')';
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
+			
+			execute v_sql_cur into v_max_ts_date_threadinfo;
+			v_max_ts_date_threadinfo := 'date''' || v_max_ts_date_threadinfo || '''';
+
+			v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd'')';
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
+			
+			execute v_sql_cur into v_max_ts_date_p_threadinfo;
+			v_max_ts_date_p_threadinfo := 'date''' || v_max_ts_date_p_threadinfo || '''';
+
 			
 			
 			v_sql := 
@@ -155,7 +173,7 @@ BEGIN
 						       , p_cre_date						       
 				  		from
 				  			#schema_name#.threadinfo curr_ti						
-						#DELTA#	
+						#DELTA#						
 						) ti	  
 			      ) threadinfo
 				  where
@@ -167,8 +185,15 @@ BEGIN
 				v_sql := replace(v_sql, '#DELTA#', '');
 			else
 				v_sql := replace(v_sql, '#DELTA#', 
-							'where 
-								p_id > coalesce((select max(a.threadinfo_id) from #schema_name#.p_threadinfo a), 0)
+							'where 								
+								p_id > coalesce((select
+													max(a.threadinfo_id)
+												from 
+													#schema_name#.p_threadinfo a
+												where
+													ts_rounded_15_secs >= #v_max_ts_date_p_threadinfo# -1
+												), 0)								
+								and ts >= #v_max_ts_date_threadinfo#
 								
 							union all
 							
@@ -192,14 +217,17 @@ BEGIN
 									   row_number() over (PARTITION BY host_name,process_id,process_name,thread_id,start_ts ORDER BY ts DESC) rn
 								from
 									#schema_name#.p_threadinfo last_ti
-								where
-									last_ti.ts_rounded_15_secs >= (select max(ts_date) max_date from #schema_name#.p_threadinfo) - 1
+								where									
+									last_ti.ts_rounded_15_secs >= #v_max_ts_date_p_threadinfo# - 1																   
+
 								) a 
 							where rn = 1');														
 			end if;
 			
 			v_sql := replace(v_sql, '#schema_name#', p_schema_name);			
-			
+			v_sql := replace(v_sql, '#v_max_ts_date_threadinfo#', v_max_ts_date_threadinfo);
+			v_sql := replace(v_sql, '#v_max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);
+
 			execute v_sql;
 			
 			GET DIAGNOSTICS v_num_inserted = ROW_COUNT;

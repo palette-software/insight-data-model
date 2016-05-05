@@ -55,8 +55,19 @@ alter sequence serverlogs_p_id_seq owned by serverlogs.p_id;
 \i 002-up-manage_partitions_for_recreate_serverlogs.sql
 
 select manage_partitions_for_recreate_serverlogs('#schema_name#', 'serverlogs_old', 'serverlogs');
+
 insert into serverlogs select * from serverlogs_old;
 drop table serverlogs_old;
 drop function manage_partitions_for_recreate_serverlogs(p_schema_name text, p_base_table_name text, p_target_table_name text);
+
+
+
+
+
+
+
+
+
+
 
 select grant_objects_to_looker_role('#schema_name#');

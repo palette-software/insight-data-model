@@ -5,19 +5,39 @@ declare
 	c refcursor;
 	rec record;
 	v_sql text;
+	v_max_ts_date_threadinfo text;
+	v_max_ts_date_serverlogs text;
 BEGIN
+
+		v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''threadinfo'')), ''yyyy-mm-dd'')';
+		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
+			
+		execute v_sql_cur into v_max_ts_date_threadinfo;
+		v_max_ts_date_threadinfo := 'date''' || v_max_ts_date_threadinfo || '''';
+
+		v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''serverlogs'')), ''yyyy-mm-dd'')';
+		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
+			
+		execute v_sql_cur into v_max_ts_date_serverlogs;
+		v_max_ts_date_serverlogs := 'date''' || v_max_ts_date_serverlogs || '''';
+
+
 						
 		v_sql_cur := '';
 		v_sql := '';
 		
 		if p_table_name in ('threadinfo') then
-			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.ext_threadinfo';			
+			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.ext_threadinfo';
+		elseif p_table_name in ('serverlogs') then
+			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.ext_serverlogs';
 		elseif p_table_name in ('p_serverlogs') then
-			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.serverlogs';
+			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.serverlogs
+						   where ts >= #max_ts_date_serverlogs#
+			';
 		elseif p_table_name in ('p_threadinfo') then
 			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.threadinfo 
-							where p_id > coalesce((select max(threadinfo_id) 
-										  from #schema_name#.p_threadinfo), 0)';
+							where ts >= #max_ts_date_threadinfo#
+						';
 		elseif p_table_name in ('p_cpu_usage') then
 			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.s_cpu_usage';
 			
@@ -38,6 +58,8 @@ BEGIN
 					
 		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 		v_sql_cur := replace(v_sql_cur, '#table_name#', p_table_name);
+		v_sql_cur := replace(v_sql_cur, '#max_ts_date_threadinfo#', v_max_ts_date_threadinfo);
+		v_sql_cur := replace(v_sql_cur, '#max_ts_date_serverlogs#', v_max_ts_date_serverlogs);		
 		
 		v_sql := 'ALTER TABLE #schema_name#.#table_name# SET SUBPARTITION TEMPLATE (';		
 
@@ -69,18 +91,19 @@ BEGIN
 		if p_table_name in ('threadinfo') then
 			v_sql_cur := 'select distinct ts::date d from #schema_name#.ext_threadinfo
 							 order by 1';
+		elseif p_table_name in ('serverlogs') then
+			v_sql_cur := 'select distinct ts::date d from #schema_name#.ext_serverlogs';
 		elseif p_table_name in ('p_serverlogs') then
 			v_sql_cur := 'select distinct ts::date d from #schema_name#.serverlogs
-							 order by 1';
+						  where  ts >= #max_ts_date_serverlogs#						  	
+					      order by 1';
 		elseif p_table_name in ('p_threadinfo') then
 			v_sql_cur := 'select distinct ts::date d from #schema_name#.threadinfo 
-							where p_id > coalesce((select max(threadinfo_id) 
-										  from #schema_name#.p_threadinfo), 0)
-							 order by 1';
+						   where ts >= #max_ts_date_threadinfo#
+						   order by 1';
 		elseif p_table_name in ('p_cpu_usage') then
 			v_sql_cur := 'select distinct ts_date d from #schema_name#.s_cpu_usage							
-							order by 1';
-			
+							order by 1';			
 		elseif p_table_name in ('p_cpu_usage_report') then
 					v_sql_cur := 'select distinct cpu_usage_ts_date d from #schema_name#.s_cpu_usage_report							
 							order by 1';						
@@ -88,6 +111,9 @@ BEGIN
 		
 		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 		v_sql_cur := replace(v_sql_cur, '#table_name#',  p_table_name);
+		v_sql_cur := replace(v_sql_cur, '#max_ts_date_threadinfo#', v_max_ts_date_threadinfo);
+		v_sql_cur := replace(v_sql_cur, '#max_ts_date_serverlogs#', v_max_ts_date_serverlogs);		
+
 		
 		open c for execute (v_sql_cur);
 			loop
