@@ -61,12 +61,12 @@ drop table serverlogs_old;
 drop function manage_partitions_for_recreate_serverlogs(p_schema_name text, p_base_table_name text, p_target_table_name text);
 
 
+\i 003-up-delete_recent_records_from_p_serverlogs.sql
+\i 004-up-insert_p_serverlogs_from_s_serverlogs.sql
 
-
-
-
-
-
+DROP FUNCTION load_p_serverlogs(p_schema_name text);
+DROP FUNCTION load_s_cpu_usage(p_schema_name text);
+DROP FUNCTION load_s_serverlogs_compressed(p_schema_name text);
 
 
 
