@@ -80,12 +80,12 @@ drop table serverlogs_old;
 
 \i get_max_ts_date.sql
 
-\i create_s_serverlogs.sql
+\i s_serverlogs.sql
 select create_s_serverlogs('#schema_name#');
 \i s_serverlogs_compressed.sql
 
-\i load_p_serverlogs_rest.sql
-\i load_p_serverlogs_vizql.sql
+\i load_s_serverlogs_rest.sql
+\i load_s_serverlogs_vizql.sql
 \i load_s_serverlogs_tabproto.sql
 \i load_s_serverlogs_dataserver.sql
 \i load_p_serverlogs.sql
@@ -99,3 +99,28 @@ select create_s_serverlogs('#schema_name#');
 \i load_s_cpu_usage_vizql.sql
 \i load_s_cpu_usage_dataserver.sql
 \i load_s_cpu_usage_tabproto.sql
+
+alter table plainlogs rename to plainlogs_old;
+CREATE TABLE plainlogs
+(LIKE plainlogs_old INCLUDING DEFAULTS)
+WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
+DISTRIBUTED BY (p_id)
+PARTITION BY RANGE (ts)
+(START (date '2016-01-01') INCLUSIVE
+	END (date '2020-01-01') EXCLUSIVE 
+	every(interval'1 day')
+WITH (appendonly=true, orientation=column, compresstype=quicklz)	
+);
+
+alter sequence plainlogs_p_id_seq owned by plainlogs.p_id;
+insert into plainlogs select * from plainlogs_old;
+drop table plainlogs_old;
+
+
+\i delete_recent_records_from_p_serverlogs.sql
+\i insert_p_serverlogs_from_s_serverlogs.sql
+\i load_p_cpu_usage_agg_report.sql
+\i p_cpu_usage_agg_report.sql
+
+
+
