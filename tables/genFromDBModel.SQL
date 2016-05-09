@@ -27,6 +27,7 @@ CREATE TABLE "p_cpu_usage"(
  "workbook_id" Bigint,
  "cpu_time_consumption_ticks" Bigint,
  "cpu_time_consumption_seconds" Double precision,
+ "cpu_time_consumption_minutes" Double precision,
  "cpu_time_consumption_hours" Double precision,
  "ts_interval_ticks" Bigint,
  "cpu_core_consumption" Double precision,

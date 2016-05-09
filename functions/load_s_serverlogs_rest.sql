@@ -1,12 +1,12 @@
-CREATE or replace function load_p_serverlogs_rest(p_schema_name text) returns bigint
+CREATE or replace function load_s_serverlogs_rest(p_schema_name text) returns bigint
 AS $$
 declare
-	v_sql text;
-	v_num_inserted bigint;
+	v_sql text;	
+	v_num_inserted bigint;		
 begin	
 
 			v_sql := 
-			'insert into #schema_name#.p_serverlogs (
+			'insert into #schema_name#.s_serverlogs (
 					serverlogs_id,
 					p_filepath,
 					filename,
@@ -38,7 +38,7 @@ begin
 					p_id,
 					sl.p_filepath,
 					sl.filename,
-					case when position(''_'' in sl.filename) > 0 then substr(sl.filename, 1, position(''_'' in sl.filename) -1) else sl.filename end as process_name,
+					replace(case when position(''_'' in sl.filename) > 0 then substr(sl.filename, 1, position(''_'' in sl.filename) -1) else sl.filename end, ''.txt'', '''') as process_name,
 					sl.host_name,
 					sl.ts,
 					sl.pid,
@@ -65,18 +65,19 @@ begin
 			where
 				substr(sl.filename, 1, 11) <> ''tabprotosrv'' and
 				substr(sl.filename, 1, 10) <> ''dataserver'' and
-				substr(sl.filename, 1, 11) <> ''vizqlserver'' and
+				substr(sl.filename, 1, 11) <> ''vizqlserver'' and				
 				sl.p_id > coalesce((select max(serverlogs_id)
 							from 
 								#schema_name#.p_serverlogs 
 							where substr(filename, 1, 11) <> ''tabprotosrv'' and
 								  substr(filename, 1, 10) <> ''dataserver'' and
-								  substr(filename, 1, 11) <> ''vizqlserver''), 0)
+								  substr(filename, 1, 11) <> ''vizqlserver''								  
+								  ), 0)
 			'	
 			;
 
 		
-		v_sql := replace(v_sql, '#schema_name#', p_schema_name);		
+		v_sql := replace(v_sql, '#schema_name#', p_schema_name);				
 		
 		raise notice 'I: %', v_sql;
 

@@ -1,12 +1,13 @@
-CREATE or replace function load_p_serverlogs_vizql(p_schema_name text) returns bigint
+CREATE or replace function load_s_serverlogs_vizql(p_schema_name text) returns bigint
 AS $$
-declare
+declare	
 	v_sql text;
-	v_num_inserted bigint;
+	v_num_inserted bigint;	
 begin	
-
+				
+		
 			v_sql := 
-			'insert into #schema_name#.p_serverlogs (
+			'insert into #schema_name#.s_serverlogs (
 					serverlogs_id,
 					p_filepath,
 					filename,
@@ -38,7 +39,7 @@ begin
 					p_id,
 					sl.p_filepath,
 					sl.filename,
-					case when position(''_'' in sl.filename) > 0 then substr(sl.filename, 1, position(''_'' in sl.filename) -1) else sl.filename end as process_name,
+					replace(case when position(''_'' in sl.filename) > 0 then substr(sl.filename, 1, position(''_'' in sl.filename) -1) else sl.filename end, ''.txt'', '''') as process_name,
 					sl.host_name,
 					sl.ts,
 					sl.pid,
@@ -72,9 +73,9 @@ begin
 			;
 
 		
-		v_sql := replace(v_sql, '#schema_name#', p_schema_name);		
+		v_sql := replace(v_sql, '#schema_name#', p_schema_name);				
 		
-		raise notice 'I: %', v_sql;
+		raise notice 'I: %', v_sql;	
 
 		execute v_sql;		
 		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;			

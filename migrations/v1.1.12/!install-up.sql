@@ -69,5 +69,45 @@ DROP FUNCTION load_s_cpu_usage(p_schema_name text);
 DROP FUNCTION load_s_serverlogs_compressed(p_schema_name text);
 
 
+alter table p_cpu_usage_report rename column cpu_usage_start_ts to session_start_ts;
+alter table p_cpu_usage_report rename column cpu_usage_end_ts to session_end_ts;
+alter table p_cpu_usage_report add column session_duration interval default null;
+alter table p_cpu_usage_report add column thread_name text default null;
+
+alter table p_cpu_usage_report add column site_name_id text default null;
+alter table p_cpu_usage_report add column project_name_id text default null;
+alter table p_cpu_usage_report add column site_project text default null;
+alter table p_cpu_usage_report add column workbook_name_id text default null;
+
+
+\i 005-up-get_max_ts_date.sql
+\i 006-up-create_load_s_cpu_usage_report.sql
+
+alter table p_serverlogs alter column v type varchar(10000000);
+alter table p_serverlogs add column thread_name text default null;
+
+drop table s_serverlogs;
+drop function create_s_serverlogs(p_schema_name text);
+
+\i 007-up-s_serverlogs.sql
+\i 008-up-load_from_stage_to_dwh.sql
+
+alter table p_cpu_usage add column cpu_time_consumption_minutes Double precision default null;
+alter table p_cpu_usage_report add column cpu_usage_cpu_time_consumption_minutes Double precision default null;
+drop table s_cpu_usage;
+select create_s_cpu_usage('#schema_name#');
+
+drop table s_cpu_usage_report;
+select create_s_cpu_usage_report('#schema_name#');
+select create_load_s_cpu_usage_report('#schema_name#');
+
+\i 009-up-p_cpu_usage_agg_report.sql
+\i 010-up-load_p_cpu_usage_agg_report.sql
+
+
+create index p_serverlogs_vizql_session_idx on p_serverlogs(sess);
+create index p_serverlogs_parent_vizql_session_idx on p_serverlogs(parent_vizql_session);
 
 select grant_objects_to_looker_role('#schema_name#');
+
+

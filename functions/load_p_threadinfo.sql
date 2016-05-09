@@ -2,8 +2,7 @@ CREATE or replace function load_p_threadinfo(p_schema_name text, p_load_type tex
 AS $$
 declare
 	v_sql text;
-	v_num_inserted bigint;
-	v_max_ts_date_threadinfo text;
+	v_num_inserted bigint;	
 	v_max_ts_date_p_threadinfo text;
 	v_sql_cur text;
 
@@ -14,13 +13,7 @@ BEGIN
 				raise EXCEPTION 'p_load_type has to be either FULL or DELTA';
 			end if;
 			
-			
-			v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''threadinfo'')), ''yyyy-mm-dd'')';
-			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
-			
-			execute v_sql_cur into v_max_ts_date_threadinfo;
-			v_max_ts_date_threadinfo := 'date''' || v_max_ts_date_threadinfo || '''';
-
+						
 			v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd'')';
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 			
@@ -191,9 +184,9 @@ BEGIN
 												from 
 													#schema_name#.p_threadinfo a
 												where
-													ts_rounded_15_secs >= #v_max_ts_date_p_threadinfo# -1
-												), 0)								
-								and ts >= #v_max_ts_date_threadinfo#
+													ts_rounded_15_secs >= #v_max_ts_date_p_threadinfo#
+												), 0)
+								and ts >= #v_max_ts_date_p_threadinfo# - interval''1 hour''
 								
 							union all
 							
@@ -225,7 +218,6 @@ BEGIN
 			end if;
 			
 			v_sql := replace(v_sql, '#schema_name#', p_schema_name);			
-			v_sql := replace(v_sql, '#v_max_ts_date_threadinfo#', v_max_ts_date_threadinfo);
 			v_sql := replace(v_sql, '#v_max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);
 
 			execute v_sql;

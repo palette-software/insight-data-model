@@ -46,8 +46,9 @@ begin
 						information_schema.columns c
 					where
 						table_schema = p_schema_name and
-						table_name in ('p_cpu_usage', 'h_sites', 'h_projects', 'h_workbooks', 'h_system_users')						
-						
+						table_name in ('h_sites', 'h_projects', 'h_workbooks', 'h_system_users') or
+						(table_name = 'p_cpu_usage' and column_name not in ('start_ts', 'end_ts'))
+												
 					union all 
 
 					select 
@@ -103,7 +104,7 @@ begin
 					
 				begin	
 
-							v_sql_cur := ''select to_char(coalesce((select max(cpu_usage_ts_date) from #schema_name#.p_cpu_usage_report), date''''1001-01-01''''), ''''yyyy-mm-dd'''')'';									
+							v_sql_cur := ''select to_char((select #schema_name#.get_max_ts_date(''''#schema_name#'''', ''''p_cpu_usage_report'''')), ''''yyyy-mm-dd'''')'';
 							v_sql_cur := replace(v_sql_cur, ''#schema_name#'', p_schema_name);
 							
 						
@@ -117,8 +118,17 @@ begin
 					
 		v_sql := v_sql || 'insert into #schema_name#.s_cpu_usage_report (';	
 		
-		v_sql := v_sql || rtrim(v_insert_part, ',\n');
-		
+		v_sql := v_sql || v_insert_part;
+		v_sql := v_sql || 'session_start_ts,
+						   session_end_ts,
+						   session_duration,
+						   thread_name,
+						   site_name_id,
+						   project_name_id,
+						   site_project,
+						   workbook_name_id						   						   						   
+						  ';
+						  
 		v_sql := v_sql || ') 
 		with t_h_workbooks as 
 				(
@@ -213,7 +223,19 @@ begin
 							
 		select ';
 		
-		v_sql := v_sql || rtrim(v_select_part, ',\n');
+		v_sql := v_sql || v_select_part;
+		
+		v_sql := v_sql || 'min(case when cpu.vizql_session not in (''''-'''', ''''default'''') then cpu.ts end) over (partition by cpu.host_name, cpu.vizql_session) as session_start_ts,
+						   max(case when cpu.vizql_session not in (''''-'''', ''''default'''') then cpu.ts end) over (partition by cpu.host_name, cpu.vizql_session) as session_end_ts,
+						   
+						   max(case when cpu.vizql_session not in (''''-'''', ''''default'''') then cpu.ts end) over (partition by cpu.host_name, cpu.vizql_session) -
+						   		min(case when cpu.vizql_session not in (''''-'''', ''''default'''') then cpu.ts end) over (partition by cpu.host_name, cpu.vizql_session) as session_duration,
+						   cpu.process_name || '''':'''' || cpu.process_id || '''':'''' || cpu.thread_id as thread_name,							
+						   s.name || '''' ('''' || s.id || '''')'''' as site_name_id,
+						   p.name || '''' ('''' || p.id || '''')'''' as project_name_id,
+						   s.name || '''':'''' || p.name as site_project,
+						   wb.name || '''' ('''' || wb.id || '''')'''' as workbook_name_id														   
+				';
 		
 		v_sql := v_sql || '
 				FROM #schema_name#.p_cpu_usage cpu

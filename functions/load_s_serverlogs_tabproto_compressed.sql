@@ -4,14 +4,14 @@ declare
 	v_sql text;
 	v_num_inserted bigint;	
 	v_sql_cur text;
-	v_max_ts_date text;
+	v_max_ts_date_p_cpu_usage text;
 begin	
 			
-			v_sql_cur := 'select to_char(coalesce((select max(ts_date) from #schema_name#.p_cpu_usage), date''1001-01-01''), ''yyyy-mm-dd'')';
+			v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'',''p_cpu_usage'')), ''yyyy-mm-dd'')';			
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 		
-			execute v_sql_cur into v_max_ts_date;
-			v_max_ts_date := 'date''' || v_max_ts_date || '''';
+			execute v_sql_cur into v_max_ts_date_p_cpu_usage;
+			v_max_ts_date_p_cpu_usage := 'date''' || v_max_ts_date_p_cpu_usage || '''';
 			
 			v_sql := 
 			'insert into #schema_name#.s_serverlogs_compressed (
@@ -112,7 +112,7 @@ begin
 								#schema_name#.p_serverlogs
 						where
 								substr(filename, 1, 11) = ''tabprotosrv'' and
-								ts >= #v_max_ts_date# - interval''60 minutes''
+								ts >= #v_max_ts_date_p_cpu_usage# - interval''60 minutes''
 						 ) slogs
 				) a
 			where
@@ -220,7 +220,7 @@ begin
 
 		
 		v_sql := replace(v_sql, '#schema_name#', p_schema_name);
-		v_sql := replace(v_sql, '#v_max_ts_date#', v_max_ts_date);
+		v_sql := replace(v_sql, '#v_max_ts_date_p_cpu_usage#', v_max_ts_date_p_cpu_usage);
 				
 		raise notice 'I: %', v_sql;
 

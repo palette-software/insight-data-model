@@ -10,16 +10,16 @@ declare
 	v_max_ts_date text;
 begin		
 
-			v_sql_cur := 'select to_char(coalesce((select max(ts_date) from #schema_name#.p_cpu_usage), date''1001-01-01''), ''yyyy-mm-dd'')';
+			v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_cpu_usage'')), ''yyyy-mm-dd'')';
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 			
 			execute v_sql_cur into v_max_ts_date;
 			v_max_ts_date := 'date''' || v_max_ts_date || '''';
 
-			v_sql_cur := 'select distinct host_name from #schema_name#.p_threadinfo
+			v_sql_cur := 'select distinct ''date'''''' || to_char(ts::date, ''yyyy-mm-dd'') || '''''''' as ts_date, host_name from #schema_name#.p_threadinfo
 						  where
 						  	ts_rounded_15_secs >= #v_max_ts_date#
-						 order by 1
+						 order by 1, 2
 						';				
 			
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
@@ -47,7 +47,8 @@ begin
 							workbook_id,		
 							cpu_time_consumption_ticks,
 							cpu_time_consumption_seconds,
-							cpu_time_consumption_hours,		
+							cpu_time_consumption_minutes,
+							cpu_time_consumption_hours,									
 							ts_interval_ticks,
 							cpu_core_consumption,
 							memory_usage_bytes,				
@@ -88,7 +89,7 @@ begin
 									from
 										#schema_name#.p_threadinfo
 									where 
-										ts_rounded_15_secs >= #v_max_ts_date#
+										ts_rounded_15_secs between #v_act_ts_date# and (#v_act_ts_date# + 1) - interval''1 milliseconds''
 										and host_name = ''#host_name#''
 										and process_name = ''vizqlserver''
 									)  ti
@@ -114,6 +115,7 @@ begin
 						  http_req_wb.workbook_id,   
 						  thread_with_sess.cpu_time_delta_ticks as cpu_time_consumption_ticks,
 						  thread_with_sess.cpu_time_delta_ticks::numeric / 10000000 as cpu_time_consumption_seconds,
+						  thread_with_sess.cpu_time_delta_ticks::numeric / 10000000 / 60 as cpu_time_consumption_minutes,        
 						  thread_with_sess.cpu_time_delta_ticks::numeric / 10000000 / 60 / 60 as cpu_time_consumption_hours,        
 						  thread_with_sess.ts_interval_ticks,
 						  thread_with_sess.cpu_core_consumption,
@@ -234,7 +236,7 @@ begin
 								from
 									#schema_name#.p_threadinfo
 								where
-									ts_rounded_15_secs >= #v_max_ts_date#
+									ts_rounded_15_secs between #v_act_ts_date# and (#v_act_ts_date# + 1) - interval''1 milliseconds''
 									and host_name = ''#host_name#''
 									and ts_interval_ticks is not null
 									and process_name = ''vizqlserver''
@@ -262,7 +264,7 @@ begin
 
 					v_sql := replace(v_sql, '#schema_name#', p_schema_name);
 					v_sql := replace(v_sql, '#host_name#', rec.host_name);
-					v_sql := replace(v_sql, '#v_max_ts_date#', v_max_ts_date);
+					v_sql := replace(v_sql, '#v_act_ts_date#', rec.ts_date);
 					
 					raise notice 'I: %', v_sql;
 

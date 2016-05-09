@@ -3,15 +3,15 @@ AS $$
 declare
 	v_sql text;
 	v_num_inserted bigint;
-	v_max_ts_date text;
+	v_max_ts_date_p_cpu_usage text;
 	v_sql_cur text;	
 begin	
 
 			v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_cpu_usage'')), ''yyyy-mm-dd'')';
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 		
-			execute v_sql_cur into v_max_ts_date;
-			v_max_ts_date := 'date''' || v_max_ts_date || '''';
+			execute v_sql_cur into v_max_ts_date_p_cpu_usage;
+			v_max_ts_date_p_cpu_usage := 'date''' || v_max_ts_date_p_cpu_usage || '''';
 
 			v_sql := 
 			'insert into #schema_name#.s_serverlogs (
@@ -43,7 +43,7 @@ begin
 			)			
 			
 			with t_s_spawner as
-				(select 
+				(select
 					sl.spawner_process_type,
 					sl.spawner_host_name,
 					sl.spawner_session,
@@ -82,23 +82,70 @@ begin
 								case when v like ''%CreateServerProcess%'' then true else false end as keep_this_line,
 								slog.site as parent_site,
 								slog.username_without_domain as parent_username
-					from #schema_name#.p_serverlogs slog
-					where
-						(substr(filename, 1, 11) = ''vizqlserver'' or substr(filename, 1, 10) = ''dataserver'') and 
-						(v like ''%CreateServerProcess%'' or k = ''destroy-session'') and 
-						ts >= #v_max_ts_date# - interval''24 hours''
+					from ( 
+						select  filename,
+								host_name,
+								site,
+								sess,
+								ts,
+								k,
+								v,
+								parent_vizql_destroy_sess_ts,
+								username_without_domain								
+						from
+							#schema_name#.p_serverlogs
+						where
+							(substr(filename, 1, 11) = ''vizqlserver'' or substr(filename, 1, 10) = ''dataserver'') and 
+							(v like ''%CreateServerProcess%'' or k = ''destroy-session'') and 
+							ts >= #v_max_ts_date_p_cpu_usage# - interval''24 hours''
+						union all
+						select filename,
+								host_name,
+								site,
+								sess,
+								ts,
+								k,
+								v,
+								parent_vizql_destroy_sess_ts,
+								username_without_domain
+						from
+							#schema_name#.s_serverlogs
+						where
+							(substr(filename, 1, 11) = ''vizqlserver'' or substr(filename, 1, 10) = ''dataserver'') and 
+							(v like ''%CreateServerProcess%'' or k = ''destroy-session'')	
+						) slog
 					) sl
+					
 					left outer join (select host_name,
 											sess,
 											max(parent_vizql_destroy_sess_ts) as parent_vizql_destroy_sess_ts,
 											max(parent_vizql_session) as parent_vizql_session,
 											max(parent_vizql_site) as parent_vizql_site,
 											max(parent_vizql_username) as parent_vizql_username
-									from									
-										#schema_name#.p_serverlogs
-									where
-										substr(filename, 1, 10) = ''dataserver'' and
-										ts >= #v_max_ts_date# - interval''24 hours''
+									from (									
+										select  host_name,
+												sess,
+												parent_vizql_destroy_sess_ts,
+												parent_vizql_session,
+												parent_vizql_site,
+												parent_vizql_username
+										from
+											#schema_name#.p_serverlogs
+										where
+											substr(filename, 1, 10) = ''dataserver'' and
+											ts >= #v_max_ts_date_p_cpu_usage# - interval''24 hours''
+										union all
+										select host_name,
+												sess,
+												parent_vizql_destroy_sess_ts,
+												parent_vizql_session,
+												parent_vizql_site,
+												parent_vizql_username 
+										from
+											#schema_name#.s_serverlogs
+										where
+											substr(filename, 1, 10) = ''dataserver''
+										) u									
 									group by
 										  host_name,
 										  sess
@@ -112,7 +159,7 @@ begin
 									#schema_name#.p_threadinfo
 								where
 									thread_id = -1 and
-									ts_rounded_15_secs >= #v_max_ts_date# - interval''24 hours'' and
+									ts_rounded_15_secs >= #v_max_ts_date_p_cpu_usage# - interval''24 hours'' and
 									process_name = ''tabprotosrv''
 								) tinfo on (tinfo.host_name = sl.spawner_host_name and 
 											tinfo.process_id = sl.spawned_tabproto_process_id)
@@ -124,7 +171,7 @@ begin
 						  a.p_id		
 						, a.p_filepath
 						, a.filename
-						, case when position(''_'' in a.filename) > 0 then substr(a.filename, 1, position(''_'' in a.filename) -1) else a.filename end as process_name
+						, replace(case when position(''_'' in a.filename) > 0 then substr(a.filename, 1, position(''_'' in a.filename) -1) else a.filename end, ''.txt'', '''') as process_name
 						, a.host_name
 						, a.ts
 						, a.process_id
@@ -215,7 +262,7 @@ begin
 
 		
 		v_sql := replace(v_sql, '#schema_name#', p_schema_name);
-		v_sql := replace(v_sql, '#v_max_ts_date#', v_max_ts_date);
+		v_sql := replace(v_sql, '#v_max_ts_date_p_cpu_usage#', v_max_ts_date_p_cpu_usage);
 		
 		raise notice 'I: %', v_sql;
 

@@ -1,4 +1,4 @@
-CREATE TABLE p_serverlogs
+CREATE TABLE s_serverlogs
 (
 	p_id bigserial,
 	serverlogs_id bigint,	
@@ -26,18 +26,10 @@ CREATE TABLE p_serverlogs
 	parent_vizql_username text,
 	parent_dataserver_site text,
 	parent_dataserver_username text,	
-	p_cre_date timestamp without time zone default now(),
-	thread_name text
+	p_cre_date timestamp without time zone default now()
 )
-DISTRIBUTED BY (host_name, process_id, thread_id)
-PARTITION BY RANGE (ts)
-SUBPARTITION BY LIST (host_name)
-SUBPARTITION TEMPLATE (SUBPARTITION init VALUES ('init')
-WITH (appendonly=true, orientation=column, compresstype=quicklz))
-(PARTITION "10010101" START (date '1001-01-01') INCLUSIVE
-	END (date '1001-01-02') EXCLUSIVE 
 WITH (appendonly=true, orientation=column, compresstype=quicklz)
-);
+DISTRIBUTED BY (host_name, process_id, thread_id)
+;
 
-create index p_serverlogs_vizql_session_idx on p_serverlogs(sess);
-create index p_serverlogs_parent_vizql_session_idx on p_serverlogs(parent_vizql_session);
+

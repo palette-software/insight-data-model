@@ -20,10 +20,10 @@ begin
 		
 		if (upper(p_table_name) = 'P_CPU_USAGE') then
 			v_sql_cur := replace(v_sql_cur, '#column_host_name#', 'host_name');
-			v_sql_cur := replace(v_sql_cur, '#column_ts_date#', 'ts_date');
+			v_sql_cur := replace(v_sql_cur, '#column_ts_date#', 'ts_rounded_15_secs::date');
 		elsif (upper(p_table_name) = 'P_CPU_USAGE_REPORT') then
 			v_sql_cur := replace(v_sql_cur, '#column_host_name#', 'cpu_usage_host_name');
-			v_sql_cur := replace(v_sql_cur, '#column_ts_date#', 'cpu_usage_ts_date');
+			v_sql_cur := replace(v_sql_cur, '#column_ts_date#', 'cpu_usage_ts_rounded_15_secs::date');
 		end if;				
 	
 		raise notice 'I: %', v_sql_cur;
