@@ -46,8 +46,8 @@ begin
 						information_schema.columns c
 					where
 						table_schema = p_schema_name and
-						table_name in ('h_sites', 'h_projects', 'h_workbooks', 'h_system_users') or
-						(table_name = 'p_cpu_usage' and column_name not in ('start_ts', 'end_ts'))
+						(table_name in ('h_sites', 'h_projects', 'h_workbooks', 'h_system_users') or
+						(table_name = 'p_cpu_usage' and column_name not in ('start_ts', 'end_ts')))
 												
 					union all 
 
