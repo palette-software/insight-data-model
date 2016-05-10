@@ -39,5 +39,4 @@ WITH (appendonly=true, orientation=column, compresstype=quicklz))
 WITH (appendonly=true, orientation=column, compresstype=quicklz)
 );
 
-create index p_serverlogs_vizql_session_idx on p_serverlogs(sess);
 create index p_serverlogs_parent_vizql_session_idx on p_serverlogs(parent_vizql_session);

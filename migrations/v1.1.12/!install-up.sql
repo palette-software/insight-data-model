@@ -72,7 +72,6 @@ drop table s_serverlogs;
 
 alter table p_serverlogs add column thread_name text default null;
 
-create index p_serverlogs_vizql_session_idx on p_serverlogs(sess);
 create index p_serverlogs_parent_vizql_session_idx on p_serverlogs(parent_vizql_session);
 
 \i 008-up-s_serverlogs.sql
