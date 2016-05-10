@@ -16,7 +16,7 @@ CREATE TABLE p_serverlogs
 	username TEXT,
 	username_without_domain TEXT,
 	k TEXT,
-	v varchar(10000000),
+	v TEXT,
 	parent_vizql_session text,
 	parent_vizql_destroy_sess_ts timestamp without time zone,
 	parent_dataserver_session text,

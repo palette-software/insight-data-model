@@ -69,7 +69,7 @@ drop function manage_partitions_for_recreate_serverlogs(p_schema_name text, p_ba
 
 drop function create_s_serverlogs(p_schema_name text);
 drop table s_serverlogs;
-alter table p_serverlogs alter column v type varchar(10000000);
+
 alter table p_serverlogs add column thread_name text default null;
 
 create index p_serverlogs_vizql_session_idx on p_serverlogs(sess);
@@ -138,5 +138,7 @@ alter sequence plainlogs_p_id_seq owned by plainlogs.p_id;
 
 insert into plainlogs select * from plainlogs_old;
 drop table plainlogs_old;
+
+\i 023-up-p_serverlogs_report.sql
 
 select grant_objects_to_looker_role('#schema_name#');
