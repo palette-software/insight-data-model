@@ -16,12 +16,12 @@ begin
 			execute v_sql_cur into v_max_ts_date;
 			v_max_ts_date := 'date''' || v_max_ts_date || '''';
 
-			v_sql_cur := 'select distinct host_name from #schema_name#.p_threadinfo
+			v_sql_cur := 'select distinct ''date'''''' || to_char(ts::date, ''yyyy-mm-dd'') || '''''''' as ts_date, host_name from #schema_name#.p_threadinfo
 						  where
 						  	ts_rounded_15_secs >= #v_max_ts_date#
-						 order by 1
-						';				
-			
+						 order by 1, 2
+						';		
+						
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 			v_sql_cur := replace(v_sql_cur, '#v_max_ts_date#', v_max_ts_date);			
 			
@@ -89,7 +89,7 @@ begin
 									from
 										#schema_name#.p_threadinfo
 									where 
-										ts_rounded_15_secs >= #v_max_ts_date#
+										ts_rounded_15_secs between #v_act_ts_date# and (#v_act_ts_date# + 1) - interval''1 milliseconds''
 										and host_name = ''#host_name#''
 										and process_name = ''dataserver''
 									)  ti
@@ -240,7 +240,7 @@ begin
 								from
 									#schema_name#.p_threadinfo
 								where
-									ts_rounded_15_secs >= #v_max_ts_date#
+									ts_rounded_15_secs between #v_act_ts_date# and (#v_act_ts_date# + 1) - interval''1 milliseconds''
 									and host_name = ''#host_name#''
 									and ts_interval_ticks is not null
 									and process_name = ''dataserver''
@@ -268,7 +268,7 @@ begin
 
 					v_sql := replace(v_sql, '#schema_name#', p_schema_name);
 					v_sql := replace(v_sql, '#host_name#', rec.host_name);
-					v_sql := replace(v_sql, '#v_max_ts_date#', v_max_ts_date);
+					v_sql := replace(v_sql, '#v_act_ts_date#', rec.ts_date);
 					
 					raise notice 'I: %', v_sql;
 
