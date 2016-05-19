@@ -1,13 +1,12 @@
 \set ON_ERROR_STOP on
-create role readonly_#schema_name# with login password 'onlyread';
-create role palette_looker;
-create role palette_updater;
+create role readonly with login password 'onlyread';
+create role etl_user with login password 'palette123';
 CREATE ROLE palette_#schema_name#_looker;
-GRANT  palette_#schema_name#_looker TO palette_looker WITH ADMIN OPTION ;
 CREATE ROLE palette_#schema_name#_updater; 
-GRANT  palette_#schema_name#_updater TO palette_updater WITH ADMIN OPTION;
-grant palette_#schema_name#_looker to readonly_#schema_name#;
-grant usage on schema #schema_name# to readonly_#schema_name#;
+grant usage on schema #schema_name# to palette_#schema_name#_looker;
+grant usage on schema #schema_name# to palette_#schema_name#_updater;
+grant palette_#schema_name#_looker to readonly;
+grant palette_#schema_name#_updater to etl_user;
 
 set search_path = '#schema_name#';
 \i db_version_meta.sql
@@ -39,8 +38,7 @@ select create_load_p_background_jobs('#schema_name#');
 \i create_load_s_cpu_usage_report.sql
 select create_load_s_cpu_usage_report('#schema_name#');
 \i load_from_stage_to_dwh.sql
-\i grant_objects_to_looker_role.sql
-select grant_objects_to_looker_role('#schema_name#');
+\i handle_privileges.sql
 
 alter table threadinfo rename to threadinfo_old;
 
@@ -123,5 +121,9 @@ drop table plainlogs_old;
 \i p_cpu_usage_agg_report.sql
 \i load_p_serverlogs_datasrv_tabproto.sql
 \i p_serverlogs_report.sql
+
+
+select handle_privileges('#schema_name#');
+
 
 
