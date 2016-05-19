@@ -44,23 +44,21 @@ insert into db_version_meta(version_number) values ('v1.1.13');
 
 alter table p_serverlogs add column elapsed_ms bigint default 0;
 alter table p_serverlogs add column start_ts timestamp without time zone default null;
-alter table s_serverlogs add column elapsed_ms bigint default null;
-alter table s_serverlogs add column start_ts timestamp without time zone default null;
-
-update p_serverlogs set start_ts = ts where start_ts is null;
+alter table s_serverlogs add column elapsed_ms bigint default 0;
+alter table s_serverlogs add column start_ts timestamp without time zone default ts;
 
 \i 001-up-insert_p_serverlogs_from_s_serverlogs.sql
-\i load_p_serverlogs_datasrv_tabproto.sql
-\i load_s_cpu_usage_dataserver.sql
-\i load_s_cpu_usage_tabproto.sql
-\i load_s_serverlogs_dataserver.sql
-\i load_s_serverlogs_rest.sql
-\i load_s_serverlogs_tabproto.sql
-\i load_s_serverlogs_tdeserver.sql
-\i load_s_serverlogs_vizql.sql
+\i 002-up-load_p_serverlogs_datasrv_tabproto.sql
+\i 003-up-load_s_cpu_usage_dataserver.sql
+\i 004-up-load_s_cpu_usage_tabproto.sql
+\i 005-up-load_s_serverlogs_dataserver.sql
+\i 006-up-load_s_serverlogs_rest.sql
+\i 007-up-load_s_serverlogs_tabproto.sql
+\i 008-up-load_s_serverlogs_tdeserver.sql
+\i 009-up-load_s_serverlogs_vizql.sql
 
-drop view p_serverlogs_report
-\i p_serverlogs_report.sql
+drop view p_serverlogs_report;
+\i 010-up-p_serverlogs_report.sql
 
 
 

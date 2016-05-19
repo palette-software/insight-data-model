@@ -22,6 +22,16 @@ select create_p_http_requests('#schema_name#');
 select create_s_cpu_usage('#schema_name#');
 \i create_p_cpu_usage_report.sql
 select create_p_cpu_usage_report('#schema_name#');
+
+alter table p_cpu_usage_report rename column cpu_usage_start_ts to session_start_ts;
+alter table p_cpu_usage_report rename column cpu_usage_end_ts to session_end_ts;
+alter table p_cpu_usage_report add column session_duration interval default null;
+alter table p_cpu_usage_report add column thread_name text default null;
+alter table p_cpu_usage_report add column site_name_id text default null;
+alter table p_cpu_usage_report add column project_name_id text default null;
+alter table p_cpu_usage_report add column site_project text default null;
+alter table p_cpu_usage_report add column workbook_name_id text default null;
+
 \i create_s_cpu_usage_report.sql
 select create_s_cpu_usage_report('#schema_name#');
 \i p_workbook_datasource_size.sql
@@ -86,6 +96,7 @@ select create_s_serverlogs('#schema_name#');
 \i load_s_serverlogs_vizql.sql
 \i load_s_serverlogs_tabproto.sql
 \i load_s_serverlogs_dataserver.sql
+\i load_s_serverlogs_tdeserver.sql
 \i load_p_serverlogs.sql
 
 \i load_s_serverlogs_dataserver_compressed.sql
