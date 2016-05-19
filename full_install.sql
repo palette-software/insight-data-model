@@ -121,6 +121,7 @@ drop table plainlogs_old;
 \i insert_p_serverlogs_from_s_serverlogs.sql
 \i load_p_cpu_usage_agg_report.sql
 \i p_cpu_usage_agg_report.sql
-
+\i load_p_serverlogs_datasrv_tabproto.sql
+\i p_serverlogs_report.sql
 
 

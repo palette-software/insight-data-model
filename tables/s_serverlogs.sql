@@ -26,7 +26,9 @@ CREATE TABLE s_serverlogs
 	parent_vizql_username text,
 	parent_dataserver_site text,
 	parent_dataserver_username text,	
-	p_cre_date timestamp without time zone default now()
+	p_cre_date timestamp without time zone default now(),
+	elapsed_ms bigint,
+	start_ts timestamp without time zone	
 )
 WITH (appendonly=true, orientation=column, compresstype=quicklz)
 DISTRIBUTED BY (host_name, process_id, thread_id)

@@ -34,6 +34,8 @@ begin
 							       , parent_dataserver_username
 							       , process_name
 							       , thread_name
+								   , elapsed_ms
+								   , start_ts
 				)
 				select 
 				         serverlogs_id
@@ -63,6 +65,8 @@ begin
 				       , parent_dataserver_username
 				       , process_name
 				       , process_name || '':'' || process_id || '':'' || thread_id as thread_name
+					   , elapsed_ms
+					   , start_ts
 				from #schema_name#.s_serverlogs';
 				
 		v_sql := replace(v_sql, '#schema_name#', p_schema_name);		

@@ -31,7 +31,9 @@ begin
 					parent_vizql_site,
 					parent_vizql_username,
 					parent_dataserver_site,
-					parent_dataserver_username									  
+					parent_dataserver_username,
+					elapsed_ms,
+					start_ts
 			)			
 			
 			select 
@@ -59,7 +61,9 @@ begin
 					null as parent_vizql_site,
 					null as parent_vizql_username,
 					null as parent_dataserver_site,
-					null as parent_dataserver_username
+					null as parent_dataserver_username,
+					sl.elapsed_ms,
+					sl.start_ts			
 			from
 				#schema_name#.serverlogs sl
 			where

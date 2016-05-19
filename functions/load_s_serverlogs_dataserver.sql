@@ -38,7 +38,9 @@ begin
 					parent_vizql_site,
 					parent_vizql_username,
 					parent_dataserver_site,
-					parent_dataserver_username
+					parent_dataserver_username,
+					elapsed_ms,
+					start_ts	
 			)			
 			
 			with t_s_spawner as
@@ -122,6 +124,8 @@ begin
 						, s_spawner.parent_vizql_username as parent_vizql_username
 						, null as parent_dataserver_site
 						, null as parent_dataserver_username
+						, s_dataserver.elapsed_ms
+						, s_dataserver.start_ts
 				from
 					#schema_name#.serverlogs s_dataserver
 					left outer join t_s_spawner s_spawner on (s_spawner.spawner_host_name = s_dataserver.host_name and

@@ -1,3 +1,5 @@
+select staging.load_s_serverlogs_tabproto('staging');
+
 CREATE or replace function load_s_serverlogs_tabproto(p_schema_name text) returns bigint
 AS $$
 declare
@@ -39,7 +41,9 @@ begin
 					parent_vizql_site,
 					parent_vizql_username,
 					parent_dataserver_site,
-					parent_dataserver_username
+					parent_dataserver_username,
+					elapsed_ms,
+					start_ts					
 			)			
 			
 			with t_s_spawner as
@@ -211,6 +215,8 @@ begin
 						, a.parent_vizql_username as parent_vizql_username
 						, a.parent_dataserver_site as parent_dataserver_site
 						, a.parent_dataserver_username as parent_dataserver_username
+						, a.elapsed_ms
+						, a.log_start_ts as start_ts
 				from
 					(
 					select 	
@@ -239,7 +245,9 @@ begin
 							, s_tabproto.k
 							, s_tabproto.v
 							, row_number() over (partition by s_tabproto.p_id order by s_spawner.spawned_tabproto_process_id_ts desc, 
-																					   s_spawner.start_ts desc) rn																					   
+																					   s_spawner.start_ts desc) rn
+							, s_tabproto.elapsed_ms
+							, s_tabproto.start_ts as log_start_ts
 					from
 						#schema_name#.serverlogs s_tabproto
 						left outer join t_s_spawner s_spawner on (s_tabproto.host_name = s_spawner.spawner_host_name and 

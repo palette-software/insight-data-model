@@ -28,4 +28,7 @@ SELECT  p_id
        , parent_dataserver_username
        , p_cre_date
        , thread_name
+	   , elapsed_ms::double precision / 1000 as elapsed_secs
+	   , elapsed_ms::double precision / 1000 / 60 / 60 / 24 as elapsed_days
+	   , start_ts
  FROM p_serverlogs;
