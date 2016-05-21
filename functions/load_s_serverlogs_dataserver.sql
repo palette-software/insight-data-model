@@ -5,12 +5,23 @@ declare
 	v_num_inserted bigint;
 	v_max_ts_date_p_cpu_usage text;	
 	v_sql_cur text;	
+	v_max_p_serverlogs_id text;	
 begin	
 
 			v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_cpu_usage'')), ''yyyy-mm-dd'')';												
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);		
 			execute v_sql_cur into v_max_ts_date_p_cpu_usage;
 			v_max_ts_date_p_cpu_usage := 'date''' || v_max_ts_date_p_cpu_usage || '''';
+						
+			v_sql_cur := 'select coalesce(max(serverlogs_id), 0)
+										from 
+											#schema_name#.p_serverlogs
+										where 
+											  process_name = ''dataserver''
+										';			
+										
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);		
+			execute v_sql_cur into v_max_p_serverlogs_id;															
 						
 			v_sql := 
 			'insert into #schema_name#.s_serverlogs (
@@ -133,18 +144,14 @@ begin
 															  s_spawner.spawned_by_parent_ts <= s_dataserver.ts)
 				where
 					substr(s_dataserver.filename, 1, 10) = ''dataserver'' and					
-					s_dataserver.p_id > coalesce((select max(serverlogs_id)
-										from 
-											#schema_name#.p_serverlogs
-										where 
-											  substr(filename, 1, 10) = ''dataserver''
-										), 0)
+					s_dataserver.p_id > #max_p_serverlogs_id#
 				';
 
 		
 		v_sql := replace(v_sql, '#schema_name#', p_schema_name);
 		v_sql := replace(v_sql, '#v_max_ts_date_p_cpu_usage#', v_max_ts_date_p_cpu_usage);		
-		
+		v_sql := replace(v_sql, '#max_p_serverlogs_id#', v_max_p_serverlogs_id);
+				
 		raise notice 'I: %', v_sql;
 
 		execute v_sql;		

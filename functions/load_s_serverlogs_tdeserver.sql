@@ -5,12 +5,24 @@ declare
 	v_num_inserted bigint;	
 	v_sql_cur text;
 	v_max_ts_date_plainlogs text;
+	v_max_p_serverlogs_id text;	
 begin	
 				
 			v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''plainlogs'')), ''yyyy-mm-dd'')';
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
 			execute v_sql_cur into v_max_ts_date_plainlogs;
 			v_max_ts_date_plainlogs := 'date''' || v_max_ts_date_plainlogs || '''';
+
+			v_sql_cur := 'select coalesce(max(serverlogs_id), 0)
+									from 
+										#schema_name#.p_serverlogs 
+									where 
+										process_name = ''tdeserver''
+								';			
+													
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);		
+			execute v_sql_cur into v_max_p_serverlogs_id;		
+
 
 			v_sql := 
 			'insert into #schema_name#.s_serverlogs (
@@ -75,18 +87,14 @@ begin
 				#schema_name#.plainlogs pl
 			where
 				substr(pl.filename, 1, 9) = ''tdeserver'' and				
-				pl.p_id > coalesce((select max(serverlogs_id)
-									from 
-										#schema_name#.p_serverlogs 
-									where 
-										substr(filename, 1, 9) = ''tdeserver''
-									), 0) and
+				pl.p_id > #max_p_serverlogs_id# and
 				pl.ts >= #max_ts_date_plainlogs#
 			'	
 			;
 		
 		v_sql := replace(v_sql, '#schema_name#', p_schema_name);				
 		v_sql := replace(v_sql, '#max_ts_date_plainlogs#', v_max_ts_date_plainlogs);
+		v_sql := replace(v_sql, '#max_p_serverlogs_id#', v_max_p_serverlogs_id);
 		
 		raise notice 'I: %', v_sql;	
 
