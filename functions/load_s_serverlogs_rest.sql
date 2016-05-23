@@ -12,7 +12,8 @@ begin
 								#schema_name#.p_serverlogs 
 							where process_name <> ''tabprotosrv'' and
 								  process_name <> ''dataserver'' and
-								  process_name <> ''vizqlserver''								  
+								  process_name <> ''vizqlserver'' and
+								  process_name <> ''tdeserver''
 							';
 			
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);		

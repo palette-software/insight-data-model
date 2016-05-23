@@ -1,12 +1,21 @@
 \set ON_ERROR_STOP on
 
+create role palette_etl_user with login password 'palette123';
+alter role palette_prod_updater rename to palette_palette_updater;
+alter role palette_prod_looker rename to palette_palette_looker;
+grant palette_palette_updater to palette_etl_user;
+grant usage on schema palette to palette_palette_looker;
+grant usage on schema palette to palette_palette_updater;
+
+
+alter schema prod rename to palette;
+
 drop function grant_objects_to_looker_role(p_schema_name text);
 i\ handle_privileges.sql
 select handle_privileges('#schema_name#');
 
 
 set role palette_#schema_name#_updater;
-
 set search_path = '#schema_name#';
 
 select 
@@ -45,7 +54,10 @@ insert into db_version_meta(version_number) values ('v1.1.13');
 alter table p_serverlogs add column elapsed_ms bigint default 0;
 alter table p_serverlogs add column start_ts timestamp without time zone default null;
 alter table s_serverlogs add column elapsed_ms bigint default 0;
-alter table s_serverlogs add column start_ts timestamp without time zone default ts;
+alter table s_serverlogs add column start_ts timestamp without time zone default null;
+
+update p_serverlogs set start_ts = ts where start_ts is null;
+vacuum p_serverlogs;
 
 \i 001-up-insert_p_serverlogs_from_s_serverlogs.sql
 \i 002-up-load_p_serverlogs_datasrv_tabproto.sql

@@ -66,6 +66,7 @@ begin
 			execute v_sql;		
 		end loop;
 				
+		execute 'grant all on ' || p_schema_name || '.ext_error_table to palette_palette_updater';		
 		return 0;
 END;
 $$ LANGUAGE plpgsql;

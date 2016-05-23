@@ -1,5 +1,3 @@
-select staging.load_s_serverlogs_tabproto('staging');
-
 CREATE or replace function load_s_serverlogs_tabproto(p_schema_name text) returns bigint
 AS $$
 declare

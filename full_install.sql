@@ -1,12 +1,12 @@
 \set ON_ERROR_STOP on
 create role readonly with login password 'onlyread';
-create role etl_user with login password 'palette123';
+create role palette_etl_user with login password 'palette123';
 CREATE ROLE palette_#schema_name#_looker;
 CREATE ROLE palette_#schema_name#_updater; 
 grant usage on schema #schema_name# to palette_#schema_name#_looker;
 grant usage on schema #schema_name# to palette_#schema_name#_updater;
 grant palette_#schema_name#_looker to readonly;
-grant palette_#schema_name#_updater to etl_user;
+grant palette_#schema_name#_updater to palette_etl_user;
 
 set search_path = '#schema_name#';
 \i db_version_meta.sql
@@ -85,6 +85,7 @@ WITH (appendonly=true, orientation=column, compresstype=quicklz)
 alter sequence serverlogs_p_id_seq owned by serverlogs.p_id;
 drop table serverlogs_old;
 
+CREATE INDEX serverlogs_p_id_idx ON palette.serverlogs USING btree (p_id);  
 
 \i get_max_ts_date.sql
 
