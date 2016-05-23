@@ -51,6 +51,7 @@ BEGIN
 		       , cpu_usage_cpu_time_consumption_seconds
 		       , cpu_usage_cpu_time_consumption_minutes
 		       , cpu_usage_cpu_time_consumption_hours
+			   , vizql_session_count
 			   )
 		select	
 			cpu_usage_host_name,
@@ -83,7 +84,14 @@ BEGIN
 			site_name || '':'' || project_name  as 	site_project,
 			sum(cpu_usage_cpu_time_consumption_seconds) as cpu_usage_cpu_time_consumption_seconds,
 			sum(cpu_usage_cpu_time_consumption_seconds) / 60 as cpu_usage_cpu_time_consumption_minutes,
-			sum(cpu_usage_cpu_time_consumption_seconds) / 60 / 60 as cpu_usage_cpu_time_consumption_hours
+			sum(cpu_usage_cpu_time_consumption_seconds) / 60 / 60 as cpu_usage_cpu_time_consumption_hours,
+			count(distinct 
+					case when cpu_usage_process_name = ''vizqlserver'' and 
+							   cpu_usage_vizql_session not in (''Non-Interactor Vizql'')
+					then 
+						cpu_usage_vizql_session 
+					end
+				   ) as vizql_session_count
 		from 
 			#schema_name#.p_cpu_usage_report
 		where
