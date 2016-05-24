@@ -4,8 +4,11 @@ create role palette_etl_user with login password 'palette123';
 alter role palette_prod_updater rename to palette_palette_updater;
 alter role palette_prod_looker rename to palette_palette_looker;
 grant palette_palette_updater to palette_etl_user;
+alter role palette_etl_user with CREATEEXTTABLE;
 grant usage on schema palette to palette_palette_looker;
-grant usage on schema palette to palette_palette_updater;
+grant all on schema palette to palette_palette_updater;
+CREATE RESOURCE QUEUE reporting WITH (ACTIVE_STATEMENTS=10, PRIORITY=MAX);
+ALTER ROLE readonly RESOURCE QUEUE reporting;
 
 
 alter schema prod rename to palette;

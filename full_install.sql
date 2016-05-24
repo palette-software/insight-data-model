@@ -4,9 +4,13 @@ create role palette_etl_user with login password 'palette123';
 CREATE ROLE palette_#schema_name#_looker;
 CREATE ROLE palette_#schema_name#_updater; 
 grant usage on schema #schema_name# to palette_#schema_name#_looker;
-grant usage on schema #schema_name# to palette_#schema_name#_updater;
+grant all on schema #schema_name# to palette_#schema_name#_updater;
+alter role palette_etl_user with CREATEEXTTABLE;
 grant palette_#schema_name#_looker to readonly;
 grant palette_#schema_name#_updater to palette_etl_user;
+CREATE RESOURCE QUEUE reporting WITH (ACTIVE_STATEMENTS=10, PRIORITY=MAX);
+ALTER ROLE readonly RESOURCE QUEUE reporting;
+
 
 set search_path = '#schema_name#';
 \i db_version_meta.sql
@@ -136,6 +140,3 @@ drop table plainlogs_old;
 
 
 select handle_privileges('#schema_name#');
-
-
-
