@@ -16,7 +16,7 @@ begin
 		
 		v_sql := 'delete from #schema_name#.p_serverlogs
 				 where 
-					(substr(filename, 1, 11) = ''tabprotosrv'' or substr(filename, 1, 10) = ''dataserver'')
+					process_name in (''tabprotosrv'', ''dataserver'')
 					and ts >= #max_ts_date_p_cpu_usage#';
 
 		v_sql := replace(v_sql, '#schema_name#', p_schema_name);
