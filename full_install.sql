@@ -14,6 +14,9 @@ alter user readonly set random_page_cost=20;
 alter user readonly set optimizer=on;
 
 
+select handle_privileges('#schema_name#');
+
+
 set search_path = '#schema_name#';
 \i db_version_meta.sql
 insert into db_version_meta(version_number) values ('#version_number#');
@@ -50,7 +53,7 @@ select create_load_p_http_requests('#schema_name#');
 \i load_s_http_requests_with_workbooks.sql
 \i create_load_p_background_jobs.sql
 select create_load_p_background_jobs('#schema_name#');
-\i load_s_cpu_usage.sql
+
 \i create_load_s_cpu_usage_report.sql
 select create_load_s_cpu_usage_report('#schema_name#');
 \i load_from_stage_to_dwh.sql
@@ -96,7 +99,6 @@ CREATE INDEX serverlogs_p_id_idx ON palette.serverlogs USING btree (p_id);
 \i get_max_ts_date.sql
 
 \i s_serverlogs.sql
-select create_s_serverlogs('#schema_name#');
 \i s_serverlogs_compressed.sql
 
 \i load_s_serverlogs_rest.sql
@@ -104,12 +106,11 @@ select create_s_serverlogs('#schema_name#');
 \i load_s_serverlogs_tabproto.sql
 \i load_s_serverlogs_dataserver.sql
 \i load_s_serverlogs_tdeserver.sql
-\i load_p_serverlogs.sql
 
 \i load_s_serverlogs_dataserver_compressed.sql
 \i load_s_serverlogs_vizql_compressed.sql
 \i load_s_serverlogs_tabproto_compressed.sql
-\i load_s_serverlogs_compressed.sql
+
 
 \i load_s_cpu_usage_rest.sql
 \i load_s_cpu_usage_vizql.sql
