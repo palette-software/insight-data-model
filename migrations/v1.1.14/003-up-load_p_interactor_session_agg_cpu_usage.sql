@@ -37,9 +37,9 @@ BEGIN
 			workbook_name_id,
 			workbook_revision,
 			http_user_agent,
-			num_fatal,
-			num_error,
-			num_warn
+			num_fatals,
+			num_errors,
+			num_warnings
 		)
 		SELECT  
 		        cpu_usage_parent_vizql_session AS vizql_session,

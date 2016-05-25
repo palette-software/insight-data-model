@@ -3,7 +3,7 @@ set search_path = '#schema_name#';
 set role palette_palette_updater;
 
 select 
-		case when (cnt_repo - cnt_cpu_usage_report) = 0
+		case when (cnt_repo - cnt_cpu_usage_report - 4) = 0
 			then 'Repository check OK. (There are no new columns for p_cpu_usage_reporting table)'
 		else
 			(1 / 0)::varchar
