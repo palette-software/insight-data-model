@@ -12,7 +12,7 @@ BEGIN
 		execute v_sql_cur into v_max_ts_date_p_interactor_session_agg_cpu_usage;
 		v_max_ts_date_p_interactor_session_agg_cpu_usage := 'date''' || v_max_ts_date_p_interactor_session_agg_cpu_usage || '''';
 				
-		v_sql_cur := 'delete from #schema_name#.p_interactor_session_agg_cpu_usage where timestamp_utc::date >= #max_ts_date_p_interactor_session_agg_cpu_usage#';
+		v_sql_cur := 'delete from #schema_name#.p_interactor_session_agg_cpu_usage where session_start_ts::date >= #max_ts_date_p_interactor_session_agg_cpu_usage#';
 		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);		
 		v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_interactor_session_agg_cpu_usage#', v_max_ts_date_p_interactor_session_agg_cpu_usage);				
 
@@ -28,13 +28,18 @@ BEGIN
 			session_start_ts,
 			session_end_ts,
 			session_duration,
-			publisher_name,
-			interactor_name,
-			site_name,
-			project_name,
-			workbook_name,
+			publisher_friendly_name_id,
+			publisher_user_name_id,
+			interactor_friendly_name_id,
+			interactor_user_name_id,
+			site_name_id,
+			project_name_id,
+			workbook_name_id,
 			workbook_revision,
-			http_user_agent
+			http_user_agent,
+			num_fatal,
+			num_error,
+			num_warn
 		)
 		SELECT  
 		        cpu_usage_parent_vizql_session AS vizql_session,
@@ -52,6 +57,7 @@ BEGIN
 		        MIN(project_name_id) AS project_name_id,
 		        MIN(workbook_name_id) AS workbook_name_id,
 		        MIN(workbook_revision) AS workbook_revision,
+			MIN(http_user_agent) AS http_user_agent,
 		        MIN(num_fatal) AS num_fatal,
 		        MIN(num_error) AS num_error,
 		        MIN(num_warn) AS num_warn
