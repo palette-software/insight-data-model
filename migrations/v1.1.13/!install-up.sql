@@ -9,7 +9,8 @@ grant usage on schema palette to palette_palette_looker;
 grant all on schema palette to palette_palette_updater;
 CREATE RESOURCE QUEUE reporting WITH (ACTIVE_STATEMENTS=10, PRIORITY=MAX);
 ALTER ROLE readonly RESOURCE QUEUE reporting;
-
+alter user readonly set random_page_cost=20;
+alter user readonly set optimizer=on;
 
 alter schema prod rename to palette;
 

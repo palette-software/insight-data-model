@@ -10,6 +10,8 @@ grant palette_#schema_name#_looker to readonly;
 grant palette_#schema_name#_updater to palette_etl_user;
 CREATE RESOURCE QUEUE reporting WITH (ACTIVE_STATEMENTS=10, PRIORITY=MAX);
 ALTER ROLE readonly RESOURCE QUEUE reporting;
+alter user readonly set random_page_cost=20;
+alter user readonly set optimizer=on;
 
 
 set search_path = '#schema_name#';
