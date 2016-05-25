@@ -12,12 +12,16 @@ begin
 		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);		
 		execute v_sql_cur into v_max_ts_date_p_cpu_usage;		
 		v_max_ts_date_p_cpu_usage := 'date''' || v_max_ts_date_p_cpu_usage || '''';
-		
+				
+		/*The order or sending serverlogs not exact. 
+		Around midnight data can come from today and previous day as well which messes up the logic 
+		and results in loosing serverlogs rows in p_serverlogs table. 
+		That is why we need the – 1 hour*/
 		
 		v_sql := 'delete from #schema_name#.p_serverlogs
 				 where 
 					process_name in (''tabprotosrv'', ''dataserver'')
-					and ts >= #max_ts_date_p_cpu_usage#';
+					and ts >= #max_ts_date_p_cpu_usage# - interval''1 hour''';
 
 		v_sql := replace(v_sql, '#schema_name#', p_schema_name);
 		v_sql := replace(v_sql, '#max_ts_date_p_cpu_usage#', v_max_ts_date_p_cpu_usage);
