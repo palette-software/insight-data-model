@@ -1,5 +1,6 @@
 \set ON_ERROR_STOP on
 set search_path = '#schema_name#';
+set role palette_palette_updater;
 
 select 
 		case when (cnt_repo - cnt_cpu_usage_report) = 0
@@ -34,15 +35,16 @@ where
 
 insert into db_version_meta(version_number) values ('v1.1.14');
 
-CREATE INDEX serverlogs_p_id_idx ON palette.serverlogs USING btree (p_id);  
-CREATE INDEX p_serverlogs_process_name_serverlogs_id_idx ON palette.p_serverlogs USING btree (process_name, serverlogs_id);
+CREATE INDEX serverlogs_p_id_idx ON serverlogs USING btree (p_id);  
+CREATE INDEX p_serverlogs_process_name_serverlogs_id_idx ON p_serverlogs USING btree (process_name, serverlogs_id);
 
 alter table p_cpu_usage_agg_report add column vizql_session_count int default null;
 
 \i 001-up-load_p_cpu_usage_agg_report.sql
+\i 002-up-p_interactor_session_agg_cpu_usage.sql
+\i 003-up-load_p_interactor_session_agg_cpu_usage.sql
+\i 004-up-p_interactor_cpu_usage_report.sql
+\i 005-up-p_processinfo.sql
 
-
-
-
-  
-  
+CREATE INDEX p_cpu_usage_report_cpu_usage_vizql_session_idx ON p_cpu_usage_report USING btree (cpu_usage_vizql_session)
+where cpu_usage_process_name in ('vizqlserver', 'dataserver', 'tabprotosrv', 'tdeserver');
