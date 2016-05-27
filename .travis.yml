@@ -34,7 +34,7 @@ before_deploy:
   - zip -r -j $INCREMENTAL_INSTALL_ZIP migrations/$LATEST_MIGRATION_VERSION/*.sql
 
   # Build the RPM file
-  - export VERSION=$(echo $TRAVIS_TAG | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\(\.[0-9][0-9]\)+')
+  - export VERSION=$(echo $TRAVIS_TAG | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\(\.[0-9][0-9]\)*')
   - echo "Building RPM version $VERSION"
   - cd rpm-build
 
