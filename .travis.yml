@@ -54,6 +54,7 @@ before_deploy:
   - chmod 600 $DEPLOY_KEY
   - whoami
   - ls -la
+  - ssh -V
 
   # Upload the RPM to the RPM repository
   # by exportin it to SSHPASS, sshpass wont log the command line and the password
