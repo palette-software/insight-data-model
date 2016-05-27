@@ -46,7 +46,7 @@ before_deploy:
   - unzip ../$FULL_INSTALL_ZIP -d _root/opt/palette-insight-reporting
 
   # Pack the rpm archvie
-  - rpmbuild -bb --buildroot "_root" --define "_rpmdir _build" --define "version $VERSION" --define "buildrelease $TRAVIS_BUILD_NUMBER" palette-insight-reporting.spec
+  - rpmbuild -bb --buildroot "_root" --define "_rpmdir $(pwd)/_build" --define "version $VERSION" --define "buildrelease $TRAVIS_BUILD_NUMBER" palette-insight-reporting.spec
 
   # Upload the RPM to the RPM repository
   # by exportin it to SSHPASS, sshpass wont log the command line and the password
