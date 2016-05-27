@@ -14,12 +14,15 @@ alter user readonly set random_page_cost=20;
 alter user readonly set optimizer=on;
 
 
+set search_path = '#schema_name#';
+
+\i handle_privileges.sql
 select handle_privileges('#schema_name#');
 
+set role = palette_palette_updater;
 
-set search_path = '#schema_name#';
 \i db_version_meta.sql
-insert into db_version_meta(version_number) values ('#version_number#');
+
 \i genFromDBModel.SQL
 \i p_serverlogs.sql
 \i s_http_requests_with_workbooks.sql
@@ -57,7 +60,6 @@ select create_load_p_background_jobs('#schema_name#');
 \i create_load_s_cpu_usage_report.sql
 select create_load_s_cpu_usage_report('#schema_name#');
 \i load_from_stage_to_dwh.sql
-\i handle_privileges.sql
 
 alter table threadinfo rename to threadinfo_old;
 
@@ -141,5 +143,15 @@ drop table plainlogs_old;
 \i load_p_serverlogs_datasrv_tabproto.sql
 \i p_serverlogs_report.sql
 
+\i p_interactor_cpu_usage_report.sql
+\i p_processinfo.sql
+\i p_interactor_session_agg_cpu_usage.sql
+\i load_p_interactor_session_agg_cpu_usage.sql
+
+CREATE INDEX p_cpu_usage_report_cpu_usage_vizql_session_idx ON p_cpu_usage_report USING btree (cpu_usage_vizql_session)
+where cpu_usage_process_name in ('vizqlserver', 'dataserver', 'tabprotosrv', 'tdeserver');
+
 
 select handle_privileges('#schema_name#');
+
+insert into db_version_meta(version_number) values ('#version_number#');
