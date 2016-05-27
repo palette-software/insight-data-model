@@ -1,16 +1,14 @@
 \set ON_ERROR_STOP on
-create role readonly with login password 'onlyread';
-create role etl_user with login password 'palette123';
-CREATE ROLE palette_#schema_name#_looker;
-CREATE ROLE palette_#schema_name#_updater; 
-grant usage on schema #schema_name# to palette_#schema_name#_looker;
-grant usage on schema #schema_name# to palette_#schema_name#_updater;
-grant palette_#schema_name#_looker to readonly;
-grant palette_#schema_name#_updater to etl_user;
 
 set search_path = '#schema_name#';
+
+\i handle_privileges.sql
+select handle_privileges('#schema_name#');
+
+set role = palette_palette_updater;
+
 \i db_version_meta.sql
-insert into db_version_meta(version_number) values ('#version_number#');
+
 \i genFromDBModel.SQL
 \i p_serverlogs.sql
 \i s_http_requests_with_workbooks.sql
@@ -44,11 +42,10 @@ select create_load_p_http_requests('#schema_name#');
 \i load_s_http_requests_with_workbooks.sql
 \i create_load_p_background_jobs.sql
 select create_load_p_background_jobs('#schema_name#');
-\i load_s_cpu_usage.sql
+
 \i create_load_s_cpu_usage_report.sql
 select create_load_s_cpu_usage_report('#schema_name#');
 \i load_from_stage_to_dwh.sql
-\i handle_privileges.sql
 
 alter table threadinfo rename to threadinfo_old;
 
@@ -85,11 +82,11 @@ WITH (appendonly=true, orientation=column, compresstype=quicklz)
 alter sequence serverlogs_p_id_seq owned by serverlogs.p_id;
 drop table serverlogs_old;
 
+CREATE INDEX serverlogs_p_id_idx ON palette.serverlogs USING btree (p_id);  
 
 \i get_max_ts_date.sql
 
 \i s_serverlogs.sql
-select create_s_serverlogs('#schema_name#');
 \i s_serverlogs_compressed.sql
 
 \i load_s_serverlogs_rest.sql
@@ -97,12 +94,11 @@ select create_s_serverlogs('#schema_name#');
 \i load_s_serverlogs_tabproto.sql
 \i load_s_serverlogs_dataserver.sql
 \i load_s_serverlogs_tdeserver.sql
-\i load_p_serverlogs.sql
 
 \i load_s_serverlogs_dataserver_compressed.sql
 \i load_s_serverlogs_vizql_compressed.sql
 \i load_s_serverlogs_tabproto_compressed.sql
-\i load_s_serverlogs_compressed.sql
+
 
 \i load_s_cpu_usage_rest.sql
 \i load_s_cpu_usage_vizql.sql
@@ -133,8 +129,15 @@ drop table plainlogs_old;
 \i load_p_serverlogs_datasrv_tabproto.sql
 \i p_serverlogs_report.sql
 
+\i p_interactor_cpu_usage_report.sql
+\i p_processinfo.sql
+\i p_interactor_session_agg_cpu_usage.sql
+\i load_p_interactor_session_agg_cpu_usage.sql
+
+CREATE INDEX p_cpu_usage_report_cpu_usage_vizql_session_idx ON p_cpu_usage_report USING btree (cpu_usage_vizql_session)
+where cpu_usage_process_name in ('vizqlserver', 'dataserver', 'tabprotosrv', 'tdeserver');
+
 
 select handle_privileges('#schema_name#');
 
-
-
+insert into db_version_meta(version_number) values ('#version_number#');

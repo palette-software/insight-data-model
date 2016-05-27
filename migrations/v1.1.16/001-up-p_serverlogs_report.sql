@@ -1,3 +1,5 @@
+drop view p_serverlogs_report;
+
 create view p_serverlogs_report
 as
 SELECT  p_id
@@ -59,3 +61,5 @@ SELECT  p_id
 				  	r.vizql_session
 	) h on (s.parent_vizql_session = h.vizql_session)
  ;
+
+grant select on p_serverlogs_report to palette_palette_looker;

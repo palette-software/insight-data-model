@@ -31,7 +31,8 @@ CREATE TABLE p_cpu_usage_agg_report
 	site_project TEXT,
 	cpu_usage_cpu_time_consumption_seconds DOUBLE PRECISION,
 	cpu_usage_cpu_time_consumption_minutes DOUBLE PRECISION,
-	cpu_usage_cpu_time_consumption_hours DOUBLE PRECISION
+	cpu_usage_cpu_time_consumption_hours DOUBLE PRECISION,
+	vizql_session_count int
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (p_id)
