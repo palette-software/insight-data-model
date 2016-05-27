@@ -63,6 +63,9 @@ before_deploy:
   - export DEPLOY_CMD="createrepo $DEPLOY_PATH/"
   - ssh -i $DEPLOY_KEY  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST $DEPLOY_CMD
 
+  # Go back to the original root dir, so travis can find the zip files
+  - cd ..
+
 deploy:
   provider: releases
   draft: false
