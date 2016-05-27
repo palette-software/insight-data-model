@@ -31,4 +31,31 @@ SELECT  p_id
 	   , elapsed_ms::double precision / 1000 as elapsed_secs
 	   , elapsed_ms::double precision / 1000 / 60 / 60 / 24 as elapsed_days
 	   , start_ts
- FROM p_serverlogs;
+	   , min(ts) over (partition by parent_vizql_session) as session_start_ts_utc
+	   , max(ts) over (partition by parent_vizql_session) as session_end_ts_utc
+	   , h.site_name_id
+	   , h.project_name_id
+	   , h.workbook_name_id
+	   --, workbook_rev
+	   , publisher_username_id	
+ FROM p_serverlogs s
+  	left outer join 
+			(SELECT       				  
+				  r.vizql_session,
+				  max(r.site_name || ' (' || r.site_id || ')') as site_name_id,
+				  max(r.project_name || ' (' || r.project_id || ')') as project_name_id,
+				  max(r.workbook_name || ' (' || r.workbook_id || ')') as workbook_name_id,
+				  --max(wb.revision) as workbook_rev,
+				  max(r.publisher_username || ' (' || r.publisher_user_id || ')') as publisher_username_id
+				FROM 
+					palette.p_http_requests r
+					--inner join palette.h_workbooks wb on (wb.p_id = r.h_workbooks_p_id)
+				WHERE
+				  coalesce(r.currentsheet, '') <> '' AND 
+				  r.vizql_session IS NOT NULL AND 
+				  r.vizql_session <> '-' AND 
+				  r.site_id IS NOT NULL   
+				group by					
+				  	r.vizql_session
+	) h on (s.parent_vizql_session = h.vizql_session)
+ ;
