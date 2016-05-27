@@ -46,11 +46,14 @@ before_deploy:
   # Pack the rpm archvie
   - rpmbuild -bb --buildroot "$(pwd)/_root" --define "_rpmdir $(pwd)/_build" --define "version $VERSION" --define "buildrelease $TRAVIS_BUILD_NUMBER" palette-insight-reporting.spec
 
+
   # Decrypt the SSH key for deployment
   - openssl aes-256-cbc -K $encrypted_9fbb5ae586fd_key -iv $encrypted_9fbb5ae586fd_iv -in ../deploy_key.enc -out $DEPLOY_KEY -d
 
   # kill openssl warnings because of bad permissions
   - chmod 600 $DEPLOY_KEY
+  - whoami
+  - ls -la
 
   # Upload the RPM to the RPM repository
   # by exportin it to SSHPASS, sshpass wont log the command line and the password
