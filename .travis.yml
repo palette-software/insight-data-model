@@ -29,7 +29,7 @@ before_deploy:
 
   # Build the RPM file
   - export VERSION=$(echo $TRAVIS_TAG | grep -o '[0-9][0-9]*\.[0-9][0-9]*(\.[0-9][0-9])+')
-  - echo "Building RPM version: ${VERSION}"
+  - echo "Building RPM version ${VERSION}"
   - cd rpm-build
 
   # Create directories
