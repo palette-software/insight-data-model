@@ -12,6 +12,12 @@ env:
 script:
   - echo "Nothing to build. Done."
 
+# install the RPM package
+addons:
+  apt:
+    packages:
+      - rpm
+
 before_install:
   # Decrypt the SSH key for deployment
   - openssl aes-256-cbc -K $encrypted_9fbb5ae586fd_key -iv $encrypted_9fbb5ae586fd_iv -in deploy_key.enc -out ${DEPLOY_KEY} -d
