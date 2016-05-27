@@ -20,7 +20,7 @@ addons:
 
 before_install:
   # Decrypt the SSH key for deployment
-  - openssl aes-256-cbc -K $encrypted_9fbb5ae586fd_key -iv $encrypted_9fbb5ae586fd_iv -in deploy_key.enc -out ${DEPLOY_KEY} -d
+  - openssl aes-256-cbc -K $encrypted_9fbb5ae586fd_key -iv $encrypted_9fbb5ae586fd_iv -in deploy_key.enc -out $DEPLOY_KEY -d
 
 before_deploy:
   # Create the full installer
@@ -35,7 +35,7 @@ before_deploy:
 
   # Build the RPM file
   - export VERSION=$(echo $TRAVIS_TAG | grep -o '[0-9][0-9]*\.[0-9][0-9]*(\.[0-9][0-9])+')
-  - echo "Building RPM version ${VERSION}"
+  - echo "Building RPM version $VERSION"
   - cd rpm-build
 
   # Create directories
@@ -46,16 +46,16 @@ before_deploy:
   - unzip ../$FULL_INSTALL_ZIP -d _root/opt/palette-insight-reporting
 
   # Pack the rpm archvie
-  - rpmbuild -bb --buildroot "_root" --define "_rpmdir _build" --define "version ${VERSION}" --define "buildrelease $TRAVIS_BUILD_NUMBER" palette-insight-reporting.spec
+  - rpmbuild -bb --buildroot "_root" --define "_rpmdir _build" --define "version $VERSION" --define "buildrelease $TRAVIS_BUILD_NUMBER" palette-insight-reporting.spec
 
   # Upload the RPM to the RPM repository
   # by exportin it to SSHPASS, sshpass wont log the command line and the password
   - export SSHPASS=$DEPLOY_PASS
-  - scp -i ${DEPLOY_KEY} -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r _build/* $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
+  - scp -i $DEPLOY_KEY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r _build/* $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
 
   # Update the RPM repository
-  - export DEPLOY_CMD="createrepo ${DEPLOY_PATH}/"
-  - ssh -i ${DEPLOY_KEY}  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST $DEPLOY_C
+  - export DEPLOY_CMD="createrepo $DEPLOY_PATH/"
+  - ssh -i $DEPLOY_KEY  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST $DEPLOY_C
 
 deploy:
   provider: releases
