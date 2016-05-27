@@ -61,7 +61,7 @@ before_deploy:
 
   # Update the RPM repository
   - export DEPLOY_CMD="createrepo $DEPLOY_PATH/"
-  - ssh -i $DEPLOY_KEY  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST $DEPLOY_C
+  - ssh -i $DEPLOY_KEY  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST $DEPLOY_CMD
 
 deploy:
   provider: releases
