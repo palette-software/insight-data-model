@@ -1,3 +1,5 @@
+drop view p_serverlogs_report;
+
 create view p_serverlogs_report
 as
 SELECT  s.p_id
@@ -59,3 +61,5 @@ SELECT  s.p_id
 	) h on (s.parent_vizql_session = h.vizql_session)
 	left outer join h_workbooks wb on (wb.p_id = h.h_workbooks_p_id)
  ;
+
+grant select on p_serverlogs_report to palette_palette_looker;
