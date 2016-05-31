@@ -1,3 +1,5 @@
+drop view p_serverlogs_report;
+
 create view p_serverlogs_report
 as
 SELECT  s.p_id
@@ -39,3 +41,5 @@ SELECT  s.p_id
 	   , s.workbook_rev
 	   , s.publisher_username_id	
  FROM p_serverlogs s;
+
+grant select on p_serverlogs_report to palette_palette_looker;

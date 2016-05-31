@@ -29,7 +29,14 @@ CREATE TABLE p_serverlogs
 	p_cre_date timestamp without time zone default now(),
 	thread_name text,
 	elapsed_ms bigint,
-	start_ts timestamp without time zone
+	start_ts timestamp without time zone,
+	session_start_ts_utc timestamp without time zone,
+    session_end_ts_utc timestamp without time zone,
+   	site_name_id text,
+    project_name_id text,
+    workbook_name_id text,
+    workbook_rev text,
+    publisher_username_id text
 )
 DISTRIBUTED BY (host_name, process_id, thread_id)
 PARTITION BY RANGE (ts)

@@ -137,6 +137,9 @@ drop table plainlogs_old;
 CREATE INDEX p_cpu_usage_report_cpu_usage_vizql_session_idx ON p_cpu_usage_report USING btree (cpu_usage_vizql_session)
 where cpu_usage_process_name in ('vizqlserver', 'dataserver', 'tabprotosrv', 'tdeserver');
 
+\i does_part_exist.sql
+\i is_subpart_template_same.sql
+
 
 select handle_privileges('#schema_name#');
 
