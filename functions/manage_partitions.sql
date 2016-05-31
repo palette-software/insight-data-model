@@ -7,8 +7,12 @@ declare
 	v_sql text;
 	v_max_ts_date_p_threadinfo text;
 	v_max_ts_date_p_serverlogs text;
+	v_subpart_cols text;	
 BEGIN
 
+		v_subpart_cols := '';
+		execute 'set local search_path = ' || p_schema_name;				
+		
 		v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd'')';
 		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
 		execute v_sql_cur into v_max_ts_date_p_threadinfo;
@@ -59,7 +63,7 @@ BEGIN
 			  
 			  v_sql := v_sql || ' SUBPARTITION "#host_name#" VALUES (''#host_name#'') WITH (appendonly=true, orientation=column, compresstype=quicklz),';
 			  v_sql := replace(v_sql, '#host_name#', rec.host_name);
-			  
+			  v_subpart_cols := v_subpart_cols || ',' || lower(rec.host_name);
 		end loop;
 		close c;
 		
@@ -67,9 +71,11 @@ BEGIN
 		v_sql := replace(v_sql, '#table_name#', p_table_name);
 		v_sql := v_sql || ' DEFAULT SUBPARTITION new_host WITH (appendonly=true, orientation=column, compresstype=quicklz))';
 		
-		raise notice 'I: %', v_sql;
+		v_subpart_cols := ltrim(v_subpart_cols, ',');
 		
-		if (v_sql like '%SUBPARTITION%VALUES%')
+		raise notice 'I: %', v_sql;
+				
+		if (v_sql like '%SUBPARTITION%VALUES%' and not is_subpart_template_same(p_schema_name, p_table_name, v_subpart_cols))
 			then
 				execute v_sql;
 		end if;
@@ -117,7 +123,9 @@ BEGIN
 				  v_sql := replace(v_sql, '#end_date#', to_char(rec.d + 1, 'yyyy-mm-dd'));				  			  			  				  
 				  
 				begin
-				  	execute v_sql;
+					if (not does_part_exist(p_schema_name, p_table_name, to_char(rec.d, 'yyyymmdd'))) then
+				  		execute v_sql;
+					end if;
 				exception when duplicate_object
 						then null;
 				end;
