@@ -43,7 +43,7 @@ before_deploy:
   - mkdir -p _build
 
   # Copy over the full install versions
-  - cp -Rv ../full-install/v* _root/opt/palette-insight-reporting/full-install
+  - cp -Rv ../full-installs/v* _root/opt/palette-insight-reporting/full-install
 
   # Copy over the migrations
   - cp -Rv ../migrations/v* _root/opt/palette-insight-reporting/migrations
