@@ -33,8 +33,8 @@ SELECT  s.p_id
 	   , s.elapsed_ms::double precision / 1000 as elapsed_secs
 	   , s.elapsed_ms::double precision / 1000 / 60 / 60 / 24 as elapsed_days
 	   , s.start_ts
-	   , session_start_ts_utc
-	   , session_end_ts_utc
+	   , s.session_start_ts_utc
+	   , s.session_end_ts_utc
 	   , s.site_name_id
 	   , s.project_name_id
 	   , s.workbook_name_id

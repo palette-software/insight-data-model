@@ -10,6 +10,7 @@ BEGIN
 	select lower(string_agg(partitionname, ',')) into v_subpart_cols
 	from pg_partition_templates
 	where 
+		partitionname <> 'new_host' and
 		schemaname = p_schema_name and
 		tablename = p_table_name;
 		
