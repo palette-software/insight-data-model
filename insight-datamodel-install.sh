@@ -15,7 +15,7 @@ DB_NAME=palette
 SCHEMA_NAME=palette
 VERSION_TABLE_NAME=db_version_meta
 
-ROOTDIR=$(realpath `dirname $0`)
+ROOTDIR=$(readlink --canonicalize `dirname $0`)
 
 echo "Inside ${ROOTDIR}"
 
@@ -87,11 +87,19 @@ if [ $VERSION_TABLE_EXISTS = 't'  ]; then
   EXISTING_VERSION=${EXISTING_VERSION_STR//[[:blank:]]/}
   EXISTING_VERSION_IDX=`awk -v a="${MIGRATION_VERSIONS}" -v b="${EXISTING_VERSION}" 'BEGIN{print index(a,b)}'`
 
+  TARGET_VERSION_IDX=`awk -v a="${MIGRATION_VERSIONS}" -v b="${TARGET_VERSION}" 'BEGIN{print index(a,b)}'`
+
 
 
     # Check if the existing version is actually in the list of migrations
+  if [[ $TARGET_VERSION_IDX = 0 ]]; then
+    echo "Cannot find target version: ${TARGET_VERSION} in versions: ${MIGRATION_VERSIONS}"
+    exit 4
+  fi
+
+    # Check if the existing version is actually in the list of migrations
   if [[ $EXISTING_VERSION_IDX = 0 ]]; then
-    echo "Cannot find target version: ${EXISTING_VERSION} in versions: ${MIGRATION_VERSIONS}"
+    echo "Cannot find existing version: ${EXISTING_VERSION} in versions: ${MIGRATION_VERSIONS}"
     exit 4
   fi
 
@@ -103,23 +111,26 @@ if [ $VERSION_TABLE_EXISTS = 't'  ]; then
 
     # Check if this version is greater then the other
     if [[  $LOCAL_INDEX -gt $EXISTING_VERSION_IDX   ]]; then
-      echo Need to run migration: $VERSION
+      # Check if the local version is lower or equal to the target version
+      if [[  $LOCAL_INDEX -le $TARGET_VERSION_IDX   ]]; then
+	echo Need to run migration: $VERSION
 
-      TEMPLATED_DIR=`template_dir ${VERSION}`
+	TEMPLATED_DIR=`template_dir ${VERSION}`
 
-      # Go to the migration dir to have the correct include paths
-      echo "Using temporary folder for migration: ${TEMPLATED_DIR}"
-      pushd ${TEMPLATED_DIR}
+	# Go to the migration dir to have the correct include paths
+	echo "Using temporary folder for migration: ${TEMPLATED_DIR}"
+	pushd ${TEMPLATED_DIR}
 
-      # Run the full installer
-      psql -d palette -f "!install-up.sql"
+	# Run the full installer
+	psql -d palette -f "!install-up.sql"
 
-      # Get back to the outer directory
-      popd
+	# Get back to the outer directory
+	popd
 
-      # Remove the templated directory
-      rm -rf ${TEMPLATED_DIR}
+	# Remove the templated directory
+	rm -rf ${TEMPLATED_DIR}
 
+      fi
     fi
   done
 
