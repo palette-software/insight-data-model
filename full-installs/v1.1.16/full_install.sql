@@ -9,7 +9,7 @@ set role = palette_palette_updater;
 
 \i db_version_meta.sql
 
-\i genFromDBModel.SQL
+\i genFromDBModel.sql
 \i p_serverlogs.sql
 \i s_http_requests_with_workbooks.sql
 \i create_p_background_jobs.sql

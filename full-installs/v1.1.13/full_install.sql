@@ -11,7 +11,7 @@ grant palette_#schema_name#_updater to etl_user;
 set search_path = '#schema_name#';
 \i db_version_meta.sql
 insert into db_version_meta(version_number) values ('v1.1.13');
-\i genFromDBModel.SQL
+\i genFromDBModel.sql
 \i p_serverlogs.sql
 \i s_http_requests_with_workbooks.sql
 \i create_p_background_jobs.sql
