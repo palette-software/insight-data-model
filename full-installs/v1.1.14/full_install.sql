@@ -1,18 +1,18 @@
 \set ON_ERROR_STOP on
-create role readonly with login password 'onlyread';
-create role palette_etl_user with login password 'palette123';
-CREATE ROLE palette_#schema_name#_looker;
-CREATE ROLE palette_#schema_name#_updater; 
-grant usage on schema #schema_name# to palette_#schema_name#_looker;
-grant all on schema #schema_name# to palette_#schema_name#_updater;
-alter role palette_etl_user with CREATEEXTTABLE;
-grant palette_#schema_name#_looker to readonly;
-grant palette_#schema_name#_updater to palette_etl_user;
-CREATE RESOURCE QUEUE reporting WITH (ACTIVE_STATEMENTS=10, PRIORITY=MAX);
-ALTER ROLE readonly RESOURCE QUEUE reporting;
-alter user readonly set random_page_cost=20;
-alter user readonly set optimizer=on;
-
+-- create role readonly with login password 'onlyread';
+-- create role palette_etl_user with login password 'palette123';
+-- CREATE ROLE palette_#schema_name#_looker;
+-- CREATE ROLE palette_#schema_name#_updater; 
+-- grant usage on schema #schema_name# to palette_#schema_name#_looker;
+-- grant all on schema #schema_name# to palette_#schema_name#_updater;
+-- alter role palette_etl_user with CREATEEXTTABLE;
+-- grant palette_#schema_name#_looker to readonly;
+-- grant palette_#schema_name#_updater to palette_etl_user;
+-- CREATE RESOURCE QUEUE reporting WITH (ACTIVE_STATEMENTS=10, PRIORITY=MAX);
+-- ALTER ROLE readonly RESOURCE QUEUE reporting;
+-- alter user readonly set random_page_cost=20;
+-- alter user readonly set optimizer=on;
+-- 
 
 select handle_privileges('#schema_name#');
 

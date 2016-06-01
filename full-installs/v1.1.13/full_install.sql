@@ -1,13 +1,13 @@
 \set ON_ERROR_STOP on
-create role readonly with login password 'onlyread';
-create role etl_user with login password 'palette123';
-CREATE ROLE palette_#schema_name#_looker;
-CREATE ROLE palette_#schema_name#_updater; 
-grant usage on schema #schema_name# to palette_#schema_name#_looker;
-grant usage on schema #schema_name# to palette_#schema_name#_updater;
-grant palette_#schema_name#_looker to readonly;
-grant palette_#schema_name#_updater to etl_user;
-
+-- create role readonly with login password 'onlyread';
+-- create role etl_user with login password 'palette123';
+-- CREATE ROLE palette_#schema_name#_looker;
+-- CREATE ROLE palette_#schema_name#_updater; 
+-- grant usage on schema #schema_name# to palette_#schema_name#_looker;
+-- grant usage on schema #schema_name# to palette_#schema_name#_updater;
+-- grant palette_#schema_name#_looker to readonly;
+-- grant palette_#schema_name#_updater to etl_user;
+-- 
 set search_path = '#schema_name#';
 \i db_version_meta.sql
 insert into db_version_meta(version_number) values ('v1.1.13');
