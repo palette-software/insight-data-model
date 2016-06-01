@@ -62,7 +62,7 @@ if [ $VERSION_TABLE_EXISTS = 'f'  ]; then
   pushd ${TEMPLATED_DIR}
 
   # Run the full installer
-  psql -d palette -f full_install.sql
+  psql -d palette  -U palette_etl_user -f full_install.sql
 
   # Get back to the outer directory
   popd
@@ -122,7 +122,7 @@ if [ $VERSION_TABLE_EXISTS = 't'  ]; then
 	pushd ${TEMPLATED_DIR}
 
 	# Run the full installer
-	psql -d palette -f "!install-up.sql"
+	psql -d ${SCHEMA_NAME} -U palette_etl_user -f "!install-up.sql"
 
 	# Get back to the outer directory
 	popd
