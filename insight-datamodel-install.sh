@@ -26,6 +26,22 @@ MIGRATIONS_DIR=${ROOTDIR}/migrations
 VERSION_TABLE_EXISTS=`psql -d ${DB_NAME} -t -c "select exists( select 1 from information_schema.tables where table_schema='${SCHEMA_NAME}' and table_name='${VERSION_TABLE_NAME}');"`
 #VERSION_TABLE_EXISTS='f'
 
+# Function to apply templates
+template_dir () {
+  IN_DIR=$1
+  OUT_DIR=$(mktemp -d /tmp/insight-datamodel-install-sql.XXXXXX)
+
+  #echo "Copying the contents of ${IN_DIR} to ${OUT_DIR}"
+  cp -R $IN_DIR/*.sql $OUT_DIR
+
+
+  # Do a replacement of #schema_name#
+  #echo "Replacing #schema_name# with ${SCHEMA_NAME}"
+  sed -i "s/#schema_name#/${SCHEMA_NAME}/g" ${OUT_DIR}/*.sql
+
+  # 'return' the output directory
+  echo $OUT_DIR
+}
 
 # If no, do a full install
 if [ $VERSION_TABLE_EXISTS = 'f'  ]; then
@@ -39,22 +55,20 @@ if [ $VERSION_TABLE_EXISTS = 'f'  ]; then
     exit 1
   fi
 
+  TEMPLATED_DIR=`template_dir ${INSTALLER_DIR}`
+
   # Go to the installer dir to have the correct include paths
-  pushd $INSTALLER_DIR
-
-  # Create a temporary file to hold the templated install sql:
-  INSTALLER_SQL_TEMP=$(mktemp /tmp/insigt-datamodel-full-install.XXXXXX.sql)
-
-  echo "Templating full_install.sql to ${INSTALLER_SQL_TEMP}"
-
-  # Do a replacement of #schema_name#
-  sed "s/#schema_name#/${SCHEMA_NAME}/g" full_install.sql >$INSTALLER_SQL_TEMP
+  echo "Using temporary folder for install: ${TEMPLATED_DIR}"
+  pushd ${TEMPLATED_DIR}
 
   # Run the full installer
-  psql -d palette -f ${INSTALLER_SQL_TEMP}
+  psql -d palette -f full_install.sql
 
   # Get back to the outer directory
   popd
+
+  # Remove the templated directory
+  rm -rf ${TEMPLATED_DIR}
 
   # We should be A-OK here
   exit 0
@@ -91,14 +105,21 @@ if [ $VERSION_TABLE_EXISTS = 't'  ]; then
     if [[  $LOCAL_INDEX -gt $EXISTING_VERSION_IDX   ]]; then
       echo Need to run migration: $VERSION
 
-      # Get into the versions directory
-      pushd ${VERSION}
+      TEMPLATED_DIR=`template_dir ${VERSION}`
 
-      # Execute the migrations install script
-      psql -d ${DB_NAME} -f "!install-up.sql"
+      # Go to the migration dir to have the correct include paths
+      echo "Using temporary folder for migration: ${TEMPLATED_DIR}"
+      pushd ${TEMPLATED_DIR}
 
-      # Get out of the migrations directory
+      # Run the full installer
+      psql -d palette -f "!install-up.sql"
+
+      # Get back to the outer directory
       popd
+
+      # Remove the templated directory
+      rm -rf ${TEMPLATED_DIR}
+
     fi
   done
 
