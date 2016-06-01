@@ -55,7 +55,7 @@ before_deploy:
   - rpmbuild -bb --buildroot "$(pwd)/_root" --define "_rpmdir $(pwd)/_build" --define "version $VERSION" --define "buildrelease $TRAVIS_BUILD_NUMBER" palette-insight-reporting.spec
 
   # Pack it as a zip also
-  - zip -r -j ../$PACKED_ZIP _root/opt/palette-insight-reporting
+  - zip -r ../$PACKED_ZIP _root/opt/palette-insight-reporting
 
 
   # Decrypt the SSH key for deployment
