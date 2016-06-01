@@ -2,6 +2,7 @@ env:
   global:
   - FULL_INSTALL_ZIP=palette-insight-reporting-$TRAVIS_TAG-full-install.zip
   - INCREMENTAL_INSTALL_ZIP=palette-insight-reporting-$TRAVIS_TAG-install.zip
+  - PACKED_ZIP=palette-insight-reporting--packed--$TRAVIS_TAG.zip
 
   # DEPLOYMENT DATA
   - DEPLOY_HOST=rpm.palette-software.net
@@ -38,16 +39,23 @@ before_deploy:
 
   # Create directories
   - mkdir -p _root/opt/palette-insight-reporting/full-install
+  - mkdir -p _root/opt/palette-insight-reporting/migrations
   - mkdir -p _build
 
-  # Unzip the sql files packages
-  - unzip ../$FULL_INSTALL_ZIP -d _root/opt/palette-insight-reporting/full-install
+  # Copy over the full install versions
+  - cp -Rv ../full-install/v* _root/opt/palette-insight-reporting/full-install
 
-  - ./copy-all-migration-versions.sh _root/opt/palette-insight-reporting
+  # Copy over the migrations
+  - cp -Rv ../migrations/v* _root/opt/palette-insight-reporting/migrations
 
+  # Copy the shell script over
+  - cp -v ../insight-datamodel-install.sh _root/opt/palette-insight-reporting
 
   # Pack the rpm archvie
   - rpmbuild -bb --buildroot "$(pwd)/_root" --define "_rpmdir $(pwd)/_build" --define "version $VERSION" --define "buildrelease $TRAVIS_BUILD_NUMBER" palette-insight-reporting.spec
+
+  # Pack it as a zip also
+  - zip -r -j ../$PACKED_ZIP _root/opt/palette-insight-reporting
 
 
   # Decrypt the SSH key for deployment
@@ -78,6 +86,7 @@ deploy:
   file:
     - "$FULL_INSTALL_ZIP"
     - "$INCREMENTAL_INSTALL_ZIP"
+    - "$PACKED_ZIP"
   on:
     repo: palette-software/palette-insight-reporting
     tags: true
