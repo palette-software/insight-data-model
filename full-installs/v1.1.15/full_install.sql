@@ -14,6 +14,7 @@
 -- alter user readonly set optimizer=on;
 -- 
 
+\i handle_privileges.sql
 select handle_privileges('#schema_name#');
 
 
@@ -57,7 +58,6 @@ select create_load_p_background_jobs('#schema_name#');
 \i create_load_s_cpu_usage_report.sql
 select create_load_s_cpu_usage_report('#schema_name#');
 \i load_from_stage_to_dwh.sql
-\i handle_privileges.sql
 
 alter table threadinfo rename to threadinfo_old;
 
