@@ -70,6 +70,8 @@ if [ $VERSION_TABLE_EXISTS = 'f'  ]; then
   # Remove the templated directory
   rm -rf ${TEMPLATED_DIR}
 
+  echo "-------------------- OK --------------------"
+
   # We should be A-OK here
   exit 0
 fi
@@ -137,6 +139,7 @@ if [ $VERSION_TABLE_EXISTS = 't'  ]; then
   # Get out of the migrations dir
   popd
 
+  echo "-------------------- OK --------------------"
   # We should be ok here too
   exit 0
 fi
