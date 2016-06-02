@@ -45,7 +45,8 @@ before_deploy:
   - mkdir -p _root/opt/palette-insight-reporting/migrations
   - mkdir -p _build
 
-  - export SRC_DIR=`dirs +1`
+  # As dirs +1 returns paths with a tilde in them, we need to expand it
+  - export SRC_DIR=$(eval echo `dirs +1`)
 
   # Copy over the full install versions
   - cp -Rv $SRC_DIR/full-installs/v* _root/opt/palette-insight-reporting/full-installs
