@@ -41,7 +41,7 @@ before_deploy:
   - pushd rpm-build
 
   # Create directories
-  - mkdir -p _root/opt/palette-insight-reporting/full-install
+  - mkdir -p _root/opt/palette-insight-reporting/full-installs
   - mkdir -p _root/opt/palette-insight-reporting/migrations
   - mkdir -p _build
 
