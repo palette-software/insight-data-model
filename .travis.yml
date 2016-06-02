@@ -4,6 +4,9 @@ env:
   - INCREMENTAL_INSTALL_ZIP=palette-insight-reporting-$TRAVIS_TAG-install.zip
   - PACKED_ZIP=palette-insight-reporting--packed--$TRAVIS_TAG.zip
 
+  - CURRENT_VERSION_FULL_INSTALL_DIR=_root/opt/palette-insight-reporting/full-installs/$TRAVIS_TAG
+
+
   # DEPLOYMENT DATA
   - DEPLOY_HOST=rpm.palette-software.net
   - DEPLOY_PATH=/var/palette-rpm-repo
@@ -35,28 +38,35 @@ before_deploy:
   # Build the RPM file
   - export VERSION=$(echo $TRAVIS_TAG | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\(\.[0-9][0-9]\)*')
   - echo "Building RPM version $VERSION"
-  - cd rpm-build
+  - pushd rpm-build
 
   # Create directories
   - mkdir -p _root/opt/palette-insight-reporting/full-install
   - mkdir -p _root/opt/palette-insight-reporting/migrations
   - mkdir -p _build
 
+  - export SRC_DIR=`dirs +1`
+
   # Copy over the full install versions
-  - cp -Rv ../full-installs/v* _root/opt/palette-insight-reporting/full-install
+  - cp -Rv $SRC_DIR/full-installs/v* _root/opt/palette-insight-reporting/full-installs
 
   # Copy over the migrations
-  - cp -Rv ../migrations/v* _root/opt/palette-insight-reporting/migrations
+  - cp -Rv $SRC_DIR/migrations/v* _root/opt/palette-insight-reporting/migrations
+
+  # Clean the destination for the current version
+  - rm -rfv $CURRENT_VERSION_FULL_INSTALL_DIR
+
+  # Overwrite the currently tagged versions directory with the
+  - unzip $SRC_DIR/$FULL_INSTALL_ZIP -d $CURRENT_VERSION_FULL_INSTALL_DIR
 
   # Copy the shell script over
-  - cp -v ../insight-datamodel-install.sh _root/opt/palette-insight-reporting
+  - cp -v $SRC_DIR/insight-datamodel-install.sh _root/opt/palette-insight-reporting
 
   # Pack the rpm archvie
   - rpmbuild -bb --buildroot "$(pwd)/_root" --define "_rpmdir $(pwd)/_build" --define "version $VERSION" --define "buildrelease $TRAVIS_BUILD_NUMBER" palette-insight-reporting.spec
 
   # Pack it as a zip also
-  - zip -r ../$PACKED_ZIP _root/opt/palette-insight-reporting
-
+  - zip -r $SRC_DIR/$PACKED_ZIP _root/opt/palette-insight-reporting
 
   # Decrypt the SSH key for deployment
   - openssl aes-256-cbc -K $encrypted_9fbb5ae586fd_key -iv $encrypted_9fbb5ae586fd_iv -in ../deploy_key.enc -out $DEPLOY_KEY -d
@@ -75,7 +85,7 @@ before_deploy:
   - ssh -i $DEPLOY_KEY  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST $DEPLOY_CMD
 
   # Go back to the original root dir, so travis can find the zip files
-  - cd ..
+  - popd
 
 deploy:
   provider: releases
