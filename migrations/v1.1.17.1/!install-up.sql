@@ -41,6 +41,7 @@ alter table p_serverlogs add column workbook_name_id text default null;
 alter table p_serverlogs add column workbook_rev text default null;
 alter table p_serverlogs add column publisher_username_id text default null;
 
+/*
 create table tmp_upd_slogs
 as
 select
@@ -108,6 +109,7 @@ where
 	p_serverlogs.ts >= now()::date - 7 and
 	p_serverlogs.parent_vizql_session = s.parent_vizql_session		
 ;
+*/
 
 \i 001-up-p_serverlogs_report.sql
 \i 002-up-does_part_exist.sql

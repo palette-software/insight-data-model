@@ -55,7 +55,7 @@ CREATE TABLE "p_cpu_usage"(
  "parent_vizql_session" varchar(100),
  "parent_dataserver_session" Text,
  "spawned_by_parent_ts" Text,
- "parent_vizql_destroy_sess_ts" Text,
+ "parent_vizql_destroy_sess_ts" Timestamp,
  "parent_process_type" Text
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
