@@ -58,7 +58,6 @@ before_deploy:
 
   # Upload the RPM to the RPM repository
   # by exportin it to SSHPASS, sshpass wont log the command line and the password
-  - cat $DEPLOY_KEY
   - echo "scp -i $DEPLOY_KEY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r _build/* $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH"
   - scp -i $DEPLOY_KEY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r _build/* $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
 
