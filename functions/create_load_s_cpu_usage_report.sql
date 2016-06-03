@@ -46,6 +46,7 @@ begin
 						information_schema.columns c
 					where
 						table_schema = p_schema_name and
+						column_name not in ('p_filepath') and
 						(table_name in ('h_sites', 'h_projects', 'h_workbooks', 'h_system_users') or
 						(table_name = 'p_cpu_usage' and column_name not in ('start_ts', 'end_ts')))
 												
@@ -72,7 +73,8 @@ begin
 						information_schema.columns c
 					where
 						table_schema = p_schema_name and
-						table_name in ('h_users', 'h_system_users')
+						table_name in ('h_users', 'h_system_users') and
+						column_name not in ('p_filepath')
 					) a	
 					order by
 						gen_seq,
@@ -129,97 +131,7 @@ begin
 						   workbook_name_id						   						   						   
 						  ';
 						  
-		v_sql := v_sql || ') 
-		with t_h_workbooks as 
-				(
-					select * 
-					from
-						#schema_name#.h_workbooks
-					where
-						p_id in
-								(select p_id
-								from
-									#schema_name#.h_workbooks
-								intersect
-								select distinct h_workbooks_p_id
-								from
-									#schema_name#.p_cpu_usage
-								where
-									ts_rounded_15_secs >= #v_max_ts_date#
-								)
-				),
-				t_interactor_h_users as 
-				(
-					select * 
-					from
-						#schema_name#.h_users
-					where
-						p_id in
-								(select p_id
-								from
-									#schema_name#.h_users
-								intersect
-								select distinct interactor_h_users_p_id
-								from
-									#schema_name#.p_cpu_usage
-								where
-									ts_rounded_15_secs >= #v_max_ts_date#
-								)									
-				),								
-				t_interactor_h_system_users as 
-				(
-					select * 
-					from
-						#schema_name#.h_system_users
-					where
-						p_id in
-								(select p_id
-								from
-									#schema_name#.h_system_users
-								intersect
-								select distinct interactor_h_system_users_p_id
-								from
-									#schema_name#.p_cpu_usage
-								where
-									ts_rounded_15_secs >= #v_max_ts_date#
-								)									
-				),	
-				t_publisher_h_users as 
-				(
-					select * 
-					from
-						#schema_name#.h_users
-					where
-						p_id in
-								(select p_id
-								from
-									#schema_name#.h_users
-								intersect
-								select distinct publisher_h_users_p_id
-								from
-									#schema_name#.p_cpu_usage
-								where
-									ts_rounded_15_secs >= #v_max_ts_date#
-								)									
-				),								
-				t_publisher_h_system_users as 
-				(
-					select * 
-					from
-						#schema_name#.h_system_users
-					where
-						p_id in
-								(select p_id
-								from
-									#schema_name#.h_system_users
-								intersect
-								select distinct publisher_h_system_users_p_id
-								from
-									#schema_name#.p_cpu_usage
-								where
-									ts_rounded_15_secs >= #v_max_ts_date#
-								)									
-				)
+		v_sql := v_sql || ')		
 							
 		select ';
 		
@@ -238,15 +150,27 @@ begin
 				';
 		
 		v_sql := v_sql || '
-				FROM #schema_name#.p_cpu_usage cpu
-				 	left outer join #schema_name#.h_projects p on (p.p_id = cpu.h_projects_p_id)
-					left outer join #schema_name#.h_sites s on (s.p_id = cpu.h_sites_p_id)
-					left outer join t_interactor_h_system_users su_int on (su_int .p_id = cpu.interactor_h_system_users_p_id)
-					left outer join t_h_workbooks wb on (wb.p_id = cpu.h_workbooks_p_id)		
-					left outer join t_publisher_h_users u_pub on (u_pub.p_id = cpu.publisher_h_users_p_id) 
-					left outer join t_publisher_h_system_users us_pub on (us_pub.p_id = cpu.publisher_h_system_users_p_id)
-				WHERE
-					cpu.ts_rounded_15_secs >= #v_max_ts_date#
+				FROM (
+						select distinct h_projects_p_id, h_sites_p_id, interactor_h_system_users_p_id, h_workbooks_p_id, publisher_h_users_p_id, publisher_h_system_users_p_id
+						from #schema_name#.p_cpu_usage cpu
+						where
+						cpu.ts_rounded_15_secs >= #v_max_ts_date#
+					) cpu0
+                    left outer join #schema_name#.h_projects p on (p.p_id = cpu0.h_projects_p_id)
+                    left outer join #schema_name#.h_sites s on (s.p_id = cpu0.h_sites_p_id)
+                    left outer join #schema_name#.h_system_users su_int on (su_int.p_id = cpu0.interactor_h_system_users_p_id)
+                    left outer join #schema_name#.h_workbooks wb on (wb.p_id = cpu0.h_workbooks_p_id)       
+                    left outer join #schema_name#.h_users u_pub on (u_pub.p_id = cpu0.publisher_h_users_p_id)
+                    left outer join #schema_name#.h_system_users us_pub on (us_pub.p_id = cpu0.publisher_h_system_users_p_id)
+                    inner join #schema_name#.p_cpu_usage cpu on
+                    (coalesce(cpu.h_projects_p_id, -1) = coalesce(cpu0.h_projects_p_id, -1)
+                     AND coalesce(cpu.h_sites_p_id, -1) = coalesce(cpu0.h_sites_p_id, -1)
+                     AND coalesce(cpu.interactor_h_system_users_p_id, -1) = coalesce(cpu0.interactor_h_system_users_p_id, -1)
+                     AND coalesce(cpu.h_workbooks_p_id, -1) = coalesce(cpu0.h_workbooks_p_id, -1)
+                     AND coalesce(cpu.publisher_h_users_p_id, -1) = coalesce(cpu0.publisher_h_users_p_id, -1)
+                     AND coalesce(cpu.publisher_h_system_users_p_id, -1) = coalesce(cpu0.publisher_h_system_users_p_id, -1)
+                    )
+                WHERE cpu.ts_rounded_15_secs >= #v_max_ts_date#
 		';
 		
 		v_sql := v_sql || '
@@ -256,6 +180,7 @@ begin
 				v_sql := replace(v_sql, ''#v_max_ts_date#'', v_max_ts_date);
 				
 				raise notice ''I: %'', v_sql;
+				execute ''set local join_collapse_limit = 1'';
 				execute v_sql;		
 				GET DIAGNOSTICS v_num_inserted = ROW_COUNT;			
 				return v_num_inserted;
@@ -264,6 +189,7 @@ begin
 				
 				
 		v_sql := replace(v_sql, '#function_schema_name#', p_schema_name);
+		
 		raise notice 'I: %', v_sql;
 		execute v_sql;
 		
