@@ -1,4 +1,4 @@
-CREATE TABLE p_interactor_session_agg_cpu_usage
+CREATE TABLE p_interactor_session
 (
 	vizql_session TEXT,
 	process_name TEXT,

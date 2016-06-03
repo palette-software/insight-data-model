@@ -1,25 +1,25 @@
-CREATE or replace function load_p_interactor_session_agg_cpu_usage(p_schema_name text) returns bigint
+CREATE or replace function load_p_interactor_session(p_schema_name text) returns bigint
 AS $$
 declare
 	v_sql text;
 	v_num_inserted bigint;	
-	v_max_ts_date_p_interactor_session_agg_cpu_usage text;
+	v_max_ts_date_p_interactor_session text;
 	v_sql_cur text;
 BEGIN	
 
-		v_sql_cur := 'select to_char(coalesce(max(session_start_ts)::date, date''1001-01-01''), ''yyyy-mm-dd'') from #schema_name#.p_interactor_session_agg_cpu_usage';
+		v_sql_cur := 'select to_char(coalesce(max(session_start_ts)::date, date''1001-01-01''), ''yyyy-mm-dd'') from #schema_name#.p_interactor_session';
 		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);		
-		execute v_sql_cur into v_max_ts_date_p_interactor_session_agg_cpu_usage;
-		v_max_ts_date_p_interactor_session_agg_cpu_usage := 'date''' || v_max_ts_date_p_interactor_session_agg_cpu_usage || '''';
+		execute v_sql_cur into v_max_ts_date_p_interactor_session;
+		v_max_ts_date_p_interactor_session := 'date''' || v_max_ts_date_p_interactor_session || '''';
 				
-		v_sql_cur := 'delete from #schema_name#.p_interactor_session_agg_cpu_usage where session_start_ts::date >= #max_ts_date_p_interactor_session_agg_cpu_usage#';
+		v_sql_cur := 'delete from #schema_name#.p_interactor_session where session_start_ts::date >= #max_ts_date_p_interactor_session#';
 		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);		
-		v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_interactor_session_agg_cpu_usage#', v_max_ts_date_p_interactor_session_agg_cpu_usage);				
+		v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_interactor_session#', v_max_ts_date_p_interactor_session);				
 
 		raise notice 'I: %', v_sql_cur;
 		execute v_sql_cur;
 
-		v_sql := 'INSERT INTO #schema_name#.p_interactor_session_agg_cpu_usage
+		v_sql := 'INSERT INTO #schema_name#.p_interactor_session
 		(
 			vizql_session, 
 			process_name,
@@ -74,18 +74,18 @@ BEGIN
 		                        SUM(CASE WHEN sev = ''warn'' THEN 1 ELSE 0 END) num_warn
 		                FROM 
 		                        #schema_name#.p_serverlogs
-		                WHERE ts >= #max_ts_date_p_interactor_session_agg_cpu_usage# - 1
+		                WHERE ts >= #max_ts_date_p_interactor_session# - 1
 		                GROUP BY parent_vizql_session, process_name
 		        ) num_loglevels
 		                ON (pcur.cpu_usage_parent_vizql_session = num_loglevels.vizql_session AND pcur.cpu_usage_process_name = num_loglevels.process_name)
-		WHERE cpu_usage_ts_rounded_15_secs >= #max_ts_date_p_interactor_session_agg_cpu_usage#
+		WHERE cpu_usage_ts_rounded_15_secs >= #max_ts_date_p_interactor_session#
 		        AND cpu_usage_parent_vizql_session IS NOT NULL
 		GROUP BY cpu_usage_parent_vizql_session, cpu_usage_process_name;
 		';
 
 
 			v_sql := replace(v_sql, '#schema_name#', p_schema_name);			
-			v_sql := replace(v_sql, '#max_ts_date_p_interactor_session_agg_cpu_usage#', v_max_ts_date_p_interactor_session_agg_cpu_usage);			
+			v_sql := replace(v_sql, '#max_ts_date_p_interactor_session#', v_max_ts_date_p_interactor_session);			
 
 			raise notice 'I: %', v_sql;
 			execute v_sql;
