@@ -44,8 +44,37 @@ begin
 					   			   , project_name_id
 					   			   , workbook_name_id
 					   			   , workbook_rev
-					   		   	   , publisher_username_id								   
-								   
+					   		   	   , publisher_username_id
+				)
+				
+				with t_req_wb as
+				(select
+					h.vizql_session,
+					h.site_name_id,
+					h.project_name_id,
+					h.workbook_name_id,
+					h.publisher_username_id,
+					h.h_workbooks_p_id,
+					wb.revision
+				from
+					(SELECT       				  
+						  r.vizql_session,
+						  max(r.site_name || '' ('' || r.site_id || '')'') as site_name_id,
+						  max(r.project_name || '' ('' || r.project_id || '')'') as project_name_id,
+						  max(r.workbook_name || '' ('' || r.workbook_id || '')'') as workbook_name_id,				  
+						  max(r.publisher_username || '' ('' || r.publisher_user_id || '')'') as publisher_username_id,
+						  max(h_workbooks_p_id) as h_workbooks_p_id
+						FROM 
+							p_http_requests r					
+						WHERE
+						  coalesce(r.currentsheet, '''') <> '''' AND 
+						  r.vizql_session IS NOT NULL AND 
+						  r.vizql_session <> ''-'' AND 
+						  r.site_id IS NOT NULL   
+						group by
+						  	r.vizql_session
+					) h
+					left outer join h_workbooks wb on (wb.p_id = h.h_workbooks_p_id)
 				)
 				select 
 				         s.serverlogs_id
@@ -82,29 +111,11 @@ begin
 					   , h.site_name_id
 					   , h.project_name_id
 					   , h.workbook_name_id
-					   , wb.revision as workbook_rev
+					   , h.revision as workbook_rev
 					   , h.publisher_username_id
 				from s_serverlogs s
-				  	left outer join (SELECT       				  
-										  r.vizql_session,
-										  max(r.site_name || '' ('' || r.site_id || '')'') as site_name_id,
-										  max(r.project_name || '' ('' || r.project_id || '')'') as project_name_id,
-										  max(r.workbook_name || '' ('' || r.workbook_id || '')'') as workbook_name_id,				  
-										  max(r.publisher_username || '' ('' || r.publisher_user_id || '')'') as publisher_username_id,
-										  max(h_workbooks_p_id) as h_workbooks_p_id
-										FROM 
-											p_http_requests r					
-										WHERE
-										  coalesce(r.currentsheet, '''') <> '''' AND 
-										  r.vizql_session IS NOT NULL AND 
-										  r.vizql_session <> ''-'' AND 
-										  r.site_id IS NOT NULL   
-										group by
-										  	r.vizql_session
-							) h on (s.parent_vizql_session = h.vizql_session)
-							left outer join h_workbooks wb on (wb.p_id = h.h_workbooks_p_id)				
-				'
-				;
+				  	left outer join t_req_wb h on (h.vizql_session = s.parent_vizql_session)
+				';
 								
 		raise notice 'I: %', v_sql;
 		execute v_sql;
