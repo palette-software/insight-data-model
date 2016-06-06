@@ -131,8 +131,8 @@ drop table plainlogs_old;
 
 \i p_interactor_cpu_usage_report.sql
 \i p_processinfo.sql
-\i p_interactor_session_agg_cpu_usage.sql
-\i load_p_interactor_session_agg_cpu_usage.sql
+\i p_interactor_session.sql
+\i load_p_interactor_session.sql
 
 CREATE INDEX p_cpu_usage_report_cpu_usage_vizql_session_idx ON p_cpu_usage_report USING btree (cpu_usage_vizql_session)
 where cpu_usage_process_name in ('vizqlserver', 'dataserver', 'tabprotosrv', 'tdeserver');
