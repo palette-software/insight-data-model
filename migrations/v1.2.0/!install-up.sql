@@ -38,4 +38,4 @@ where
 alter table p_interactor_session_agg_cpu_usage rename to p_interactor_session;
 \i 001-up-load_p_interactor_session.sql
 
-insert into db_version_meta(version_number) values ('v1.1.17.2');
+insert into db_version_meta(version_number) values ('v1.2.0');
