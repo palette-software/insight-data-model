@@ -162,7 +162,10 @@ begin
 				    WHERE
 				      workbooks_datasources.owner_id=users.id AND 
 				      users.system_user_id=system_users.id AND 
-				      workbooks_datasources.project_id=projects.id
+				      workbooks_datasources.project_id=projects.id AND
+					  greatest(workbooks_datasources.p_valid_from, users.p_valid_from, system_users.p_valid_from, projects.p_valid_from) 
+					  	<= 
+						least(workbooks_datasources.p_valid_to, users.p_valid_to, system_users.p_valid_to, projects.p_valid_to)
 				  ) workbooks_datasources 
 				  ON 
 				    bj.title = workbooks_datasources.workbooks_datasources_name AND 
