@@ -136,7 +136,7 @@ where cpu_usage_process_name in ('vizqlserver', 'dataserver', 'tabprotosrv', 'td
 
 \i does_part_exist.sql
 \i is_subpart_template_same.sql
-
+\i get_max_ts.sql
 
 select handle_privileges('#schema_name#');
 
