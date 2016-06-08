@@ -4,15 +4,15 @@ declare
 	v_sql text;
 	v_num_inserted bigint;	
 	v_sql_cur text;
-	v_max_ts_date_plainlogs text;	
+	v_max_ts_date_p_serverlogs text;	
 begin	
 
 			execute 'set local search_path = ' || p_schema_name;
 			
-			v_sql_cur := 'select to_char((select get_max_ts_date(''#schema_name#'', ''plainlogs'')), ''yyyy-mm-dd'')';
+			v_sql_cur := 'select to_char((select get_max_ts_date(''#schema_name#'', ''p_serverlogs'')), ''yyyy-mm-dd'')';
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
-			execute v_sql_cur into v_max_ts_date_plainlogs;
-			v_max_ts_date_plainlogs := 'date''' || v_max_ts_date_plainlogs || '''';
+			execute v_sql_cur into v_max_ts_date_p_serverlogs;
+			v_max_ts_date_p_serverlogs := 'date''' || v_max_ts_date_p_serverlogs || '''';
 			
 			v_sql := 
 			'insert into s_serverlogs (
@@ -45,14 +45,95 @@ begin
 					start_ts
 			)			
 			
-			select 
+			with t_s_spawner as
+                (
+                    select
+                                slog.host_name as spawner_host_name,
+                                slog.site as parent_vizql_site,
+								slog.sess as spawner_session,        
+								slog.username_without_domain as parent_vizql_username,
+                                max(parent_vizql_destroy_sess_ts) as parent_vizql_destroy_sess_ts                          
+                    from 
+                        (select host_name,
+                                site,
+                                sess,
+								username_without_domain,
+                                max(case when k = ''destroy-session'' then ts end) as parent_vizql_destroy_sess_ts
+                        from
+                            p_serverlogs
+                        where
+                            (filename like ''vizqlserver%'' or filename like ''dataserver%'') and
+                            ts >= (#max_ts_date_p_serverlogs# - interval ''1 day'')
+						group by
+							host_name,
+                            site,
+                            sess,
+                            username_without_domain
+							
+                        union all                        
+						
+                        select  host_name,
+                                site,
+                                sess,
+								username_without_domain,
+                                max(case when k = ''destroy-session'' then ts end) as parent_vizql_destroy_sess_ts
+                        from
+                            s_serverlogs
+                        where
+                            (filename like ''vizqlserver%'' or filename like ''dataserver%'')
+						group by
+							host_name,
+                            site,
+                            sess,
+                            username_without_domain
+                        ) slog
+						group by host_name,
+                                site,
+                                sess,
+								username_without_domain
+				),
+				
+				session_map as (
+					select
+						tid,
+						sessid,
+						first_p_id,
+						coalesce(lead(first_p_id) over (partition by filename, session_uid order by ts, p_id) - 1, max_file_p_id) as last_p_id,
+						ts_start,
+						coalesce(lead(ts) over (partition by filename, session_uid order by ts, p_id), max_file_ts) as ts_end,
+						session_uid,
+						filename
+					from
+					(
+						select
+							p_id,
+							pid as tid,
+							ts,
+							line,
+							substr(line, position(''sessionid='' in line) + 10, 36) as sessid,
+							lag(p_id) over (partition by filename, pid order by ts, p_id) as first_p_id,
+							lag(substr(line, 1, greatest(position('':'' in line) - 1, 1))) over (partition by filename, pid order by ts, p_id) as session_uid,
+							lag(ts) over (partition by filename, pid order by ts, p_id) as ts_start,
+							filename,
+							max(p_id) over (partition by filename) as max_file_p_id,
+							max(ts) over (partition by filename) as max_file_ts
+						from 
+							plainlogs p
+						where 
+							ts >= (#max_ts_date_p_serverlogs# - interval ''1 day'')
+							and (filename like ''tdeserver_vizqlserver%'' or filename like ''tdeserver_dataserver%'')
+					) t
+					where line like ''(queryband%''
+				)
+				select * from (
+				select 
 					p_id,
 					pl.p_filepath,
 					pl.filename,
 					replace(case when position(''_'' in pl.filename) > 0 then substr(pl.filename, 1, position(''_'' in pl.filename) -1) else pl.filename end, ''.txt'', '''') as process_name,
 					pl.host_name,
 					pl.ts,
-					null as pid,
+					max(case when pl.line like ''pid=%'' then substr(pl.line, 5) end) over (partition by pl.filename)::bigint as pid,
 					pl.pid as tid,
 					null as sev,
 					null as req,
@@ -62,25 +143,32 @@ begin
 					null as username_without_domain,
 					null as k,
 					pl.line as v,
-					null as parent_vizql_session,
-					null as parent_vizql_destroy_sess_ts,
-					null as parent_dataserver_session,
-					null as spawned_by_parent_ts,
-					null as parent_process_type,
-					null as parent_vizql_site,
-					null as parent_vizql_username,
-					null as parent_dataserver_site,
-					null as parent_dataserver_username,
+					case when pl.filename like ''tdeserver_vizqlserver%'' then sm.sessid end as parent_vizql_session,
+					sp.parent_vizql_destroy_sess_ts as parent_vizql_destroy_sess_ts,
+					case when pl.filename like ''tdeserver_dataserver%'' then sm.sessid end as parent_dataserver_session,
+					sm.ts_start as spawned_by_parent_ts,
+					case when pl.filename like ''tdeserver_vizqlserver%'' then ''vizqlserver''
+						 when pl.filename like ''tdeserver_dataserver%'' then  ''dataserver''
+					end as parent_process_type,
+					case when pl.filename like ''tdeserver_vizqlserver%'' then sp.parent_vizql_site end as parent_vizql_site,
+					case when pl.filename like ''tdeserver_vizqlserver%'' then sp.parent_vizql_username end as parent_vizql_username,
+					case when pl.filename like ''tdeserver_dataserver%'' then sp.parent_vizql_site end as parent_dataserver_site,
+					case when pl.filename like ''tdeserver_dataserver%'' then sp.parent_vizql_username end as parent_dataserver_username,
 					pl.elapsed_ms,
-					pl.start_ts
-			from
-					plainlogs pl
-			where
-				substr(pl.filename, 1, 9) = ''tdeserver'' and
-				pl.ts >= #max_ts_date_plainlogs#
+					pl.start_ts					
+			from plainlogs pl
+				left join session_map sm on pl.filename = sm.filename
+				  							and pl.line like (sm.session_uid || '':%'')
+				  							and pl.p_id between sm.first_p_id and sm.last_p_id
+											
+				left join t_s_spawner sp on sp.spawner_session = sm.sessid
+			
+			where pl.ts >= #max_ts_date_p_serverlogs# - interval ''1 day''
+					and pl.filename like ''%tdeserver%''
+			) t where t.ts >= #max_ts_date_p_serverlogs#
 			';
 			
-		v_sql := replace(v_sql, '#max_ts_date_plainlogs#', v_max_ts_date_plainlogs);
+		v_sql := replace(v_sql, '#max_ts_date_p_serverlogs#', v_max_ts_date_p_serverlogs);
 
 		raise notice 'I: %', v_sql;	
 
@@ -88,5 +176,6 @@ begin
 		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;			
 
 		return v_num_inserted;
+
 END;
 $$ LANGUAGE plpgsql;
