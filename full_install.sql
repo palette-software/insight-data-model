@@ -82,7 +82,6 @@ WITH (appendonly=true, orientation=column, compresstype=quicklz)
 alter sequence serverlogs_p_id_seq owned by serverlogs.p_id;
 drop table serverlogs_old;
 
-CREATE INDEX serverlogs_p_id_idx ON palette.serverlogs USING btree (p_id);  
 
 \i get_max_ts_date.sql
 
@@ -121,12 +120,10 @@ alter sequence plainlogs_p_id_seq owned by plainlogs.p_id;
 insert into plainlogs select * from plainlogs_old;
 drop table plainlogs_old;
 
-
 \i delete_recent_records_from_p_serverlogs.sql
 \i insert_p_serverlogs_from_s_serverlogs.sql
 \i load_p_cpu_usage_agg_report.sql
 \i p_cpu_usage_agg_report.sql
-\i load_p_serverlogs_datasrv_tabproto.sql
 \i p_serverlogs_report.sql
 
 \i p_interactor_cpu_usage_report.sql

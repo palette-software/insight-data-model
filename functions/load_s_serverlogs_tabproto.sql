@@ -2,32 +2,20 @@ CREATE or replace function load_s_serverlogs_tabproto(p_schema_name text) return
 AS $$
 declare
 	v_sql text;
-	v_num_inserted bigint;
-	v_max_ts_date_p_cpu_usage text;
+	v_num_inserted bigint;	
 	v_sql_cur text;	
-	v_max_p_serverlogs_id text;	
+	v_max_ts_date_p_serverlogs text;	
 begin	
 
-			v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_cpu_usage'')), ''yyyy-mm-dd'')';
-			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
-		
-			execute v_sql_cur into v_max_ts_date_p_cpu_usage;
-			v_max_ts_date_p_cpu_usage := 'date''' || v_max_ts_date_p_cpu_usage || '''';
-
-
-			v_sql_cur := 'select coalesce(max(serverlogs_id), 0)
-							from 
-								#schema_name#.p_serverlogs
-							where 
-								  process_name = ''tabprotosrv''
-							';			
-													
-			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);		
-			execute v_sql_cur into v_max_p_serverlogs_id;		
-						
+			execute 'set local search_path = ' || p_schema_name;
+			
+			v_sql_cur := 'select to_char((select get_max_ts_date(''#schema_name#'', ''p_serverlogs'')), ''yyyy-mm-dd'')';
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
+			execute v_sql_cur into v_max_ts_date_p_serverlogs;
+			v_max_ts_date_p_serverlogs := 'date''' || v_max_ts_date_p_serverlogs || '''';																
 			
 			v_sql := 
-			'insert into #schema_name#.s_serverlogs (
+			'insert into s_serverlogs (
 					serverlogs_id,
 					p_filepath,
 					filename,
@@ -108,11 +96,11 @@ begin
 								parent_vizql_destroy_sess_ts,
 								username_without_domain								
 						from
-							#schema_name#.p_serverlogs
+								p_serverlogs
 						where
 							(substr(filename, 1, 11) = ''vizqlserver'' or substr(filename, 1, 10) = ''dataserver'') and 
 							(v like ''%CreateServerProcess%'' or k = ''destroy-session'') and 
-							ts >= #v_max_ts_date_p_cpu_usage# - interval''24 hours''
+							ts >= #max_ts_date_p_serverlogs# - interval''24 hours''
 						union all
 						select filename,
 								host_name,
@@ -124,7 +112,7 @@ begin
 								parent_vizql_destroy_sess_ts,
 								username_without_domain
 						from
-							#schema_name#.s_serverlogs
+								s_serverlogs
 						where
 							(substr(filename, 1, 11) = ''vizqlserver'' or substr(filename, 1, 10) = ''dataserver'') and 
 							(v like ''%CreateServerProcess%'' or k = ''destroy-session'')	
@@ -145,10 +133,10 @@ begin
 												parent_vizql_site,
 												parent_vizql_username
 										from
-											#schema_name#.p_serverlogs
+												p_serverlogs
 										where
 											substr(filename, 1, 10) = ''dataserver'' and
-											ts >= #v_max_ts_date_p_cpu_usage# - interval''24 hours''
+											ts >= #max_ts_date_p_serverlogs# - interval''24 hours''
 										union all
 										select host_name,
 												sess,
@@ -157,7 +145,7 @@ begin
 												parent_vizql_site,
 												parent_vizql_username 
 										from
-											#schema_name#.s_serverlogs
+												s_serverlogs
 										where
 											substr(filename, 1, 10) = ''dataserver''
 										) u									
@@ -171,10 +159,10 @@ begin
 										process_id, 
 										start_ts
 								from
-									#schema_name#.p_threadinfo
+										p_threadinfo
 								where
 									thread_id = -1 and
-									ts_rounded_15_secs >= #v_max_ts_date_p_cpu_usage# - interval''24 hours'' and
+									ts_rounded_15_secs >= #max_ts_date_p_serverlogs# - interval''24 hours'' and
 									process_name = ''tabprotosrv''
 								) tinfo on (tinfo.host_name = sl.spawner_host_name and 
 											tinfo.process_id = sl.spawned_tabproto_process_id)
@@ -260,24 +248,21 @@ begin
 							, s_tabproto.elapsed_ms
 							, s_tabproto.start_ts as log_start_ts
 					from
-						#schema_name#.serverlogs s_tabproto
+						serverlogs s_tabproto
 						left outer join t_s_spawner s_spawner on (s_tabproto.host_name = s_spawner.spawner_host_name and 
 																 s_tabproto.pid = s_spawner.spawned_tabproto_process_id and 
 																 s_tabproto.ts >= s_spawner.spawned_tabproto_process_id_ts and 
 																 s_tabproto.ts >= s_spawner.start_ts)						
 					where
 						substr(s_tabproto.filename, 1, 11) = ''tabprotosrv'' and
-						s_tabproto.p_id > #max_p_serverlogs_id#
+						s_tabproto.ts >= #max_ts_date_p_serverlogs#
 					) a
 				where 
 					rn = 1
 				'
 				;
-
-		
-		v_sql := replace(v_sql, '#schema_name#', p_schema_name);
-		v_sql := replace(v_sql, '#v_max_ts_date_p_cpu_usage#', v_max_ts_date_p_cpu_usage);
-		v_sql := replace(v_sql, '#max_p_serverlogs_id#', v_max_p_serverlogs_id);
+						
+		v_sql := replace(v_sql, '#max_ts_date_p_serverlogs#', v_max_ts_date_p_serverlogs);
 		
 		raise notice 'I: %', v_sql;
 

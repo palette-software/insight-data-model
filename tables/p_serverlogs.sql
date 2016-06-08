@@ -49,7 +49,4 @@ WITH (appendonly=true, orientation=column, compresstype=quicklz)
 );
 
 create index p_serverlogs_parent_vizql_session_idx on p_serverlogs(parent_vizql_session);
-
-CREATE INDEX p_serverlogs_process_name_serverlogs_id_idx ON palette.p_serverlogs 
-USING btree (process_name, serverlogs_id);
   

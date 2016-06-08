@@ -6,27 +6,48 @@ declare
 	v_sql_cur text;
 	v_num_deleted bigint;
 	v_max_ts_date_p_cpu_usage text;
+	c refcursor;
+	rec record;		
 begin	
 
-		v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_cpu_usage'')), ''yyyy-mm-dd'')';		
-		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);		
-		execute v_sql_cur into v_max_ts_date_p_cpu_usage;		
-		v_max_ts_date_p_cpu_usage := 'date''' || v_max_ts_date_p_cpu_usage || '''';
+		execute 'set local search_path = ' || p_schema_name;
+		
+		v_sql_cur := 'select distinct 
+							#column_host_name# as host_name,
+							#column_ts_date# as ts_date,
+							''delete from "p_#table_name#_1_prt_'' || to_char(#column_ts_date#, ''yyyymmdd'') || ''_2_prt_'' || #column_host_name# || ''"'' as delete_partition
+					 from 
+							s_#table_name#';
+			
+		v_sql_cur := replace(v_sql_cur, '#table_name#', 'serverlogs');		
+		v_sql_cur := replace(v_sql_cur, '#column_host_name#', 'host_name');
+		v_sql_cur := replace(v_sql_cur, '#column_ts_date#', 'ts::date');
+		
+		raise notice 'I: %', v_sql_cur;
+		
+		open c for execute (v_sql_cur);
+		loop
+			  fetch c into rec;
+			  exit when not found;
+			  			  
+			  v_sql := rec.delete_partition;
+			  raise notice 'I: %', v_sql;
+			  
+			  begin			  
+			  	execute v_sql;				
+			  exception when undefined_table 
+			  		-- the partition is not there (only possible when a new host's just installed)
+			  		then null;
+			  end;
+			  			  
+			  v_sql := 'delete from "p_#table_name#_1_prt_' || to_char(rec.ts_date, 'yyyymmdd') || '_2_prt_new_host"';			  
+			  v_sql := replace(v_sql, '#table_name#', substr('p_serverlogs', 3));
+			  raise notice 'I: %', v_sql;
+			  execute v_sql;
+			  
+		end loop;
+		close c;			
 				
-		/*The order or sending serverlogs not exact. 
-		Around midnight data can come from today and previous day as well which messes up the logic 
-		and results in loosing serverlogs rows in p_serverlogs table. 
-		That is why we need the – 1 hour*/
-		
-		v_sql := 'delete from #schema_name#.p_serverlogs
-				  where 
-					process_name in (''vizqlserver'', ''tabprotosrv'', ''dataserver'')
-					and ts >= #max_ts_date_p_cpu_usage# - interval''1 hour''';
-
-		v_sql := replace(v_sql, '#schema_name#', p_schema_name);
-		v_sql := replace(v_sql, '#max_ts_date_p_cpu_usage#', v_max_ts_date_p_cpu_usage);
-		
-		execute v_sql;
 						
 		GET DIAGNOSTICS v_num_deleted = ROW_COUNT;	
 		return v_num_deleted;

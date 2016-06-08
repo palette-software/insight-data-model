@@ -36,6 +36,17 @@ where
 ;
 
 alter table p_interactor_session_agg_cpu_usage rename to p_interactor_session;
-\i 001-up-load_p_interactor_session.sql
+drop function load_p_interactor_session_agg_cpu_usage(text);
+\i 001-up-load_p_interactor_session.sql 
+
+
+drop index palette.p_serverlogs_process_name_serverlogs_id_idx;
+drop index palette.serverlogs_p_id_idx;
+drop function load_p_serverlogs_datasrv_tabproto(text);
+
+
 
 insert into db_version_meta(version_number) values ('v1.2.0');
+
+
+

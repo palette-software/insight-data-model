@@ -4,19 +4,18 @@ declare
 	v_sql text;
 	v_num_inserted bigint;	
 	v_sql_cur text;	
-	v_max_p_serverlogs_id text;	
-begin	
+	v_max_ts_date_p_serverlogs text;	
+begin				
+			execute 'set local search_path = ' || p_schema_name;
 				
-			v_sql_cur := 'select coalesce(max(serverlogs_id), 0)
-							from 
-								#schema_name#.p_serverlogs 
-							where process_name = ''vizqlserver''';
-							
-			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);		
-			execute v_sql_cur into v_max_p_serverlogs_id;									
+			v_sql_cur := 'select to_char((select get_max_ts_date(''#schema_name#'', ''p_serverlogs'')), ''yyyy-mm-dd'')';
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
+			
+			execute v_sql_cur into v_max_ts_date_p_serverlogs;
+			v_max_ts_date_p_serverlogs := 'date''' || v_max_ts_date_p_serverlogs || '''';							
 			
 			v_sql := 
-			'insert into #schema_name#.s_serverlogs (
+			'insert into s_serverlogs (
 					serverlogs_id,
 					p_filepath,
 					filename,
@@ -75,15 +74,14 @@ begin
 					sl.elapsed_ms,
 					sl.start_ts
 			from
-				#schema_name#.serverlogs sl
+					serverlogs sl
 			where
 				substr(sl.filename, 1, 11) = ''vizqlserver'' and				
-				sl.p_id > #max_p_serverlogs_id#
+				sl.ts >= #max_ts_date_p_serverlogs#
 			'	
 			;
-		
-		v_sql := replace(v_sql, '#schema_name#', p_schema_name);				
-		v_sql := replace(v_sql, '#max_p_serverlogs_id#', v_max_p_serverlogs_id);
+				
+		v_sql := replace(v_sql, '#max_ts_date_p_serverlogs#', v_max_ts_date_p_serverlogs);
 		
 		raise notice 'I: %', v_sql;	
 
