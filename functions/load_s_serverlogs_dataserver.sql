@@ -124,8 +124,8 @@ begin
 						, case when s_spawner.spawner_session is not null then ''vizqlserver'' end as parent_process_type
 						, s_spawner.parent_vizql_site as parent_vizql_site
 						, s_spawner.parent_vizql_username as parent_vizql_username
-						, null as parent_dataserver_site
-						, null as parent_dataserver_username
+						, s_dataserver.site as parent_dataserver_site
+						, s_dataserver.user as parent_dataserver_username
 						, s_dataserver.elapsed_ms
 						, s_dataserver.start_ts
 				from
