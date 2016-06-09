@@ -180,7 +180,7 @@ begin
 						  thread_with_sess.parent_vizql_session as parent_vizql_session,
 						  null as parent_dataserver_session,
 						  null as spawned_by_parent_ts,
-						  null as parent_vizql_destroy_sess_ts,
+						  thread_with_sess.ts_destroy_sess as parent_vizql_destroy_sess_ts,
 						  null as parent_process_type
 						  --thread_with_sess.whole_session_duration as whole_session_duration
 						FROM 
@@ -213,6 +213,7 @@ begin
 								   ,slogs.whole_session_start_ts
 								   ,slogs.whole_session_end_ts
 								   ,slogs.parent_vizql_session
+								   ,slogs.ts_destroy_sess
 
 							from	
 								(select 
