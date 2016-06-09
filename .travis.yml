@@ -98,7 +98,7 @@ deploy:
     - "$INCREMENTAL_INSTALL_ZIP"
     - "$PACKED_ZIP"
   on:
-    repo: palette-software/palette-insight-reporting
+    repo: palette-software/insight-data-model
     tags: true
   skip_cleanup: true
 notifications:
