@@ -18,7 +18,37 @@ begin
 					where
 						table_schema = p_schema_name and
 						table_name = 'http_requests' and
-						column_name not in ('id', 'p_id', 'p_filepath', 'p_cre_date')		
+						column_name not in ('id', 'p_id', 'p_filepath', 'p_cre_date') and
+						column_name in (select 
+											column_name 
+										from
+											information_schema.columns 
+										where
+											table_schema = p_schema_name and
+											table_name = 'p_http_requests' and
+											column_name not in ('site_name',
+																'interactor_user_id',
+																'interactor_system_users_id',
+																'interactor_username',
+																'interactor_friendly_name',
+																'workbook_id',
+																'workbook_name',
+																'workbook_repository_url',
+																'publisher_user_id',
+																'project_id',
+																'publisher_system_users_id',
+																'publisher_username',
+																'publisher_friendly_name',
+																'project_name',
+																'created_at_month',
+																'h_projects_p_id',
+																'publisher_h_users_p_id',
+																'publisher_h_system_users_p_id',
+																'h_sites_p_id',
+																'h_workbooks_p_id',
+																'interactor_h_users_p_id',
+																'interactor_h_system_users_p_id')				
+										)	
 					order by						
 						ordinal_position)
 		loop			

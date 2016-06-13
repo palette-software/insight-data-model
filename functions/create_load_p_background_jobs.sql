@@ -18,7 +18,28 @@ begin
 					where
 						table_schema = p_schema_name and
 						table_name = 'background_jobs' and
-						column_name not in ('id', 'p_id', 'p_filepath', 'p_cre_date')
+						column_name not in ('id', 'p_id', 'p_filepath', 'p_cre_date') and
+						column_name in (select 
+										column_name 
+									from
+										information_schema.columns 
+									where
+										table_schema = p_schema_name and
+										table_name = 'p_background_jobs' and
+										column_name not in ('date_hour',
+															'workbooks_datasources_id',
+															'workbooks_datasources_name',
+															'publisher_name',
+															'publisher_friendlyname',
+															'project_name',
+															'site_name',
+															'wd_type',
+															'h_projects_p_id',
+															'h_workbooks_datasources_p_id',
+															'h_system_users_p_id',
+															'h_users_p_id',
+															'h_sites_p_id')
+									)
 					order by						
 						ordinal_position)
 		loop			
