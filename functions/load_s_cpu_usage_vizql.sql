@@ -119,7 +119,7 @@ begin
 						  thread_with_sess.cpu_time_delta_ticks::numeric / 10000000 / 60 / 60 as cpu_time_consumption_hours,        
 						  thread_with_sess.ts_interval_ticks,
 						  thread_with_sess.cpu_core_consumption,
-						  thread_with_sess.memory_usage_delta_bytes as memory_usage_bytes,    
+						  thread_with_sess.memory_usage_bytes as memory_usage_bytes,    
 						  thread_with_sess.process_name,
 						  case when thread_with_sess.process_name in (''backgrounder'',
 													''clustercontroller'',
@@ -198,6 +198,7 @@ begin
 							       ,tri.ts_interval_ticks
 							       ,tri.cpu_core_consumption
 								   ,tri.memory_usage_delta_bytes
+								   ,tri.memory_usage_bytes
 								   ,tri.process_level
 								   ,tri.is_thread_level
 								   ,max_reporting_granularity
@@ -230,6 +231,7 @@ begin
 							       ,ts_interval_ticks
 							       ,cpu_core_consumption
 								   ,memory_usage_delta_bytes
+								   ,memory_usage_bytes
 								   ,case when thread_id = -1 then ''Process Level'' else ''Thread Level'' end as process_level
 								   ,is_thread_level
 								   ,case when is_thread_level = ''Y'' and thread_id = -1 then false else true end as max_reporting_granularity
