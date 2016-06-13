@@ -26,7 +26,13 @@ MIGRATIONS_DIR=${ROOTDIR}/migrations
 VERSION_TABLE_EXISTS=`psql -d ${DB_NAME} -t -c "select exists( select 1 from information_schema.tables where table_schema='${SCHEMA_NAME}' and table_name='${VERSION_TABLE_NAME}');"`
 #VERSION_TABLE_EXISTS='f'
 
-# Function to apply templates
+# Function to apply templates.
+# Call like:
+#
+#   template_dir <INPUT_DIR>
+#
+# Returns the name of a temp directory with the templated contents.
+# The caller is responsible for cleaning up the temporary directory.
 template_dir () {
   IN_DIR=$1
   OUT_DIR=$(mktemp -d /tmp/insight-datamodel-install-sql.XXXXXX)
@@ -34,14 +40,17 @@ template_dir () {
   #echo "Copying the contents of ${IN_DIR} to ${OUT_DIR}"
   cp -R $IN_DIR/*.sql $OUT_DIR
 
-
-  # Do a replacement of #schema_name#
-  #echo "Replacing #schema_name# with ${SCHEMA_NAME}"
-  sed -i "s/#schema_name#/${SCHEMA_NAME}/g" ${OUT_DIR}/*.sql
+  # Do a replacement of #schema_name# in all *install* files
+  sed -i "s/#schema_name#/${SCHEMA_NAME}/g" ${OUT_DIR}/*install*.sql
 
   # 'return' the output directory
   echo $OUT_DIR
 }
+
+
+
+# ============= FULL INSTALL ==============
+
 
 # If no, do a full install
 if [ $VERSION_TABLE_EXISTS = 'f'  ]; then
@@ -76,6 +85,10 @@ if [ $VERSION_TABLE_EXISTS = 'f'  ]; then
   exit 0
 fi
 
+
+# ==================== INCREMENTAL INSTALL ====================
+
+
 # If yes, do an incremental install
 if [ $VERSION_TABLE_EXISTS = 't'  ]; then
   # Go into the migrations dir, so listing files there wont
@@ -106,7 +119,7 @@ if [ $VERSION_TABLE_EXISTS = 't'  ]; then
   fi
 
 
-  # Iterate through all versiosn
+  # Iterate through all versions
   for VERSION in $MIGRATION_VERSIONS
   do
     LOCAL_INDEX=`awk -v a="${MIGRATION_VERSIONS}" -v b="${VERSION}" 'BEGIN{print index(a,b)}'`
@@ -115,22 +128,23 @@ if [ $VERSION_TABLE_EXISTS = 't'  ]; then
     if [[  $LOCAL_INDEX -gt $EXISTING_VERSION_IDX   ]]; then
       # Check if the local version is lower or equal to the target version
       if [[  $LOCAL_INDEX -le $TARGET_VERSION_IDX   ]]; then
-	echo Need to run migration: $VERSION
 
-	TEMPLATED_DIR=`template_dir ${VERSION}`
+        echo Need to run migration: $VERSION
 
-	# Go to the migration dir to have the correct include paths
-	echo "Using temporary folder for migration: ${TEMPLATED_DIR}"
-	pushd ${TEMPLATED_DIR}
+        TEMPLATED_DIR=`template_dir ${VERSION}`
 
-	# Run the full installer
-	psql -d ${SCHEMA_NAME} -U palette_etl_user -f "!install-up.sql"
+        # Go to the migration dir to have the correct include paths
+        echo "Using temporary folder for migration: ${TEMPLATED_DIR}"
+        pushd ${TEMPLATED_DIR}
 
-	# Get back to the outer directory
-	popd
+        # Run the full installer
+        psql -d ${SCHEMA_NAME} -U palette_etl_user -f "!install-up.sql"
 
-	# Remove the templated directory
-	rm -rf ${TEMPLATED_DIR}
+        # Get back to the outer directory
+        popd
+
+        # Remove the templated directory
+        rm -rf ${TEMPLATED_DIR}
 
       fi
     fi
@@ -145,6 +159,7 @@ if [ $VERSION_TABLE_EXISTS = 't'  ]; then
 fi
 
 
+# ============= ERROR  ==============
 
 # Signal if we dont understand the existence flag
 echo "UNKNOWN VERSION TABLE EXISTENCE FLAG: ${VERSION_TABLE_EXISTS}"
