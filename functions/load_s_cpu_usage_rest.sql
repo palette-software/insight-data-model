@@ -96,7 +96,7 @@ begin
 						  tri.cpu_time_delta_ticks::numeric / 10000000 / 60 / 60 as cpu_time_consumption_hours,        
 						  tri.ts_interval_ticks,
 						  tri.cpu_core_consumption,
-						  tri.memory_usage_delta_bytes as memory_usage_bytes,    
+						  tri.memory_usage_bytes as memory_usage_bytes,    
 						  tri.process_name,
 						  case when tri.process_name in (''backgrounder'',
 													''clustercontroller'',
@@ -174,6 +174,7 @@ begin
 						       ,ts_interval_ticks
 						       ,cpu_core_consumption
 							   ,memory_usage_delta_bytes
+							   ,memory_usage_bytes
 							   ,case when thread_id = -1 then ''Process Level'' else ''Thread Level'' end as process_level
 							   ,is_thread_level
 							   ,case when is_thread_level = ''Y'' and thread_id = -1 then false else true end as max_reporting_granularity
