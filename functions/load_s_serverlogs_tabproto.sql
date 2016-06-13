@@ -4,7 +4,8 @@ declare
 	v_sql text;
 	v_num_inserted bigint;	
 	v_sql_cur text;	
-	v_max_ts_date_p_serverlogs text;	
+	v_max_ts_date_p_serverlogs text;
+	v_max_ts_date_p_threadinfo text;	
 begin	
 
 			execute 'set local search_path = ' || p_schema_name;
@@ -13,6 +14,11 @@ begin
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
 			execute v_sql_cur into v_max_ts_date_p_serverlogs;
 			v_max_ts_date_p_serverlogs := 'date''' || v_max_ts_date_p_serverlogs || '''';																
+
+			v_sql_cur := 'select to_char((select get_max_ts_date(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd'')';
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
+			execute v_sql_cur into v_max_ts_date_p_threadinfo;
+			v_max_ts_date_p_threadinfo := 'date''' || v_max_ts_date_p_threadinfo || '''';
 			
 			v_sql := 
 			'insert into s_serverlogs (
@@ -255,7 +261,7 @@ begin
 																 s_tabproto.ts >= s_spawner.start_ts)						
 					where
 						substr(s_tabproto.filename, 1, 11) = ''tabprotosrv'' and
-						s_tabproto.ts >= #max_ts_date_p_serverlogs#
+						s_tabproto.ts between #max_ts_date_p_serverlogs# and #max_ts_date_p_threadinfo# + interval''27 hours'' + interval''15 sec''
 					) a
 				where 
 					rn = 1
@@ -263,7 +269,8 @@ begin
 				;
 						
 		v_sql := replace(v_sql, '#max_ts_date_p_serverlogs#', v_max_ts_date_p_serverlogs);
-		
+		v_sql := replace(v_sql, '#max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);
+					
 		raise notice 'I: %', v_sql;
 
 		execute v_sql;		

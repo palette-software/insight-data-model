@@ -5,6 +5,8 @@ declare
 	v_num_inserted bigint;	
 	v_max_ts_date_p_threadinfo text;
 	v_sql_cur text;
+	v_max_ts_p_threadinfo timestamp;
+	v_max_ts_p_cpu_usage_report timestamp;	
 
 BEGIN	
 
@@ -12,18 +14,36 @@ BEGIN
 			then
 				raise EXCEPTION 'p_load_type has to be either FULL or DELTA';
 			end if;
+	
+			execute 'set local search_path = ' || p_schema_name;												
+
+			v_sql_cur := 'select get_max_ts(''#schema_name#'', ''p_threadinfo'')';
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);	
+			execute v_sql_cur into v_max_ts_p_threadinfo;
 			
+			v_sql_cur := 'select get_max_ts(''#schema_name#'', ''p_cpu_usage_report'')';
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);	
+			execute v_sql_cur into v_max_ts_p_cpu_usage_report;
 						
-			v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd'')';
-			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
+			if  v_max_ts_p_threadinfo > v_max_ts_p_cpu_usage_report + interval '10 minutes' then			
+				/*No p_threadinfo load since it is already ahead.
+				Probably some problem occured during the load after loading p_threadinfo*/
+				raise notice 'I: %', 'Skip p_threadinfo load since it is already ahead.';
+				return 0;
+			end if;
 			
+			-- todo
+			/*if get_max_ts(threadinfo) >= (v_max_ts_p_threadinfo + interval'27 hours') then			
+				maintenance log: get_max_ts_date(p_threadinfo) + '1 day';		
+			end if;*/
+			
+			v_sql_cur := 'select to_char((select get_max_ts_date(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd'')';
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
 			execute v_sql_cur into v_max_ts_date_p_threadinfo;
 			v_max_ts_date_p_threadinfo := 'date''' || v_max_ts_date_p_threadinfo || '''';
-
-			
 			
 			v_sql := 
-			'insert into #schema_name#.p_threadinfo
+			'insert into p_threadinfo
 			(	
 				threadinfo_id,
 				host_name,
@@ -165,7 +185,7 @@ BEGIN
 						       , thread_level
 						       , p_cre_date						       
 				  		from
-				  			#schema_name#.threadinfo curr_ti						
+				  				threadinfo curr_ti						
 						#DELTA#						
 						) ti	  
 			      ) threadinfo
@@ -182,11 +202,11 @@ BEGIN
 								p_id > coalesce((select
 													max(a.threadinfo_id)
 												from 
-													#schema_name#.p_threadinfo a
+													p_threadinfo a
 												where
-													ts_rounded_15_secs >= #v_max_ts_date_p_threadinfo#
+													ts_rounded_15_secs >= #max_ts_date_p_threadinfo#
 												), 0)
-								and ts >= #v_max_ts_date_p_threadinfo# - interval''1 hour''
+								and ts between #max_ts_date_p_threadinfo# - interval''1 hour'' and #max_ts_date_p_threadinfo# + interval''27 hours''
 								
 							union all
 							
@@ -209,16 +229,16 @@ BEGIN
 								select last_ti.*,
 									   row_number() over (PARTITION BY host_name,process_id,process_name,thread_id,start_ts ORDER BY ts DESC) rn
 								from
-									#schema_name#.p_threadinfo last_ti
+									p_threadinfo last_ti
 								where									
-									last_ti.ts_rounded_15_secs >= #v_max_ts_date_p_threadinfo# - 1																   
+									last_ti.ts_rounded_15_secs >= #max_ts_date_p_threadinfo# - 1																   
 
 								) a 
 							where rn = 1');														
 			end if;
 			
 			v_sql := replace(v_sql, '#schema_name#', p_schema_name);			
-			v_sql := replace(v_sql, '#v_max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);
+			v_sql := replace(v_sql, '#max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);
 
 			execute v_sql;
 			
