@@ -1,4 +1,4 @@
-CREATE or replace function create_load_s_cpu_usage_report(p_schema_name text) returns int	
+CREATE or replace function create_load_s_cpu_usage_report(p_schema_name text) returns int
 AS $$
 declare	
 	rec record;
@@ -76,6 +76,34 @@ begin
 						table_name in ('h_users', 'h_system_users') and
 						column_name not in ('p_filepath')
 					) a	
+					where
+						(a.table_name, a.column_name) in 
+							(select								
+								case 
+									when substr(c.column_name, 1, length('cpu_usage')) = 'cpu_usage' then 'p_cpu_usage'
+									when substr(c.column_name, 1, length('interactor_s_user')) = 'interactor_s_user' then 'h_system_users'
+									when substr(c.column_name, 1, length('project')) = 'project' then 'h_projects'
+									when substr(c.column_name, 1, length('publisher_s_user')) = 'publisher_s_user' then 'h_system_users'
+									when substr(c.column_name, 1, length('publisher_user')) = 'publisher_user' then 'h_users'
+									when substr(c.column_name, 1, length('workbook')) = 'workbook' then 'h_workbooks'
+									when substr(c.column_name, 1, length('site')) = 'site' then 'h_sites'									
+								end as table_name,
+								case 
+									when substr(c.column_name, 1, length('cpu_usage')) = 'cpu_usage' then substr(c.column_name, length('cpu_usage') + 2)
+									when substr(c.column_name, 1, length('interactor_s_user')) = 'interactor_s_user' then substr(c.column_name, length('interactor_s_user') + 2)
+									when substr(c.column_name, 1, length('project')) = 'project' then substr(c.column_name, length('project') + 2)
+									when substr(c.column_name, 1, length('publisher_s_user')) = 'publisher_s_user' then substr(c.column_name, length('publisher_s_user') + 2)
+									when substr(c.column_name, 1, length('publisher_user')) = 'publisher_user' then substr(c.column_name, length('publisher_user') + 2)
+									when substr(c.column_name, 1, length('workbook')) = 'workbook' then substr(c.column_name, length('workbook') + 2)
+									when substr(c.column_name, 1, length('site')) = 'site' then substr(c.column_name, length('site') + 2)
+									else
+										c.column_name
+								end orig_col_name
+							from
+								information_schema.columns c
+							where
+								c.table_schema = p_schema_name and
+								c.table_name = 'p_cpu_usage_report')
 					order by
 						gen_seq,
 						case table_name
