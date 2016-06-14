@@ -30,12 +30,7 @@ BEGIN
 				Probably some problem occured during the load after loading p_threadinfo*/
 				raise notice 'I: %', 'Skip p_threadinfo load since it is already ahead.';
 				return 0;
-			end if;
-			
-			-- todo
-			/*if get_max_ts(threadinfo) >= (v_max_ts_p_threadinfo + interval'27 hours') then			
-				maintenance log: get_max_ts_date(p_threadinfo) + '1 day';		
-			end if;*/
+			end if;						
 			
 			v_sql_cur := 'select to_char((select get_max_ts_date(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd'')';
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
