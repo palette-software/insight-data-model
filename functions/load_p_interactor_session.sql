@@ -1,5 +1,6 @@
-CREATE or replace function load_p_interactor_session(p_schema_name text) returns bigint
-AS $$
+CREATE OR REPLACE FUNCTION palette.load_p_interactor_session(p_schema_name text)
+RETURNS bigint AS
+$BODY$
 declare
 	v_sql text;
 	v_num_inserted bigint;	
@@ -39,8 +40,29 @@ BEGIN
 			http_user_agent,
 			num_fatals,
 			num_errors,
-			num_warnings
+			num_warnings,
+			init_show_bootstrap_normal,
+			show_count,
+			bootstrap_count,
+			show_elapsed_secs,
+			bootstrap_elapsed_secs,
+			show_bootstrap_delay_secs
 		)
+		WITH rownofilt AS (
+			SELECT 
+				rowno.*
+			FROM
+				(
+					SELECT 
+						vizql_session, 
+						action, 
+						created_at, 
+						completed_at, 
+						row_number() over (partition by vizql_session order by created_at asc) AS rn
+					FROM palette.p_http_requests
+				) rowno	
+			WHERE action = ''show'' OR action = ''bootstrapSession''
+			)
 		SELECT  
 		        cpu_usage_parent_vizql_session AS vizql_session,
 		        cpu_usage_process_name AS process_name,
@@ -57,10 +79,34 @@ BEGIN
 		        MIN(project_name_id) AS project_name_id,
 		        MIN(workbook_name_id) AS workbook_name_id,
 		        MIN(workbook_revision) AS workbook_revision,
-			MIN(http_user_agent) AS http_user_agent,
+				MIN(http_user_agent) AS http_user_agent,
 		        MIN(num_fatal) AS num_fatal,
 		        MIN(num_error) AS num_error,
-		        MIN(num_warn) AS num_warn
+		        MIN(num_warn) AS num_warn,
+				CASE WHEN MIN(process_name) != 'vizqlserver' THEN NULL
+					WHEN MIN(http_user_agent) IS NULL THEN NULL /* if we don''t have a value on http_user_agent, then there isn''t the given vizql session in the p_http_requests table so it should be null. */
+					WHEN MIN(normal) IS NULL OR MIN(normal) != 2 THEN FALSE /* if there is a vizql session there, but has no show or bootstrap actions, its value will be null, but it is not a normal vizql session, so it should be false */
+					ELSE TRUE END
+					AS init_show_bootstrap_normal,
+				CASE WHEN MIN(process_name) != 'vizqlserver' THEN NULL
+					WHEN MIN(http_user_agent) IS NULL THEN NULL 
+					WHEN MIN(show_count) is NULL THEN 0
+					ELSE MIN(show_count) END
+					AS show_count,
+				CASE WHEN MIN(process_name) != 'vizqlserver' THEN NULL
+					WHEN MIN(http_user_agent) IS NULL THEN NULL 
+					WHEN MIN(bootstrap_count) is NULL THEN 0
+					ELSE MIN(bootstrap_count) END 
+					AS bootstrap_count,
+				CASE WHEN MIN(process_name) != 'vizqlserver' THEN NULL
+					WHEN MIN(show_count) = 0 THEN NULL 
+					ELSE MIN(show_elapsed_secs) END AS show_elapsed_secs,
+				CASE WHEN MIN(process_name) != 'vizqlserver' THEN NULL
+					WHEN MIN(bootstrap_count) = 0 THEN NULL 
+					ELSE MIN(bootstrap_elapsed_secs) END AS bootstrap_elapsed_secs,
+				CASE WHEN MIN(process_name) != 'vizqlserver' THEN NULL
+					WHEN MIN(bootstrap_count) = 0 or MIN(show_count) = 0 THEN NULL
+					ELSE MIN(show_bootstrap_delay_secs) END AS show_bootstrap_delay_secs
 		FROM    
 		        #schema_name#.p_cpu_usage_report pcur
 		        LEFT OUTER JOIN (SELECT vizql_session, MIN(http_user_agent) AS http_user_agent FROM #schema_name#.p_http_requests GROUP BY vizql_session) user_agents
@@ -78,6 +124,31 @@ BEGIN
 		                GROUP BY parent_vizql_session, process_name
 		        ) num_loglevels
 		                ON (pcur.cpu_usage_parent_vizql_session = num_loglevels.vizql_session AND pcur.cpu_usage_process_name = num_loglevels.process_name)
+				LEFT OUTER JOIN (
+						SELECT ro.vizql_session, 
+								sum(case when (ro.action = ''show'' and ro.rn = 1) or (ro.action = ''bootstrapSession'' and ro.rn = 2) then 1 else 0 end) as normal,
+								sum(case when ro.action = ''bootstrapSession'' then 1 else 0 end) as bootstrap_count,
+								sum(case when ro.action = ''show'' then 1 else 0 end) as show_count
+						FROM rownofilt ro
+						GROUP BY vizql_session
+					) actions1
+					ON (actions1.vizql_session = pcur.cpu_usage_parent_vizql_session)
+				LEFT OUTER JOIN (
+						SELECT vizql_session,
+								extract(second from (min(rored.completed_at) - min(rored.created_at))) as show_elapsed_secs,
+								extract(second from (max(rored.completed_at) - max(rored.created_at))) as bootstrap_elapsed_secs,
+								case when extract(second from (max(rored.created_at) - min(rored.completed_at))) > 0 then extract(second from (max(rored.created_at) - min(rored.completed_at))) else null end as show_bootstrap_delay_secs
+						FROM (
+							select distinct on (ro.action, ro.vizql_session) action, 
+									vizql_session, 
+									ro.created_at, 
+									ro.completed_at
+							from rownofilt ro
+							order by ro.action, ro.vizql_session, ro.created_at 
+							) rored
+						GROUP BY vizql_session
+					) actions2
+					ON (actions2.vizql_session = pcur.cpu_usage_parent_vizql_session)
 		WHERE cpu_usage_ts_rounded_15_secs >= #max_ts_date_p_interactor_session#
 		        AND cpu_usage_parent_vizql_session IS NOT NULL
 		GROUP BY cpu_usage_parent_vizql_session, cpu_usage_process_name;
@@ -94,4 +165,7 @@ BEGIN
 			
 			return v_num_inserted;
 END;
-$$ LANGUAGE plpgsql;
+$BODY$
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER;
+
+
