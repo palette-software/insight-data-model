@@ -206,7 +206,7 @@ BEGIN
 												where
 													ts_rounded_15_secs >= #max_ts_date_p_threadinfo#
 												), 0)
-								and ts between #max_ts_date_p_threadinfo# - interval''1 hour'' and #max_ts_date_p_threadinfo# + interval''27 hours''
+								and ts between #max_ts_date_p_threadinfo# - interval''1 hour'' and #max_ts_date_p_threadinfo# + interval''1 day'' - interval''1 millisecond''
 								
 							union all
 							

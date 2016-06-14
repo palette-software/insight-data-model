@@ -168,7 +168,7 @@ begin
 					where pl.ts >= #max_ts_date_p_serverlogs# - interval ''1 day''
 							and pl.filename like ''%tdeserver%''
 			) t 
-			where t.ts between #max_ts_date_p_serverlogs# and #max_ts_date_p_threadinfo# + interval''27 hours'' + interval''15 sec''
+			where t.ts between #max_ts_date_p_serverlogs# and #max_ts_date_p_threadinfo# + interval''1 day'' + interval''15 sec''
 			';
 			
 		v_sql := replace(v_sql, '#max_ts_date_p_serverlogs#', v_max_ts_date_p_serverlogs);

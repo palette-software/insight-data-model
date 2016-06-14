@@ -84,7 +84,7 @@ begin
 				substr(sl.filename, 1, 11) <> ''tabprotosrv'' and
 				substr(sl.filename, 1, 10) <> ''dataserver'' and
 				substr(sl.filename, 1, 11) <> ''vizqlserver'' and
-				sl.ts between #max_ts_date_p_serverlogs# and #max_ts_date_p_threadinfo# + interval''27 hours'' + interval''15 sec''
+				sl.ts between #max_ts_date_p_serverlogs# and #max_ts_date_p_threadinfo# + interval''1 day'' + interval''15 sec''
 			';				
 			
 		v_sql := replace(v_sql, '#max_ts_date_p_serverlogs#', v_max_ts_date_p_serverlogs);
