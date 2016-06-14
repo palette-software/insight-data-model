@@ -261,7 +261,8 @@ begin
 																 s_tabproto.ts >= s_spawner.start_ts)						
 					where
 						substr(s_tabproto.filename, 1, 11) = ''tabprotosrv'' and
-						s_tabproto.ts between #max_ts_date_p_serverlogs# and #max_ts_date_p_threadinfo# + interval''1 day'' + interval''15 sec''
+						s_tabproto.ts >= #max_ts_date_p_serverlogs# and 
+						s_tabproto.ts <= #max_ts_date_p_threadinfo# + interval''1 day'' + interval''15 sec''
 					) a
 				where 
 					rn = 1

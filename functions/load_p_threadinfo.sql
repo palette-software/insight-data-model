@@ -25,7 +25,7 @@ BEGIN
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);	
 			execute v_sql_cur into v_max_ts_p_cpu_usage_report;
 						
-			if  v_max_ts_p_threadinfo > v_max_ts_p_cpu_usage_report + interval '10 minutes' then			
+			if  v_max_ts_p_threadinfo > v_max_ts_p_cpu_usage_report + interval '20 minutes' then
 				/*No p_threadinfo load since it is already ahead.
 				Probably some problem occured during the load after loading p_threadinfo*/
 				raise notice 'I: %', 'Skip p_threadinfo load since it is already ahead.';
@@ -206,7 +206,8 @@ BEGIN
 												where
 													ts_rounded_15_secs >= #max_ts_date_p_threadinfo#
 												), 0)
-								and ts between #max_ts_date_p_threadinfo# - interval''1 hour'' and #max_ts_date_p_threadinfo# + interval''1 day'' - interval''1 millisecond''
+								and ts >= #max_ts_date_p_threadinfo# - interval''1 hour'' and 
+									ts < #max_ts_date_p_threadinfo# + interval''1 day''
 								
 							union all
 							
@@ -231,7 +232,7 @@ BEGIN
 								from
 									p_threadinfo last_ti
 								where									
-									last_ti.ts_rounded_15_secs >= #max_ts_date_p_threadinfo# - 1																   
+									last_ti.ts_rounded_15_secs >= #max_ts_date_p_threadinfo# - interval''12 hours''
 
 								) a 
 							where rn = 1');														

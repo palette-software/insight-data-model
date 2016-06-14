@@ -82,7 +82,8 @@ begin
 					serverlogs sl
 			where
 				substr(sl.filename, 1, 11) = ''vizqlserver'' and				
-				sl.ts between #max_ts_date_p_serverlogs# and #max_ts_date_p_threadinfo# + interval''1 day'' + interval''15 sec''
+				sl.ts >= #max_ts_date_p_serverlogs# and 
+				sl.ts <= #max_ts_date_p_threadinfo# + interval''1 day'' + interval''15 sec''
 			'	
 			;
 				
