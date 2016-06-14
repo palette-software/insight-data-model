@@ -4,15 +4,20 @@ declare
 	v_sql text;
 	v_num_inserted bigint;	
 	v_sql_cur text;	
-	v_max_ts_date_p_serverlogs text;	
+	v_max_ts_date_p_serverlogs text;
+	v_max_ts_date_p_threadinfo text;
 begin				
 			execute 'set local search_path = ' || p_schema_name;
 				
 			v_sql_cur := 'select to_char((select get_max_ts_date(''#schema_name#'', ''p_serverlogs'')), ''yyyy-mm-dd'')';
-			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
-			
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
 			execute v_sql_cur into v_max_ts_date_p_serverlogs;
 			v_max_ts_date_p_serverlogs := 'date''' || v_max_ts_date_p_serverlogs || '''';							
+			
+			v_sql_cur := 'select to_char((select get_max_ts_date(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd'')';
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
+			execute v_sql_cur into v_max_ts_date_p_threadinfo;
+			v_max_ts_date_p_threadinfo := 'date''' || v_max_ts_date_p_threadinfo || '''';
 			
 			v_sql := 
 			'insert into s_serverlogs (
@@ -77,11 +82,13 @@ begin
 					serverlogs sl
 			where
 				substr(sl.filename, 1, 11) = ''vizqlserver'' and				
-				sl.ts >= #max_ts_date_p_serverlogs#
+				sl.ts >= #max_ts_date_p_serverlogs# and 
+				sl.ts <= #max_ts_date_p_threadinfo# + interval''1 day'' + interval''15 sec''
 			'	
 			;
 				
 		v_sql := replace(v_sql, '#max_ts_date_p_serverlogs#', v_max_ts_date_p_serverlogs);
+		v_sql := replace(v_sql, '#max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);
 		
 		raise notice 'I: %', v_sql;	
 

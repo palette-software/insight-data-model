@@ -5,6 +5,7 @@ declare
 	v_num_inserted bigint;	
 	v_sql_cur text;
 	v_max_ts_date_p_serverlogs text;	
+	v_max_ts_date_p_threadinfo text;
 begin	
 
 			execute 'set local search_path = ' || p_schema_name;
@@ -13,6 +14,11 @@ begin
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 			execute v_sql_cur into v_max_ts_date_p_serverlogs;
 			v_max_ts_date_p_serverlogs := 'date''' || v_max_ts_date_p_serverlogs || '''';
+									
+			v_sql_cur := 'select to_char((select get_max_ts_date(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd'')';
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
+			execute v_sql_cur into v_max_ts_date_p_threadinfo;
+			v_max_ts_date_p_threadinfo := 'date''' || v_max_ts_date_p_threadinfo || '''';			
 			
 			v_sql := 
 			'insert into s_serverlogs (
@@ -120,51 +126,56 @@ begin
 					) t
 					where line like ''(queryband%''
 				)
-				select * from (
-				select 
-					p_id,
-					pl.p_filepath,
-					pl.filename,
-					replace(case when position(''_'' in pl.filename) > 0 then substr(pl.filename, 1, position(''_'' in pl.filename) -1) else pl.filename end, ''.txt'', '''') as process_name,
-					pl.host_name,
-					pl.ts,
-					max(case when pl.line like ''pid=%'' then substr(pl.line, 5) end) over (partition by pl.filename)::bigint as pid,
-					pl.pid as tid,
-					null as sev,
-					null as req,
-					null as sess,
-					null as site,
-					null as user,
-					null as username_without_domain,
-					null as k,
-					pl.line as v,
-					case when pl.filename like ''tdeserver_vizqlserver%'' then sm.sessid end as parent_vizql_session,
-					sp.parent_vizql_destroy_sess_ts as parent_vizql_destroy_sess_ts,
-					case when pl.filename like ''tdeserver_dataserver%'' then sm.sessid end as parent_dataserver_session,
-					sm.ts_start as spawned_by_parent_ts,
-					case when pl.filename like ''tdeserver_vizqlserver%'' then ''vizqlserver''
-						 when pl.filename like ''tdeserver_dataserver%'' then  ''dataserver''
-					end as parent_process_type,
-					case when pl.filename like ''tdeserver_vizqlserver%'' then sp.parent_vizql_site end as parent_vizql_site,
-					case when pl.filename like ''tdeserver_vizqlserver%'' then sp.parent_vizql_username end as parent_vizql_username,
-					case when pl.filename like ''tdeserver_dataserver%'' then sp.parent_vizql_site end as parent_dataserver_site,
-					case when pl.filename like ''tdeserver_dataserver%'' then sp.parent_vizql_username end as parent_dataserver_username,
-					pl.elapsed_ms,
-					pl.start_ts					
-			from plainlogs pl
-				left join session_map sm on pl.filename = sm.filename
-				  							and pl.line like (sm.session_uid || '':%'')
-				  							and pl.p_id between sm.first_p_id and sm.last_p_id
-											
-				left join t_s_spawner sp on sp.spawner_session = sm.sessid
-			
-			where pl.ts >= #max_ts_date_p_serverlogs# - interval ''1 day''
-					and pl.filename like ''%tdeserver%''
-			) t where t.ts >= #max_ts_date_p_serverlogs#
+				select * 
+				from 
+					(select 
+							p_id,
+							pl.p_filepath,
+							pl.filename,
+							replace(case when position(''_'' in pl.filename) > 0 then substr(pl.filename, 1, position(''_'' in pl.filename) -1) else pl.filename end, ''.txt'', '''') as process_name,
+							pl.host_name,
+							pl.ts,
+							max(case when pl.line like ''pid=%'' then substr(pl.line, 5) end) over (partition by pl.filename)::bigint as pid,
+							pl.pid as tid,
+							null as sev,
+							null as req,
+							null as sess,
+							null as site,
+							null as user,
+							null as username_without_domain,
+							null as k,
+							pl.line as v,
+							case when pl.filename like ''tdeserver_vizqlserver%'' then sm.sessid end as parent_vizql_session,
+							sp.parent_vizql_destroy_sess_ts as parent_vizql_destroy_sess_ts,
+							case when pl.filename like ''tdeserver_dataserver%'' then sm.sessid end as parent_dataserver_session,
+							sm.ts_start as spawned_by_parent_ts,
+							case when pl.filename like ''tdeserver_vizqlserver%'' then ''vizqlserver''
+								 when pl.filename like ''tdeserver_dataserver%'' then  ''dataserver''
+							end as parent_process_type,
+							case when pl.filename like ''tdeserver_vizqlserver%'' then sp.parent_vizql_site end as parent_vizql_site,
+							case when pl.filename like ''tdeserver_vizqlserver%'' then sp.parent_vizql_username end as parent_vizql_username,
+							case when pl.filename like ''tdeserver_dataserver%'' then sp.parent_vizql_site end as parent_dataserver_site,
+							case when pl.filename like ''tdeserver_dataserver%'' then sp.parent_vizql_username end as parent_dataserver_username,
+							pl.elapsed_ms,
+							pl.start_ts					
+					from plainlogs pl
+						left join session_map sm on pl.filename = sm.filename
+						  							and pl.line like (sm.session_uid || '':%'')
+						  							and pl.p_id between sm.first_p_id and sm.last_p_id
+													
+						left join t_s_spawner sp on sp.spawner_session = sm.sessid
+						
+					where pl.ts >= #max_ts_date_p_serverlogs# - interval ''1 day''
+							and pl.filename like ''%tdeserver%''
+			) t 
+			where 
+				t.ts >= #max_ts_date_p_serverlogs# and 
+				t.ts <= #max_ts_date_p_threadinfo# + interval''1 day'' + interval''15 sec''
 			';
 			
 		v_sql := replace(v_sql, '#max_ts_date_p_serverlogs#', v_max_ts_date_p_serverlogs);
-
+		v_sql := replace(v_sql, '#max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);
+		
 		raise notice 'I: %', v_sql;	
 
 		execute v_sql;		
