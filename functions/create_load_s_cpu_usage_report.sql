@@ -1,3 +1,10 @@
+truncate table s_cpu_usage_report;
+select * from s_cpu_usage_report;
+
+select load_s_cpu_usage_report('palette');
+
+select create_load_s_cpu_usage_report('palette');
+
 CREATE or replace function create_load_s_cpu_usage_report(p_schema_name text) returns int
 AS $$
 declare	
@@ -134,19 +141,34 @@ begin
 					
 				begin	
 
-							v_sql_cur := ''select to_char((select #schema_name#.get_max_ts_date(''''#schema_name#'''', ''''p_cpu_usage_report'''')), ''''yyyy-mm-dd'''')'';
-							v_sql_cur := replace(v_sql_cur, ''#schema_name#'', p_schema_name);
+							execute ''set local search_path = '' || p_schema_name;
 							
-						
+							v_sql_cur := ''select to_char((select get_max_ts_date(''''#schema_name#'''', ''''p_cpu_usage_report'''')), ''''yyyy-mm-dd'''')'';
+							v_sql_cur := replace(v_sql_cur, ''#schema_name#'', p_schema_name);													
 							execute v_sql_cur into v_max_ts_date;
 							v_max_ts_date := ''date'''''' || v_max_ts_date || '''''''';
+
+																					
+							v_sql := ''create table tmp_cpu0 as 
+										select distinct h_projects_p_id, h_sites_p_id, interactor_h_system_users_p_id, h_workbooks_p_id, publisher_h_users_p_id, publisher_h_system_users_p_id
+										from 	
+											p_cpu_usage cpu
+										where
+											cpu.ts_rounded_15_secs >= #v_max_ts_date#
+										'';
+							
+							v_sql := replace(v_sql, ''#v_max_ts_date#'', v_max_ts_date);	
+							execute v_sql;							
+							
+							analyze tmp_cpu0;
+							
 							
 							v_sql := 
 								''								
 				';
 					
 					
-		v_sql := v_sql || 'insert into #schema_name#.s_cpu_usage_report (';	
+		v_sql := v_sql || 'insert into s_cpu_usage_report (';	
 		
 		v_sql := v_sql || v_insert_part;
 		v_sql := v_sql || 'session_start_ts,
@@ -178,19 +200,14 @@ begin
 				';
 		
 		v_sql := v_sql || '
-				FROM (
-						select distinct h_projects_p_id, h_sites_p_id, interactor_h_system_users_p_id, h_workbooks_p_id, publisher_h_users_p_id, publisher_h_system_users_p_id
-						from #schema_name#.p_cpu_usage cpu
-						where
-						cpu.ts_rounded_15_secs >= #v_max_ts_date#
-					) cpu0
-                    left outer join #schema_name#.h_projects p on (p.p_id = cpu0.h_projects_p_id)
-                    left outer join #schema_name#.h_sites s on (s.p_id = cpu0.h_sites_p_id)
-                    left outer join #schema_name#.h_system_users su_int on (su_int.p_id = cpu0.interactor_h_system_users_p_id)
-                    left outer join #schema_name#.h_workbooks wb on (wb.p_id = cpu0.h_workbooks_p_id)       
-                    left outer join #schema_name#.h_users u_pub on (u_pub.p_id = cpu0.publisher_h_users_p_id)
-                    left outer join #schema_name#.h_system_users us_pub on (us_pub.p_id = cpu0.publisher_h_system_users_p_id)
-                    inner join #schema_name#.p_cpu_usage cpu on
+				FROM tmp_cpu0 cpu0
+                    left outer join h_projects p on (p.p_id = cpu0.h_projects_p_id)
+                    left outer join h_sites s on (s.p_id = cpu0.h_sites_p_id)
+                    left outer join h_system_users su_int on (su_int.p_id = cpu0.interactor_h_system_users_p_id)
+                    left outer join h_workbooks wb on (wb.p_id = cpu0.h_workbooks_p_id)       
+                    left outer join h_users u_pub on (u_pub.p_id = cpu0.publisher_h_users_p_id)
+                    left outer join h_system_users us_pub on (us_pub.p_id = cpu0.publisher_h_system_users_p_id)
+                    inner join p_cpu_usage cpu on
                     (coalesce(cpu.h_projects_p_id, -1) = coalesce(cpu0.h_projects_p_id, -1)
                      AND coalesce(cpu.h_sites_p_id, -1) = coalesce(cpu0.h_sites_p_id, -1)
                      AND coalesce(cpu.interactor_h_system_users_p_id, -1) = coalesce(cpu0.interactor_h_system_users_p_id, -1)
@@ -203,14 +220,16 @@ begin
 		
 		v_sql := v_sql || '
 				'';
-											
-				v_sql := replace(v_sql, ''#schema_name#'', p_schema_name);
+
 				v_sql := replace(v_sql, ''#v_max_ts_date#'', v_max_ts_date);
 				
 				raise notice ''I: %'', v_sql;
 				execute ''set local join_collapse_limit = 1'';
 				execute v_sql;		
-				GET DIAGNOSTICS v_num_inserted = ROW_COUNT;			
+				GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
+				
+				drop table tmp_cpu0;
+				
 				return v_num_inserted;
 		END;
 		\$\$ LANGUAGE plpgsql;';
