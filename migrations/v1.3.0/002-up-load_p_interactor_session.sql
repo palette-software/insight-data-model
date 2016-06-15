@@ -83,28 +83,28 @@ BEGIN
 		        MIN(num_fatal) AS num_fatal,
 		        MIN(num_error) AS num_error,
 		        MIN(num_warn) AS num_warn,
-				CASE WHEN MIN(process_name) != 'vizqlserver' THEN NULL
+				CASE WHEN MIN(process_name) != ''vizqlserver'' THEN NULL
 					WHEN MIN(http_user_agent) IS NULL THEN NULL /* if we don''t have a value on http_user_agent, then there isn''t the given vizql session in the p_http_requests table so it should be null. */
 					WHEN MIN(normal) IS NULL OR MIN(normal) != 2 THEN FALSE /* if there is a vizql session there, but has no show or bootstrap actions, its value will be null, but it is not a normal vizql session, so it should be false */
 					ELSE TRUE END
 					AS init_show_bootstrap_normal,
-				CASE WHEN MIN(process_name) != 'vizqlserver' THEN NULL
+				CASE WHEN MIN(process_name) != ''vizqlserver'' THEN NULL
 					WHEN MIN(http_user_agent) IS NULL THEN NULL 
 					WHEN MIN(show_count) is NULL THEN 0
 					ELSE MIN(show_count) END
 					AS show_count,
-				CASE WHEN MIN(process_name) != 'vizqlserver' THEN NULL
+				CASE WHEN MIN(process_name) != ''vizqlserver'' THEN NULL
 					WHEN MIN(http_user_agent) IS NULL THEN NULL 
 					WHEN MIN(bootstrap_count) is NULL THEN 0
 					ELSE MIN(bootstrap_count) END 
 					AS bootstrap_count,
-				CASE WHEN MIN(process_name) != 'vizqlserver' THEN NULL
+				CASE WHEN MIN(process_name) != ''vizqlserver'' THEN NULL
 					WHEN MIN(show_count) = 0 THEN NULL 
 					ELSE MIN(show_elapsed_secs) END AS show_elapsed_secs,
-				CASE WHEN MIN(process_name) != 'vizqlserver' THEN NULL
+				CASE WHEN MIN(process_name) != ''vizqlserver'' THEN NULL
 					WHEN MIN(bootstrap_count) = 0 THEN NULL 
 					ELSE MIN(bootstrap_elapsed_secs) END AS bootstrap_elapsed_secs,
-				CASE WHEN MIN(process_name) != 'vizqlserver' THEN NULL
+				CASE WHEN MIN(process_name) != ''vizqlserver'' THEN NULL
 					WHEN MIN(bootstrap_count) = 0 or MIN(show_count) = 0 THEN NULL
 					ELSE MIN(show_bootstrap_delay_secs) END AS show_bootstrap_delay_secs
 		FROM    
