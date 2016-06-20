@@ -1,0 +1,1 @@
+ALTER TABLE p_serverlogs ADD COLUMN user_type TEXT DEFAULT NULL;
