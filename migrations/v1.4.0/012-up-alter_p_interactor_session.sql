@@ -1,0 +1,1 @@
+ALTER TABLE p_interactor_session ADD COLUMN user_type TEXT DEFAULT NULL;

@@ -24,7 +24,8 @@ CREATE TABLE p_interactor_session
 	bootstrap_count integer,
 	show_elapsed_secs double,
 	bootstrap_elapsed_secs double,
-	show_bootstrap_delay_secs double
+	show_bootstrap_delay_secs double,
+	user_type TEXT
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (vizql_session);

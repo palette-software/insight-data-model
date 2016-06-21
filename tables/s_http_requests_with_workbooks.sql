@@ -12,7 +12,8 @@ CREATE TABLE s_http_requests_with_workbooks
 	publisher_h_system_users_p_id bigint,
 	h_sites_p_id bigint,
 	interactor_h_users_p_id bigint,
-	interactor_h_system_users_p_id bigint
+	interactor_h_system_users_p_id bigint,
+	user_type text
 )
 	WITH (appendonly=true, orientation=column, compresstype=quicklz)
 DISTRIBUTED BY (vizql_session);

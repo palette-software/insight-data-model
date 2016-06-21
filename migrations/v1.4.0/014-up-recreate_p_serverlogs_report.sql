@@ -1,4 +1,6 @@
-create view p_serverlogs_report
+drop view p_serverlogs_report;
+
+create or replace view p_serverlogs_report
 as
 SELECT  s.p_id
        , s.serverlogs_id

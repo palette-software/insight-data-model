@@ -1,0 +1,1 @@
+ALTER TABLE s_http_requests_with_workbooks ADD COLUMN user_type TEXT DEFAULT NULL;
