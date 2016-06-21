@@ -18,7 +18,8 @@ CREATE TABLE p_interactor_session
 	http_user_agent TEXT,
 	num_fatals INTEGER,
 	num_errors INTEGER,
-	num_warnings INTEGER
+	num_warnings INTEGER,
+	user_type TEXT
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (vizql_session);
