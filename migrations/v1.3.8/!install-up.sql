@@ -4,4 +4,4 @@ set role palette_palette_updater;
 
 \i 001-up-load_p_threadinfo.sql
 
-insert into db_version_meta(version_number) values ('v1.3.7');
+insert into db_version_meta(version_number) values ('v1.3.8');
