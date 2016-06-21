@@ -36,7 +36,8 @@ CREATE TABLE p_serverlogs
     project_name_id text,
     workbook_name_id text,
     workbook_rev text,
-    publisher_username_id text
+    publisher_username_id text,
+    user_type text
 )
 DISTRIBUTED BY (host_name, process_id, thread_id)
 PARTITION BY RANGE (ts)

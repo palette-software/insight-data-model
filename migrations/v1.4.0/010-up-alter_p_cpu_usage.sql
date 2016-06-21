@@ -1,0 +1,1 @@
+ALTER TABLE p_cpu_usage ADD COLUMN user_type TEXT DEFAULT NULL;
