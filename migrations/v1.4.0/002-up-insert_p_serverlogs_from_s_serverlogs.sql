@@ -121,7 +121,7 @@ begin
 					   , h.project_name_id
 					   , h.workbook_name_id
 					   , h.revision as workbook_rev
-					   , h.publisher_username_id,
+					   , h.publisher_username_id
 					   , h.user_type
 				from s_serverlogs s
 				  	left outer join t_req_wb h on (h.vizql_session = s.parent_vizql_session)
