@@ -59,7 +59,7 @@ BEGIN
 	-- We delete at most two days here as if we deleted only one we never would progress if
 	-- loading is a couple of days behind.
 	v_sql_cur := 'delete
-		from hsz_p_cpu_usage_process_agg_report
+		from p_process_class_agg_report
 		where ts_rounded_15_secs >= date''#p_from#''
 		and ts_rounded_15_secs <= timestamp''#v_to#''
 	';
@@ -73,7 +73,7 @@ BEGIN
     -- behind we load two days as that is needed for "progressing" and not getting stuck in a single day.
 	-- The plus 1 in the to clause is needed as we compare timestamp to date and in that case date is
 	-- implicit converted to timestamp at 00:00:00.000
-	v_sql := 'insert into hsz_p_cpu_usage_process_agg_report
+	v_sql := 'insert into p_process_class_agg_report
 	    (
             ts_rounded_15_secs,
             process_name,
