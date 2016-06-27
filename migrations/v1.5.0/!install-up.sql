@@ -36,6 +36,6 @@ insert into p_process_class_agg_report
 
 
 
-insert into db_version_meta(version_number) values ('v1.4.7');
+insert into db_version_meta(version_number) values ('v1.5.0');
 
 COMMIT;
