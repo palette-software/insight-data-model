@@ -1,5 +1,6 @@
 CREATE TABLE p_interactor_session
 (
+	p_id bigserial,
 	vizql_session TEXT,
 	process_name TEXT,
 	host_name TEXT,
