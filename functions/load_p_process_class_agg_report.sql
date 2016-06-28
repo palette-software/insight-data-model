@@ -7,8 +7,6 @@ declare
 	v_num_inserted bigint;
 	v_from text;
 	v_sql_cur text;
-	c refcursor;
-  rec record;
 BEGIN
     execute 'set local search_path = ' || p_schema_name;
 
@@ -17,13 +15,12 @@ BEGIN
 	v_sql_cur := '
 	    select
 		    to_char(coalesce(
-			    max(ts_rounded_15_secs)::date,
+			    max(ts_rounded_15_secs),
 				date''1001-01-01''), ''yyyy-mm-dd'')
 		from p_process_class_agg_report';
 	raise notice 'I: %', v_sql_cur;
 	execute v_sql_cur into v_from;
-
-	-- Let's do the loading (in a loop for now. but it should be remove when we got rid of Talend
+	
   	v_sql_cur := 'select load_p_process_class_agg_report(''#p_schema_name#'', ''#v_from#'')';
 	v_sql_cur := replace(v_sql_cur, '#p_schema_name#', p_schema_name);
 	v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);
