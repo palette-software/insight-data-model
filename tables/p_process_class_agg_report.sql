@@ -4,7 +4,10 @@ CREATE TABLE p_process_class_agg_report
   ts_rounded_15_secs           TIMESTAMP,
   process_name                 TEXT,
   host_name                    TEXT,
-  cpu_usage_core_consumption   DOUBLE PRECISION
+  cpu_usage_core_consumption   DOUBLE PRECISION,
+  cpu_usage_cpu_time_consumption_seconds DOUBLE PRECISION,
+  cpu_usage_memory_usage_bytes BIGINT,
+  tableau_process              BOOLEAN
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (p_id)
