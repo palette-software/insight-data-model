@@ -1,5 +1,3 @@
--- One parametered version searches for the last loaded day or now::date and calles the
--- method with same name but two arguments. We always load one day at once.
 CREATE OR REPLACE FUNCTION load_p_process_class_agg_report(p_schema_name text) returns bigint
 AS $$
 declare
@@ -20,7 +18,7 @@ BEGIN
 		from p_process_class_agg_report';
 	raise notice 'I: %', v_sql_cur;
 	execute v_sql_cur into v_from;
-	
+
   	v_sql_cur := 'select load_p_process_class_agg_report(''#p_schema_name#'', ''#v_from#'')';
 	v_sql_cur := replace(v_sql_cur, '#p_schema_name#', p_schema_name);
 	v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);
@@ -104,7 +102,7 @@ BEGIN
         from
 	        p_cpu_usage_report
         where
-			cpu_usage_ts_rounded_15_secs >= date''#p_from#''
+			    cpu_usage_ts_rounded_15_secs >= date''#p_from#''
 			and cpu_usage_ts_rounded_15_secs <= timestamp''#v_to#''
         group by
 	        cpu_usage_ts_rounded_15_secs,
@@ -124,4 +122,5 @@ BEGIN
 		return v_num_inserted;
 END;
 $$ LANGUAGE plpgsql;
+
 
