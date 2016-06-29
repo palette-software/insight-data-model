@@ -109,7 +109,8 @@ BEGIN
         group by
 	        cpu_usage_ts_rounded_15_secs,
 	        cpu_usage_host_name,
-	        cpu_usage_process_name
+	        process_name,
+            tableau_process
 		';
 
 		v_sql := replace(v_sql, '#p_from#', p_from);

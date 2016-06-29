@@ -44,7 +44,8 @@ insert into p_process_class_agg_report
         group by
 	        cpu_usage_ts_rounded_15_secs,
 	        cpu_usage_host_name,
-	        cpu_usage_process_name
+	        process_name,
+            tableau_process
 ;
 
 insert into db_version_meta(version_number) values ('v1.5.1');
