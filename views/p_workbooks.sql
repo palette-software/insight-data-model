@@ -45,8 +45,8 @@ select wb.p_id,
        ((wb.name::text || ' ('::text) || wb.id::text) || ')'::text AS workbook_name_id, 
        'WORKBOOK'::text AS type
 from palette.h_workbooks wb
-left outer join palette.h_projects p on (p.id = wb.project_id and p.site_id = wb.site_id and p.p_valid_from between wb.p_valid_from and wb.p_valid_to)
-left outer join palette.h_sites s on (s.id = wb.site_id and s.p_valid_from between wb.p_valid_from and wb.p_valid_to)
+left outer join palette.h_projects p on (p.id = wb.project_id and p.site_id = wb.site_id and least(wb.p_valid_to, p.p_valid_to) >= greatest(wb.p_valid_from, p.p_valid_from)) 
+left outer join palette.h_sites s on (s.id = wb.site_id and least(wb.p_valid_to, s.p_valid_to) >= greatest(wb.p_valid_from, s.p_valid_from))
 left outer join palette.h_users wb_u on (wb_u.id  = wb.owner_id and wb_u.site_id = wb.site_id and least(wb.p_valid_to, wb_u.p_valid_to) >= greatest(wb.p_valid_from, wb_u.p_valid_from))
 left outer join palette.h_system_users wb_su on (wb_su.id = wb_u.system_user_id and least(wb.p_valid_to, wb_su.p_valid_to) >= greatest(wb.p_valid_from, wb_su.p_valid_from))
 group by
