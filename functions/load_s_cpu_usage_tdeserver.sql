@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION load_s_cpu_usage_tdeserver(p_schema_name text) RETURNS bigint AS
+CREATE OR REPLACE FUNCTION load_s_cpu_usage_tdeserver(p_schema_name text) RETURNS bigint
 AS $$
 declare
 	v_sql text;
