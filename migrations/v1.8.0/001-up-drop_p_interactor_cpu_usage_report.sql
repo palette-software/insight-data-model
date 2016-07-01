@@ -1,0 +1,1 @@
+DROP VIEW p_interactor_cpu_usage_report;
