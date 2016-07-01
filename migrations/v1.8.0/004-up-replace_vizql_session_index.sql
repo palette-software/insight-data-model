@@ -1,3 +1,2 @@
-SELECT drop_child_indexes('#schema_name#.p_cpu_usage_report_cpu_usage_vizql_session_idx');
 DROP INDEX p_cpu_usage_report_cpu_usage_vizql_session_idx;
 CREATE INDEX p_cpu_usage_report_cpu_usage_parent_vizql_session_idx ON p_cpu_usage_report (cpu_usage_parent_vizql_session);
