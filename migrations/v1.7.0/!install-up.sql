@@ -16,6 +16,6 @@ BEGIN;
 \i 009-up-create_view_p_datasources.sql
 \i 010-up-grantselect_p_datasources.sql
 
-insert into db_version_meta(version_number) values ('v1.7.1');
+insert into db_version_meta(version_number) values ('v1.7.0');
 
 COMMIT;
