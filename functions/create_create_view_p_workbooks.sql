@@ -16,7 +16,7 @@ begin
 	loop
 		var := var || '\twb.' || rec.column_name || ',\n';
 	end loop;
-	sel := 'CREATE OR REPLACE VIEW ' || p_schema_name || '.test_lev_view AS \nselect \n';
+	sel := 'CREATE OR REPLACE VIEW ' || p_schema_name || '.p_workbooks AS \nselect \n';
 	sel := sel || var;
 	sel := sel || '	((p.name::text || '' (''::text) || p.id::text) || '')''::text AS project_name_id, 
 	((s.name::text || '' (''::text) || s.id::text) || '')''::text AS site_name_id, 
