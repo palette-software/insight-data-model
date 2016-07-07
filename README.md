@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/palette-software/palette-insight-reporting.svg?token=aM8moNfqtxLBEXdGYNpt&branch=master)](https://travis-ci.com/palette-software/palette-insight-reporting)
+[![Build Status](https://travis-ci.com/palette-software/insight-data-model.svg?token=qWG5FJDvsjLrsJpXgxSJ&branch=master)](https://travis-ci.com/palette-software/insight-data-model)
 
 
 ## Using the installer:
