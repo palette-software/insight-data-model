@@ -1,36 +1,3 @@
--- One parametered version searches for the last loaded day or now::date and calles the
--- method with same name but two arguments. We always load one day at once.
-CREATE OR REPLACE FUNCTION load_p_process_class_agg_report(p_schema_name text) returns bigint
-AS $$
-declare
-	v_sql text;
-	v_num_inserted bigint;
-	v_from text;
-	v_sql_cur text;
-BEGIN
-    execute 'set local search_path = ' || p_schema_name;
-
-    -- At first find the day that should be the next one loaded
-    -- This means it is the last that has data either in the agg_report table or in cpu_usage_report
-	v_sql_cur := '
-	    select
-		    to_char(coalesce(
-			    max(ts_rounded_15_secs),
-				date''1001-01-01''), ''yyyy-mm-dd'')
-		from p_process_class_agg_report';
-	raise notice 'I: %', v_sql_cur;
-	execute v_sql_cur into v_from;
-	
-  	v_sql_cur := 'select load_p_process_class_agg_report(''#p_schema_name#'', ''#v_from#'')';
-	v_sql_cur := replace(v_sql_cur, '#p_schema_name#', p_schema_name);
-	v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);
-	raise notice 'I: %', v_sql_cur;
-	execute v_sql_cur into v_num_inserted;
-	return v_num_inserted;
-END;
-$$ LANGUAGE plpgsql;
-
-
 CREATE or replace function load_p_process_class_agg_report(p_schema_name text, p_from text) returns bigint
 AS $$
 declare
@@ -127,4 +94,3 @@ BEGIN
 		return v_num_inserted;
 END;
 $$ LANGUAGE plpgsql;
-
