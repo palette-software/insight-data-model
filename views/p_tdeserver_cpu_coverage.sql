@@ -15,15 +15,15 @@
 
 
 
-create or replace view test__tdeserver_vizql_session_coverage_report as
+create or replace view p_tdeserver_cpu_coverage as
   select
     host_name,
     date_trunc('hour', ts_rounded_15_secs) as ts_hour,
     count(1) as count_tdeserver_entries_with_cpu_consumption,
-    ((sum(case when vizql_session IS NOT NULL then 1 else 0 end)::DOUBLE PRECISION /  count(1)::DOUBLE PRECISION) * 100.0) as tdeserver_fill_ratio
+    ((sum(case when vizql_session is not null then 1 else 0 end)::double precision /  count(1)::double precision) * 100.0) as tdeserver_fill_ratio
     from palette.p_cpu_usage
-  where process_name='tdeserver64'
-     and ts_rounded_15_secs BETWEEN  ((now() - '48 hours'::interval) at time zone 'utc') and ((now() at time zone 'utc'))
+  where process_name in ('tdeserver64', 'tdeserver')
+     and ts_rounded_15_secs between  ((now() - '48 hours'::interval) at time zone 'utc') and ((now() at time zone 'utc'))
   group by host_name, date_trunc('hour', ts_rounded_15_secs)
   order by ts_hour asc;
 
