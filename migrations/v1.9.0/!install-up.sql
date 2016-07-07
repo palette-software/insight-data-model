@@ -7,7 +7,7 @@ BEGIN;
 \i 001-up-create-p_tdeserver_cpu_coverage.sql
 
 
-grant select on palette.p_tdeserver_cpu_coverage to palette_palette_looker;
+grant select on p_tdeserver_cpu_coverage to palette_palette_looker;
 
 insert into db_version_meta(version_number) values ('v1.9.0');
 
