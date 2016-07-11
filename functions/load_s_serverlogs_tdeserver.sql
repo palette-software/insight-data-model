@@ -77,7 +77,8 @@ begin
           max(case when k = ''destroy-session'' then ts end) as parent_vizql_destroy_sess_ts
         from
           p_serverlogs
-        where (filename like ''vizqlserver%'' or filename like ''dataserver%'')
+        where 
+	  (filename like ''vizqlserver%'' or filename like ''dataserver%'')
           and ts >= (#max_ts_date_p_serverlogs# - interval ''1 day'')
           and ts < now()::date + 2
         group by
@@ -179,20 +180,23 @@ begin
             row_number() over (partition by pl0.p_id order by pl0.ts desc) as rn
           from plainlogs pl0
           left join (select filename, line, ts from plainlogs where line like ''pid=%'' and ts < now()::date + 2) pids
-            on substring(pl0.filename from ''tdeserver_[a-z]+server_[0-9]+'') = substring(pids.filename from ''tdeserver_[a-z]+server_[0-9]+'')
-            and pl0.ts >= pids.ts
+            on 
+	      substring(pl0.filename from ''tdeserver_[a-z]+server_[0-9]+'') = substring(pids.filename from ''tdeserver_[a-z]+server_[0-9]+'')
+              and pl0.ts >= pids.ts
           where pl0.filename like ''tdeserver%''
         ) pl
 
         left join session_map sm
-          on pl.filename = sm.filename
-          and pl.line like (sm.session_uid || '':%'')
-          and pl.p_id between sm.first_p_id and sm.last_p_id
+          on 
+	    pl.filename = sm.filename
+            and pl.line like (sm.session_uid || '':%'')
+            and pl.p_id between sm.first_p_id and sm.last_p_id
 
         left join t_s_spawner sp
           on sp.spawner_session = sm.sessid
 
-        where pl.ts >= #max_ts_date_p_serverlogs# - interval ''1 day''
+        where 
+	  pl.ts >= #max_ts_date_p_serverlogs# - interval ''1 day''
           and pl.ts < now()::date + 2
           and pl.filename like ''tdeserver%''
           and pl.rn = 1
