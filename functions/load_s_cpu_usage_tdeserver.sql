@@ -82,12 +82,14 @@ begin
 						with t_slogs as
 						(
 						select
-							slogs.*	
+							slogs.*,
+							max(ts) over (partition by sess) as last_ts_for_sess
 						from 
 							palette.p_serverlogs slogs
 						where
-							slogs.filename like ''tdeserver_vizql%'' and
-							slogs.host_name = ''#host_name#''
+							slogs.filename like ''tdeserver%'' and
+							slogs.host_name = ''#host_name#'' and
+							slogs.ts > #v_max_ts_date# - 2
 						),
 						t_slogs_agg as
 						(
@@ -104,18 +106,19 @@ begin
                                 min(spawned_by_parent_ts) as whole_session_start_ts ,
 								min(spawned_by_parent_ts) as session_start_ts,
 								max(parent_vizql_destroy_sess_ts) as parent_vizql_destroy_sess_ts,
-                                max(parent_vizql_destroy_sess_ts) as whole_session_end_ts
-								from t_slogs
+                                max(parent_vizql_destroy_sess_ts) as whole_session_end_ts,
+								last_ts_for_sess
+						from t_slogs
 						 group by 
 						 		host_name,
-						 		process_id,
-								host_name,
+						 		process_id,								
                                 parent_vizql_session,
 								coalesce(parent_vizql_session, parent_dataserver_session),
 								parent_vizql_username,
 								parent_vizql_site,
                                 parent_dataserver_session,
-                                parent_process_type														 
+                                parent_process_type,
+								last_ts_for_sess
 						)                        
 						SELECT
 						  thread_with_sess.p_id,
@@ -193,8 +196,8 @@ begin
 						  su.p_id as interactor_h_system_users_p_id,
 						  thread_with_sess.max_reporting_granularity,						  
 						  /*case when thread_with_sess.session in (''-'', ''default'') then ''Non-Interactor Dataserver'' else thread_with_sess.session end*/ NULL as dataserver_session,
-						  parent_vizql_session as parent_vizql_session,
-						  null as parent_dataserver_session,
+						  thread_with_sess.parent_vizql_session as parent_vizql_session,
+						  thread_with_sess.parent_dataserver_session as parent_dataserver_session,
 						  spawned_by_parent_ts as spawned_by_parent_ts,
 						  parent_vizql_destroy_sess_ts as parent_vizql_destroy_sess_ts,
 						  parent_process_type as parent_process_type
@@ -261,7 +264,7 @@ begin
 												tri.host_name = slogs.host_name AND
 							    				tri.process_id = slogs.process_id AND
                                                 slogs.session_start_ts <= tri.ts_rounded_15_secs  AND
-												slogs.parent_vizql_destroy_sess_ts >= tri.ts_rounded_15_secs
+												coalesce(slogs.parent_vizql_destroy_sess_ts, slogs.last_ts_for_sess) >= tri.ts_rounded_15_secs
 							  				)
 								left outer join palette.h_sites sites on (sites.name = slogs.parent_vizql_site and slogs.session_start_ts between sites.p_valid_from and sites.p_valid_to)
 						   ) thread_with_sess
@@ -278,6 +281,7 @@ begin
 					v_sql := replace(v_sql, 'palette', p_schema_name);
 					v_sql := replace(v_sql, '#host_name#', rec.host_name);
 					v_sql := replace(v_sql, '#v_act_ts_date#', rec.ts_date);
+					v_sql := replace(v_sql, '#v_max_ts_date#', v_max_ts_date);
 					
 					raise notice 'I: %', v_sql;
 

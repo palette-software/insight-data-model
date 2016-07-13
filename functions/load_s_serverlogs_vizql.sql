@@ -15,7 +15,7 @@ begin
 			execute v_sql_cur into v_max_ts_date_p_serverlogs;
 			v_max_ts_date_p_serverlogs := 'date''' || v_max_ts_date_p_serverlogs || '''';							
 
-			v_sql_cur := 'select to_char((select get_max_ts(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd hh:mi:ss.ms'')';
+			v_sql_cur := 'select to_char((select get_max_ts(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd hh24:mi:ss.ms'')';
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
 			execute v_sql_cur into v_max_ts_p_threadinfo;
 			v_max_ts_p_threadinfo := 'timestamp''' || v_max_ts_p_threadinfo || '''';									
