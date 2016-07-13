@@ -28,32 +28,38 @@ begin
 						
 			drop table if exists tde_filename_pids;
 			
+			v_sql := '
 			create table tde_filename_pids as
 			select
 				host_name,
 				file_prefix,
 				pid::bigint,
-				ts + interval '1 milliseconds' as ts_from,
-				coalesce(lead(ts) over (partition by host_name, file_prefix order by ts), date'9999-12-31') as ts_to
+				ts as ts_from,
+				coalesce(lead(ts) over (partition by host_name, file_prefix order by ts), date''9999-12-31'') as ts_to
 			from
 			(
 			  SELECT
 			  	host_name,
-			    substring(filename FROM '^[a-z_]+[0-9]+') AS file_prefix,
+			    substring(filename FROM ''^[a-z_]+[0-9]+'') AS file_prefix,
 			    substr(line, 5) AS pid,
 			    ts
 			  FROM
 			    palette.plainlogs
 			  WHERE
-			    line LIKE 'pid=%'
-			    AND ts > now() :: DATE - 18 AND ts < now() :: DATE + 2
+			    line LIKE ''pid=%''
+			    AND ts > now() :: DATE - 18 
+				AND ts <= #max_ts_p_threadinfo# + interval''15 sec''
 			  GROUP BY 
 			  		host_name,
-					substring(filename FROM '^[a-z_]+[0-9]+'),  		   
+					substring(filename FROM ''^[a-z_]+[0-9]+''),  		   
 					substr(line, 5),
-					ts  
-			) b;
-
+					ts
+			) b
+			';
+			
+			v_sql := replace(v_sql, '#max_ts_p_threadinfo#', v_max_ts_p_threadinfo);
+			execute v_sql;
+			
 			analyze tde_filename_pids;		
 			
 			
@@ -98,7 +104,7 @@ begin
 	                            p_serverlogs
 	                        where                            
 	                            ts >= (#max_ts_date_p_serverlogs# - interval ''1 day'')
-								and ts < now()::date + 2
+								and ts <= #max_ts_p_threadinfo# + interval''15 sec''
 								and process_name not like ''tdeserver%''
 							group by
 								host_name,
@@ -149,7 +155,8 @@ begin
 															p_serverlogs
 													where
 														substr(filename, 1, 10) = ''dataserver'' and
-														ts >= #max_ts_date_p_serverlogs# - interval''24 hours''
+														ts >= #max_ts_date_p_serverlogs# - interval''24 hours'' and
+														ts <= #max_ts_p_threadinfo# + interval''15 sec''
 													union all
 													select  host_name,
 															sess,
@@ -170,7 +177,8 @@ begin
 				)
 				';
 			
-			v_sql := replace(v_sql, '#max_ts_date_p_serverlogs#', v_max_ts_date_p_serverlogs);			
+			v_sql := replace(v_sql, '#max_ts_date_p_serverlogs#', v_max_ts_date_p_serverlogs);
+			v_sql := replace(v_sql, '#max_ts_p_threadinfo#', v_max_ts_p_threadinfo);
 			raise notice 'I: %', v_sql;	
 			execute v_sql;		
 			analyze t_s_spawner;
@@ -287,20 +295,24 @@ begin
 							case when sp.process_name = ''dataserver'' then sp.parent_vizql_username end as parent_dataserver_username,
 							pl.elapsed_ms,
 							pl.start_ts					
-					from (select pl0.*, 
+					from
+						(select pl0.*, 
 								p.pid as process_id,                               								
 								/*substring(pl0.filename from ''^[a-z_]+[0-9]+'')*/ filename as file_prefix_to_join
                           from 
 						  		plainlogs pl0
                      	  		left outer join tde_filename_pids p on (pl0.host_name = p.host_name and
 																		substring(pl0.filename from ''^[a-z_]+[0-9]+'') = p.file_prefix and
-						  										  		pl0.ts between p.ts_from and p.ts_to
+						  										  		pl0.ts >= p.ts_from and 
+																		pl0.ts < p.ts_to
 						  										  		)
 						  
-                    	  where   pl0.filename like ''tdeserver%'' and
-								  pl0.ts >= #max_ts_date_p_serverlogs# - interval ''1 day'' and
-								  pl0.ts < now()::date + 2
-                 ) pl
+                    	  where   
+						  		pl0.filename like ''tdeserver%'' and
+								-- todo: is interval - 1 day really needed?
+								pl0.ts >= #max_ts_date_p_serverlogs# - interval ''1 day'' and
+								pl0.ts <= #max_ts_p_threadinfo# + interval''15 sec''
+                 		) pl
 						left join session_map sm on pl.file_prefix_to_join = sm.file_prefix_to_join
 						  							and pl.line like (sm.session_uid || '':%'')
 						  							--and pl.p_id between sm.first_p_id and sm.last_p_id
@@ -315,8 +327,7 @@ begin
                             --and pl.rn = 1
 			) t 
 			where 
-				t.ts >= #max_ts_date_p_serverlogs# and
-				t.ts <= #max_ts_p_threadinfo# + interval''15 sec''
+				t.ts >= #max_ts_date_p_serverlogs#				
 			';
 			
 		v_sql := replace(v_sql, '#max_ts_date_p_serverlogs#', v_max_ts_date_p_serverlogs);
