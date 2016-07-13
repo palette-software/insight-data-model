@@ -303,8 +303,8 @@ begin
                  ) pl
 						left join session_map sm on pl.file_prefix_to_join = sm.file_prefix_to_join
 						  							and pl.line like (sm.session_uid || '':%'')
-						  							and pl.p_id between sm.first_p_id and sm.last_p_id
-													--and pl.ts between sm.ts_start and sm.ts_end
+						  							--and pl.p_id between sm.first_p_id and sm.last_p_id
+													and pl.ts between sm.ts_start and sm.ts_end
 													
 						left join t_s_spawner sp on sp.spawner_session = sm.sessid
 						
