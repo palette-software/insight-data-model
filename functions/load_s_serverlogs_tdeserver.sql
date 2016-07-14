@@ -218,7 +218,7 @@ begin
 							plainlogs p
 						where 
 							ts >= (#max_ts_date_p_serverlogs# - interval ''1 day'')
-							and ts < now()::date + 2
+							and ts <= #max_ts_p_threadinfo# + interval''15 sec''
 							and filename like ''tdeserver%''
 					) t
 					where line like ''(queryband%''
@@ -226,6 +226,7 @@ begin
 			';
 			
 			v_sql := replace(v_sql, '#max_ts_date_p_serverlogs#', v_max_ts_date_p_serverlogs);			
+			v_sql := replace(v_sql, '#max_ts_p_threadinfo#', v_max_ts_p_threadinfo);
 			raise notice 'I: %', v_sql;	
 			execute v_sql;			
 			analyze session_map;
@@ -297,8 +298,9 @@ begin
 							pl.start_ts					
 					from
 						(select pl0.*, 
-								p.pid as process_id,                               								
-								/*substring(pl0.filename from ''^[a-z_]+[0-9]+'')*/ filename as file_prefix_to_join
+								p.pid as process_id,								
+								/*substring(pl0.filename from ''^[a-z_]+[0-9]+'')*/ filename as file_prefix_to_join,
+								substr(line, 1, greatest(position('':'' in line) - 1, 1)) as session_uid
                           from 
 						  		plainlogs pl0
                      	  		left outer join tde_filename_pids p on (pl0.host_name = p.host_name and
@@ -314,9 +316,9 @@ begin
 								pl0.ts <= #max_ts_p_threadinfo# + interval''15 sec''
                  		) pl
 						left join session_map sm on pl.file_prefix_to_join = sm.file_prefix_to_join
-						  							and pl.line like (sm.session_uid || '':%'')
-						  							--and pl.p_id between sm.first_p_id and sm.last_p_id
-													and pl.ts between sm.ts_start and sm.ts_end
+						  							and pl.session_uid = sm.session_uid
+													and pl.ts >= sm.ts_start 
+													and pl.ts < sm.ts_end
 													
 						left join t_s_spawner sp on sp.spawner_session = sm.sessid
 						
