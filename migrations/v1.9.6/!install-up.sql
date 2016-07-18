@@ -18,8 +18,8 @@ create table palette.tmp_memory_upd as
 	where
 		cpu.process_name like 'tdeserver%' and
 		cpu.p_threadinfo_id = ti.p_id and
-		cpu.ts_rounded_15_secs >= date'2016-07-13' and		
-		ti.ts_rounded_15_secs >= date'2016-07-13'
+		cpu.ts_rounded_15_secs >= date'2016-06-13' and		
+		ti.ts_rounded_15_secs >= date'2016-06-13'
 ;
 
 update palette.p_cpu_usage t
@@ -29,7 +29,7 @@ from
 	palette.tmp_memory_upd s	
 where
 	t.process_name like 'tdeserver%' and
-	t.ts_rounded_15_secs >= date'2016-07-13' and
+	t.ts_rounded_15_secs >= date'2016-06-13' and
 	t.p_id = s.p_id	
 ;
 
@@ -40,7 +40,7 @@ from
 	palette.tmp_memory_upd s	
 where
 	t.cpu_usage_process_name like 'tdeserver%' and
-	t.cpu_usage_ts_rounded_15_secs >= date'2016-07-13' and
+	t.cpu_usage_ts_rounded_15_secs >= date'2016-06-13' and
 	t.cpu_usage_p_id = s.p_id
 ;
 
