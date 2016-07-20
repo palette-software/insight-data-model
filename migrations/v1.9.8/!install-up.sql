@@ -30,8 +30,7 @@ begin
 		-- Just to see how we proceed
 		raise notice 'I: %', rec.d;		
 		
-		select load_p_process_class_agg_report('palette');
-				
+		perform load_p_process_class_agg_report('palette');				
 	end loop;
 	close c;
 	return 0;
