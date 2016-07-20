@@ -40,7 +40,7 @@ $$ LANGUAGE plpgsql;
 
 select reload_p_process_class_agg_report();
 
-drop FUNCTION reload_p_process_class_agg_report;
+drop FUNCTION reload_p_process_class_agg_report();
 
 insert into db_version_meta(version_number) values ('v1.9.8');
 
