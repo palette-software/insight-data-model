@@ -19,11 +19,15 @@ declare
 	v_datum_text varchar;
 begin	
 
+
+	-- This is just a simple loop from 1 to 39.
+	-- rec.d is not relevant.
 	open  c for (select date'2016-06-12' + generate_series(1,39) as d 				 
 				order by d desc);
 	loop
 		fetch c into rec;
 		exit when not found;
+		-- Just to see how we proceed
 		raise notice 'I: %', rec.d;		
 		
 		select load_p_process_class_agg_report('palette');
