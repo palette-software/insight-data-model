@@ -115,8 +115,8 @@ begin
 				       , s.process_name || '':'' || s.process_id || '':'' || s.thread_id as thread_name
 					   , s.elapsed_ms
 					   , s.start_ts
-					   , min(s.ts) over (partition by s.parent_vizql_session) as session_start_ts_utc
-					   , max(s.ts) over (partition by s.parent_vizql_session) as session_end_ts_utc
+					   , min(s.ts) over (partition by s.parent_vizql_session) as session_start_ts_utc				
+					   , s.parent_vizql_destroy_sess_ts as session_end_ts_utc
 					   , h.site_name_id
 					   , h.project_name_id
 					   , h.workbook_name_id

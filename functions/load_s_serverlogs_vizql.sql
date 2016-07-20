@@ -74,6 +74,7 @@ begin
 					sl.k,
 					sl.v,
 					case when sl.sess not in (''-'', ''default'') then sl.sess end as parent_vizql_session,
+					--todo: what if we have multiply destroy-session log entry?
 					max(case when k = ''destroy-session'' then ts end) over (partition by host_name, sess) as parent_vizql_destroy_sess_ts,
 					null as parent_dataserver_session,
 					null as spawned_by_parent_ts,
