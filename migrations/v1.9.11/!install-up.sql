@@ -14,7 +14,9 @@ BEGIN;
 \i 008-up-load_s_serverlogs_vizql_compressed.sql
 
 
+select create_load_s_cpu_usage_report('#schema_name#');
+
+
 insert into db_version_meta(version_number) values ('v1.9.11');
 
 COMMIT;
-
