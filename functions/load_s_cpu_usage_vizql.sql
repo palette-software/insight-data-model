@@ -59,7 +59,8 @@ begin
 							is_thread_level,				
 							host_name,
 							process_id,
-							thread_id,	
+							thread_id,
+							--todo: should be renamed to session_start_ts_utc
 							start_ts,
 							end_ts,
 							username,	

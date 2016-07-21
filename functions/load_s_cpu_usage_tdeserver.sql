@@ -103,10 +103,10 @@ begin
                                 parent_dataserver_session,
                                 parent_process_type,
                                 min(spawned_by_parent_ts) as spawned_by_parent_ts,
-                                min(spawned_by_parent_ts) as whole_session_start_ts ,
+                                session_start_ts_utc as whole_session_start_ts ,
 								min(spawned_by_parent_ts) as session_start_ts,
 								max(parent_vizql_destroy_sess_ts) as parent_vizql_destroy_sess_ts,
-                                max(parent_vizql_destroy_sess_ts) as whole_session_end_ts,
+                                session_end_ts_utc as whole_session_end_ts,
 								last_ts_for_sess
 						from t_slogs
 						 group by 
@@ -118,7 +118,9 @@ begin
 								parent_vizql_site,
                                 parent_dataserver_session,
                                 parent_process_type,
-								last_ts_for_sess
+								last_ts_for_sess,
+								session_start_ts_utc,
+								session_end_ts_utc
 						)                        
 						SELECT
 						  thread_with_sess.p_id,
