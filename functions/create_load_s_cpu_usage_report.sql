@@ -180,11 +180,9 @@ begin
 		
 		v_sql := v_sql || v_select_part;
 		
-		v_sql := v_sql || 'min(case when cpu.vizql_session not in (''''-'''', ''''default'''') then cpu.ts end) over (partition by cpu.host_name, cpu.vizql_session) as session_start_ts,
-						   max(case when cpu.vizql_session not in (''''-'''', ''''default'''') then cpu.ts end) over (partition by cpu.host_name, cpu.vizql_session) as session_end_ts,
-						   
-						   max(case when cpu.vizql_session not in (''''-'''', ''''default'''') then cpu.ts end) over (partition by cpu.host_name, cpu.vizql_session) -
-						   		min(case when cpu.vizql_session not in (''''-'''', ''''default'''') then cpu.ts end) over (partition by cpu.host_name, cpu.vizql_session) as session_duration,
+		v_sql := v_sql || ' cpu.start_ts as session_start_ts,
+						   cpu.end_ts as session_end_ts,							
+						   cpu.end_ts - cpu.start_ts as session_duration,
 						   cpu.process_name || '''':'''' || cpu.process_id || '''':'''' || cpu.thread_id as thread_name,							
 						   s.name || '''' ('''' || s.id || '''')'''' as site_name_id,
 						   p.name || '''' ('''' || p.id || '''')'''' as project_name_id,
