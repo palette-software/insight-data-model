@@ -57,7 +57,9 @@ begin
 					parent_vizql_site,
 				    parent_vizql_username,
 				    parent_dataserver_site,
-				    parent_dataserver_username					
+				    parent_dataserver_username,
+					session_start_ts_utc,
+					session_end_ts_utc
 			from
 				(select 	
 					host_name,
@@ -81,7 +83,9 @@ begin
 													ts
 										order by 
 												case when sess not in (''-'', ''default'') then 1 else 0 end 
-												desc, sess desc, site desc) as rn					
+												desc, sess desc, site desc) as rn,
+					session_start_ts_utc,
+					session_end_ts_utc												
 				from
 						(select distinct 
 									host_name,
@@ -98,7 +102,9 @@ begin
 									parent_vizql_site,
 								    parent_vizql_username,
  								    parent_dataserver_site,
- 								    parent_dataserver_username
+ 								    parent_dataserver_username,
+									session_start_ts_utc,
+									session_end_ts_utc
 						from
 								#schema_name#.p_serverlogs
 						where
@@ -152,8 +158,8 @@ begin
 					    parent_vizql_username,
 					    parent_dataserver_site,
 					    parent_dataserver_username,
-						min(case when sess not in (''-'', ''default'') then ts end) over (partition by host_name, sess) as whole_session_start_ts,
-						max(case when sess not in (''-'', ''default'') then ts end) over (partition by host_name, sess) as whole_session_end_ts
+						session_start_ts_utc as whole_session_start_ts,
+						session_end_ts_utc as whole_session_end_ts
 				from
 					(
 					select 
@@ -178,7 +184,9 @@ begin
 							parent_vizql_site,
 						    parent_vizql_username,
 						    parent_dataserver_site,
-						    parent_dataserver_username							
+						    parent_dataserver_username,
+							session_start_ts_utc,
+							session_end_ts_utc
 					from
 						t_slogs
 					) a	
