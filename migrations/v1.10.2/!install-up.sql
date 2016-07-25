@@ -8,6 +8,6 @@ BEGIN;
 
 grant select on p_interactor_session_normal to palette_palette_looker;
 
-insert into db_version_meta(version_number) values ('v1.10.1');
+insert into db_version_meta(version_number) values ('v1.10.2');
 
 COMMIT;
