@@ -38,7 +38,8 @@ CREATE TABLE p_serverlogs
     workbook_rev text,
     publisher_username_id text,
     user_type text,
-	session_elapsed_seconds double precision
+	session_duration double precision,
+	session_elapsed_seconds double precision	
 )
 DISTRIBUTED BY (host_name, process_id, thread_id)
 PARTITION BY RANGE (ts)

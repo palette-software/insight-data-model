@@ -62,6 +62,7 @@ begin
 					   			   , workbook_rev
 					   		   	   , publisher_username_id
 								   , user_type
+								   , session_duration
 								   , session_elapsed_seconds
 				)
 				
@@ -141,6 +142,7 @@ begin
 					, a.workbook_rev
 					, a.publisher_username_id
 					, a.user_type
+					, extract(''epoch'' from (a.session_end_ts_utc - a.session_start_ts_utc)) as session_duration
 					, sum(extract(''epoch'' from ts_diff)) over (partition by a.host_name, a.parent_vizql_session order by a.ts, a.p_id ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as session_elapsed_seconds					
 				from
 					(

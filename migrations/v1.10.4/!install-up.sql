@@ -4,6 +4,7 @@ set role palette_palette_updater;
 
 BEGIN;
 
+alter table p_serverlogs add column session_duration double precision default 0;
 alter table p_serverlogs add column session_elapsed_seconds double precision default 0;
 
 drop view p_interactor_session_normal;
