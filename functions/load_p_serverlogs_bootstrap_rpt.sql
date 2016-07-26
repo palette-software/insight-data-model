@@ -99,7 +99,9 @@ begin
 	       , workbook_rev
 	       , publisher_username_id
 	       , user_type
-		   , elapsed_seconds_to_bootstrap
+		   , session_duration
+		   , session_elapsed_seconds
+	
 		)
 		select     
 	   		 srvlog.p_id	       
@@ -140,12 +142,8 @@ begin
 	       , srvlog.workbook_rev
 	       , srvlog.publisher_username_id
 	       , srvlog.user_type
-		   , extract(''epoch'' from (
-		   							max(ts) over (partition by parent_vizql_session)
-		   							-
-		   							srvlog.session_start_ts_utc
-		   							)		   
-		   			) as elapsed_seconds_to_bootstrap
+		   , srvlog.session_duration
+		   , srvlog.session_elapsed_seconds
 		from
 		    p_serverlogs srvlog
 		left outer join p_interactor_session s on (

@@ -41,7 +41,7 @@ begin
 		' ||
 			v_col_list		
 		||
-			'elapsed_seconds_to_bootstrap bigint,
+			'session_elapsed_seconds bigint,
 			p_cre_date timestamp without time zone default now()'			
 		||
 		')

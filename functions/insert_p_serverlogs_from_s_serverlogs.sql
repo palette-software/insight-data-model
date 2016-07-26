@@ -1,19 +1,3 @@
-select delete_recent_records_from_p_serverlogs('palette');
-
-select insert_p_serverlogs_from_s_serverlogs('palette');
-
-select * from palette.p_serverlogs
-where ts >= now()::date
-and parent_vizql_session is not null
-limit 100;
-
-select s.ts, s.session_elapsed_seconds, s.*
-from palette.p_serverlogs s
-where parent_vizql_session ='0256335C0DCD4A558CAFDA838D5C9DCB-0:0'
-and ts >= now()::date
-order by ts
-;
-
 CREATE OR REPLACE FUNCTION insert_p_serverlogs_from_s_serverlogs(p_schema_name text)
 RETURNS bigint AS
 $BODY$

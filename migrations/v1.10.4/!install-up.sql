@@ -7,6 +7,12 @@ BEGIN;
 alter table p_serverlogs add column session_duration double precision default 0;
 alter table p_serverlogs add column session_elapsed_seconds double precision default 0;
 
+alter table p_serverlogs_bootstrap_rpt rename column elapsed_seconds_to_bootstrap to session_elapsed_seconds;
+alter table p_serverlogs_bootstrap_rpt add column session_duration double precision default 0;
+alter table p_serverlogs_bootstrap_rpt ALTER COLUMN session_elapsed_seconds TYPE double precision;
+
+
+
 drop view p_interactor_session_normal;
 alter table p_interactor_session ALTER COLUMN session_duration TYPE double precision using extract('epoch' from session_duration);
 
