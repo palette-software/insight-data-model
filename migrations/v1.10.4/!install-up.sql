@@ -6,8 +6,13 @@ BEGIN;
 
 alter table p_serverlogs add column session_elapsed_seconds double precision default 0;
 
+drop view p_interactor_session_normal;
+alter table p_interactor_session ALTER COLUMN session_duration TYPE double precision using extract('epoch' from session_duration);
 
-\i 
+\i 001-up-insert_p_serverlogs_from_s_serverlogs.sql
+\i 002-up-p_interactor_session_normal.sql
+
+grant select on p_interactor_session_normal to palette_palette_looker;
 
 insert into db_version_meta(version_number) values ('v1.10.4');
 
