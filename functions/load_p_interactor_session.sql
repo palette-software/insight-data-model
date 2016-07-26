@@ -71,7 +71,7 @@ BEGIN
 		        SUM(cpu_usage_cpu_time_consumption_seconds) AS cpu_time_consumption_seconds,
 		        MIN(session_start_ts) AS session_start_ts,
 		        MIN(session_end_ts) AS session_end_ts,
-		        MIN(session_end_ts) - MIN(session_start_ts) AS session_duration,
+		        MIN(session_duration) as session_duration,
 		        MIN(publisher_s_user_friendly_name) || '' ('' || MIN(publisher_s_user_id) || '')'' AS publisher_friendly_name_id,
 		        MIN(publisher_s_user_name) || '' ('' || MIN(publisher_s_user_id) || '')'' AS publisher_user_name_id,
 		        MIN(interactor_s_user_friendly_name) || '' ('' || MIN(interactor_s_user_id) || '')'' AS interactor_friendly_name_id,
