@@ -28,16 +28,23 @@ alter table p_interactor_session ALTER COLUMN session_duration TYPE double preci
 alter table p_cpu_usage_report ALTER COLUMN session_duration TYPE double precision using extract('epoch' from session_duration);
 alter table s_cpu_usage_report ALTER COLUMN session_duration TYPE double precision using extract('epoch' from session_duration);
 
-select create_load_s_cpu_usage_report('palette');
+select create_load_s_cpu_usage_report('#schema_name#');
 
 \i 001-up-insert_p_serverlogs_from_s_serverlogs.sql
 \i 002-up-p_interactor_session_normal.sql
-\i -up-load_s_cpu_usage_dataserver.sql
-\i -up-load_s_cpu_usage_rest.sql
-\i -up-load_s_cpu_usage_tabproto.sql
-\i -up-load_s_cpu_usage_tdeserver.sql
-\i -up-load_s_cpu_usage_vizql.sql
-\i -up-load_p_interactor_session.sql
+\i 003-up-load_s_cpu_usage_dataserver.sql
+\i 004-up-load_s_cpu_usage_rest.sql
+\i 005-up-load_s_cpu_usage_tabproto.sql
+\i 006-up-load_s_cpu_usage_tdeserver.sql
+\i 007-up-load_s_cpu_usage_vizql.sql
+\i 008-up-load_p_interactor_session.sql
+\i 009-up-create_load_p_cpu_usage_bootstrap_rpt.sql
+\i 010-up-create_load_s_cpu_usage_report.sql
+\i 011-up-create_p_serverlogs_bootstrap_rpt.sql
+\i 012-up-load_p_interactor_session.sql
+\i 013-up-load_p_serverlogs_bootstrap_rpt.sql
+select create_load_s_cpu_usage_report('#schema_name#');
+select create_load_p_cpu_usage_bootstrap_rpt('#schema_name#');
 
 grant select on p_interactor_session_normal to palette_palette_looker;
 
