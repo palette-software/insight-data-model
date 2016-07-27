@@ -28,8 +28,6 @@ alter table p_interactor_session ALTER COLUMN session_duration TYPE double preci
 alter table p_cpu_usage_report ALTER COLUMN session_duration TYPE double precision using extract('epoch' from session_duration);
 alter table s_cpu_usage_report ALTER COLUMN session_duration TYPE double precision using extract('epoch' from session_duration);
 
-select create_load_s_cpu_usage_report('#schema_name#');
-
 \i 001-up-insert_p_serverlogs_from_s_serverlogs.sql
 \i 002-up-p_interactor_session_normal.sql
 \i 003-up-load_s_cpu_usage_dataserver.sql
