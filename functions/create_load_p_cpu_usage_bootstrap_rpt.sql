@@ -1,5 +1,3 @@
-select create_load_p_cpu_usage_bootstrap_rpt('palette');
-
 CREATE or replace function create_load_p_cpu_usage_bootstrap_rpt(p_schema_name text) returns int
 AS $$
 declare	
@@ -19,7 +17,7 @@ begin
 					where
 						table_schema = p_schema_name and
 						table_name = 'p_cpu_usage_bootstrap_rpt' and
-						column_name not in ('p_id', 'p_cre_date')
+						column_name not in ('p_id', 'p_cre_date', 'session_elapsed_seconds')
 					order by
 						ordinal_position)
 		loop			
@@ -30,6 +28,8 @@ begin
 		v_col_list_select := ltrim(v_col_list_select, ' ,');
 		v_col_list_insert := ltrim(v_col_list_insert, ' ,');
 							
+		v_col_list_select := replace(v_col_list_select, 'cpu.p_cpu_usage_report_p_id', 'cpu.p_id');
+		
 		v_sql := 		
 				'
 				CREATE or replace function load_p_cpu_usage_bootstrap_rpt(p_schema_name text) returns bigint
@@ -98,30 +98,55 @@ begin
 						||
 							v_col_list_insert
 						||
-						' )
+						',session_elapsed_seconds
+						)
+						
 						select \n' 
 						||					
-							replace(v_col_list_select, 'cpu.p_cpu_usage_report_p_id', 'cpu.p_id')
+							replace(v_col_list_select, 'cpu.', 'a.')
 						||
-						'from
-							p_cpu_usage_report cpu
-						left outer join p_interactor_session s on (
-						                                    s.session_start_ts >= date''''#v_from#'''' and
-															-- plus one hour as a safety net
-						                                    s.session_start_ts <= timestamp''''#v_to#'''' + interval''''1 hour'''' and
-						                                    s.vizql_session = cpu.cpu_usage_parent_vizql_session and
-						                                    s.process_name = ''''vizqlserver'''')
-						where
-							cpu.cpu_usage_ts_rounded_15_secs >= date''''#v_from#'''' and	
-							cpu.cpu_usage_ts_rounded_15_secs <= timestamp''''#v_to#'''' and	
-							cpu_usage_parent_vizql_session is not null and
-						    cpu_usage_parent_vizql_session not in (''''Non-Interactor Vizql'''', ''''-'''')  and
-						                      cpu_usage_ts <= s.session_start_ts +
-																(interval''''1 second'''' * coalesce(s.bootstrap_elapsed_secs, 0)) +
-																(interval''''1 second'''' * coalesce(s.show_elapsed_secs,0)) +
-																(interval''''1 second'''' * coalesce(s.show_bootstrap_delay_secs,0))										
-														+ interval ''''15 second''''
-						'';			
+						    ',sum(extract(''''epoch'''' from ts_diff))
+														over (partition by 
+																	a.cpu_usage_host_name, 
+																	a.cpu_usage_parent_vizql_session 
+																order by a.cpu_usage_ts_rounded_15_secs,
+																		a.cpu_usage_p_id 
+																ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as session_elapsed_seconds
+						from
+								(
+								select \n' 
+								||					
+									v_col_list_select
+								||
+									',coalesce(cpu.cpu_usage_ts_rounded_15_secs - lag(cpu.cpu_usage_ts_rounded_15_secs) over (partition by 
+																																	cpu.cpu_usage_host_name, 
+																															  		cpu.cpu_usage_parent_vizql_session 
+																													order by 
+																															cpu.cpu_usage_ts_rounded_15_secs,
+																															cpu.cpu_usage_p_id),
+																													interval ''''0'''') as ts_diff
+								from
+									p_cpu_usage_report cpu
+								left outer join p_interactor_session s on (
+								                                    s.session_start_ts >= date''''#v_from#'''' and
+																	-- plus one hour as a safety net
+								                                    s.session_start_ts <= timestamp''''#v_to#'''' + interval''''1 hour'''' and
+								                                    s.vizql_session = cpu.cpu_usage_parent_vizql_session and
+								                                    s.process_name = ''''vizqlserver'''')
+																	
+								where
+									cpu.cpu_usage_ts_rounded_15_secs >= date''''#v_from#'''' and	
+									cpu.cpu_usage_ts_rounded_15_secs <= timestamp''''#v_to#'''' and	
+									cpu_usage_parent_vizql_session is not null and
+								    cpu_usage_parent_vizql_session not in (''''Non-Interactor Vizql'''', ''''-'''')  and
+								                      cpu_usage_ts <= s.session_start_ts +
+																		(interval''''1 second'''' * coalesce(s.bootstrap_elapsed_secs, 0)) +
+																		(interval''''1 second'''' * coalesce(s.show_elapsed_secs,0)) +
+																		(interval''''1 second'''' * coalesce(s.show_bootstrap_delay_secs,0))										
+																+ interval ''''15 second''''
+								) a
+								''															
+						;
 							
 						v_sql := replace(v_sql, ''#v_from#'', v_from);
 						v_sql := replace(v_sql, ''#v_to#'', v_to);		

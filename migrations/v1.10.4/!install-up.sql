@@ -11,6 +11,10 @@ alter table p_serverlogs_bootstrap_rpt rename column elapsed_seconds_to_bootstra
 alter table p_serverlogs_bootstrap_rpt add column session_duration double precision default 0;
 alter table p_serverlogs_bootstrap_rpt ALTER COLUMN session_elapsed_seconds TYPE double precision;
 
+alter table p_cpu_usage_bootstrap_rpt rename column elapsed_seconds_to_bootstrap to session_elapsed_seconds;
+alter table p_cpu_usage_bootstrap_rpt ALTER COLUMN session_elapsed_seconds TYPE double precision;
+alter table p_cpu_usage_bootstrap_rpt ALTER column session_duration TYPE double precision using extract('epoch' from session_duration);
+
 alter table p_cpu_usage rename column start_ts to session_start_ts;
 alter table p_cpu_usage rename column end_ts to session_end_ts;
 alter table p_cpu_usage add column session_duration double precision default 0;
