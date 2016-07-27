@@ -7,7 +7,7 @@ CREATE TABLE p_interactor_session
 	cpu_time_consumption_seconds DOUBLE PRECISION,
 	session_start_ts TIMESTAMP WITHOUT TIME ZONE,
 	session_end_ts TIMESTAMP WITHOUT TIME ZONE,
-	session_duration INTERVAL,
+	session_duration DOUBLE PRECISION,
 	publisher_friendly_name_id TEXT,
 	publisher_user_name_id TEXT,
 	interactor_friendly_name_id TEXT,

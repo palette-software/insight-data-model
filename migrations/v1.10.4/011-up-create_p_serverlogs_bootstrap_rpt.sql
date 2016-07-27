@@ -1,4 +1,4 @@
-CREATE or replace function create_p_cpu_usage_bootstrap_rpt(p_schema_name text) returns int
+CREATE or replace function create_p_serverlogs_bootstrap_rpt(p_schema_name text) returns int
 AS $$
 declare
 	v_sql text;			
@@ -13,7 +13,7 @@ begin
 		for rec in (select 
 						case when c.column_name in ('p_id', 'p_cre_date') 
 							then
-								'p_cpu_usage_report_' || c.column_name
+								'p_serverlogs_' || c.column_name
 							else 	
 								c.column_name
 						end || ' ' ||
@@ -22,7 +22,7 @@ begin
 														 '') || ',' as col_def
 					from information_schema.columns c
 					 where
-					 	c.table_name = 'p_cpu_usage_report' and
+					 	c.table_name = 'p_serverlogs' and
 						c.table_schema = p_schema_name
 					 order by
 					 	ordinal_position
@@ -36,21 +36,21 @@ begin
 		--v_col_list := rtrim(v_col_list, ',');
 				
 		v_sql := '
-		create table p_cpu_usage_bootstrap_rpt ( 
+		create table p_serverlogs_bootstrap_rpt ( 
 			p_id bigserial,
 		' ||
 			v_col_list		
 		||
-			'elapsed_seconds_to_bootstrap bigint,
+			'session_elapsed_seconds bigint,
 			p_cre_date timestamp without time zone default now()'			
 		||
 		')
 		WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)				
 		DISTRIBUTED BY (p_id)
-		PARTITION BY RANGE (cpu_usage_ts_rounded_15_secs)
+		PARTITION BY RANGE (ts)
 		(START (date ''2016-05-01'') INCLUSIVE
 			END (date ''2017-05-01'') EXCLUSIVE 
-			every(interval ''1 month'')		
+			every(interval ''1 day'')		
 		)
 		';
 		
@@ -60,3 +60,4 @@ begin
 		return 0;
 END;
 $$ LANGUAGE plpgsql;
+
