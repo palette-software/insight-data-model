@@ -137,9 +137,9 @@ BEGIN
 					ON (actions1.vizql_session = pcur.cpu_usage_parent_vizql_session)
 				LEFT OUTER JOIN (
 						SELECT vizql_session,
-								extract(second from (min(rored.completed_at) - min(rored.created_at))) as show_elapsed_secs,
-								extract(second from (max(rored.completed_at) - max(rored.created_at))) as bootstrap_elapsed_secs,
-								case when extract(second from (max(rored.created_at) - min(rored.completed_at))) > 0 then extract(second from (max(rored.created_at) - min(rored.completed_at))) else null end as show_bootstrap_delay_secs
+								extract(''epoch'' from (min(rored.completed_at) - min(rored.created_at))) as show_elapsed_secs,
+								extract(''epoch'' from (max(rored.completed_at) - max(rored.created_at))) as bootstrap_elapsed_secs,
+								case when extract(''epoch'' from (max(rored.created_at) - min(rored.completed_at))) > 0 then extract(''epoch'' from (max(rored.created_at) - min(rored.completed_at))) else null end as show_bootstrap_delay_secs
 						FROM (
 							select distinct on (ro.action, ro.vizql_session) action, 
 									vizql_session, 
