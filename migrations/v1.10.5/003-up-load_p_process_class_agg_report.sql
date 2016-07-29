@@ -107,7 +107,8 @@ BEGIN
         group by
 	        cpu_usage_ts_rounded_15_secs,
 	        cpu_usage_host_name,
-	        process_name,
+            pc.process_name,
+            pc.process_class,
             tableau_process
 		';
 

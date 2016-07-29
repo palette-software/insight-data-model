@@ -1,4 +1,4 @@
-NSERT INTO p_process_classification (process_name, process_class) VALUES ('7z', 'Tableau');
+INSERT INTO p_process_classification (process_name, process_class) VALUES ('7z', 'Tableau');
 INSERT INTO p_process_classification (process_name, process_class) VALUES ('backgrounder', 'Tableau');
 INSERT INTO p_process_classification (process_name, process_class) VALUES ('clustercontroller', 'Tableau');
 INSERT INTO p_process_classification (process_name, process_class) VALUES ('dataserver', 'Tableau');
