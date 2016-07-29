@@ -124,35 +124,7 @@ begin
 						  thread_with_sess.cpu_core_consumption,
 						  thread_with_sess.memory_usage_bytes as memory_usage_bytes,    
 						  thread_with_sess.process_name,
-						  case when thread_with_sess.process_name in (''backgrounder'',
-													''clustercontroller'',
-													''dataserver'',
-													''filestore'',
-													''httpd'',
-													''postgres'',
-													''searchserver'',
-													''tabadminservice'',
-													''tableau'',
-													''tabprotosrv'',
-													''tabrepo'',
-													''tabsvc'',
-													''tabsystray'',
-													''tdeserver'',
-													''vizportal'',
-													''vizqlserver'',
-													''wgserver'',
-													''zookeeper'',
-													''tabspawn'',
-													''tabadmwrk'',
-													''tabadmsvc'',
-													''tdeserver64'',
-													''tabadmin'',
-													''redis-server''
-													) then 
-									''Tableau''
-						  else 
-						  			''Non-Tableau''
-						  end as process_owner,  
+                          ''Tableau'' as process_owner,
 						  case when process_name in (''dataserver'',							
 													  ''tabprotosrv'',
 													  ''tdeserver'')

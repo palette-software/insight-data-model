@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION load_s_cpu_usage_tdeserver(p_schema_name text) RETURNS bigint
+CREATE or replace function load_s_cpu_usage_dataserver(p_schema_name text) returns bigint
 AS $$
 declare
 	v_sql text;
@@ -10,19 +10,19 @@ declare
 	v_max_ts_date text;
 begin		
 
-			v_sql_cur := 'select to_char((select palette.get_max_ts_date(''palette'', ''p_cpu_usage'')), ''yyyy-mm-dd'')';
-			v_sql_cur := replace(v_sql_cur, 'palette', p_schema_name);
+			v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_cpu_usage'')), ''yyyy-mm-dd'')';
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 			
 			execute v_sql_cur into v_max_ts_date;
 			v_max_ts_date := 'date''' || v_max_ts_date || '''';
 
-			v_sql_cur := 'select distinct ''date'''''' || to_char(ts::date, ''yyyy-mm-dd'') || '''''''' as ts_date, host_name from palette.p_threadinfo
+			v_sql_cur := 'select distinct ''date'''''' || to_char(ts::date, ''yyyy-mm-dd'') || '''''''' as ts_date, host_name from #schema_name#.p_threadinfo
 						  where
 						  	ts_rounded_15_secs >= #v_max_ts_date#
 						 order by 1, 2
 						';		
 						
-			v_sql_cur := replace(v_sql_cur, 'palette', p_schema_name);
+			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 			v_sql_cur := replace(v_sql_cur, '#v_max_ts_date#', v_max_ts_date);			
 			
 			v_num_inserted_all := 0;
@@ -33,8 +33,7 @@ begin
 				  exit when not found;
 				  
 				v_sql := 
-						
-						'insert into palette.s_cpu_usage
+						'insert into #schema_name#.s_cpu_usage
 						(	
 							p_threadinfo_id,
 							ts,
@@ -61,15 +60,15 @@ begin
 							host_name,
 							process_id,
 							thread_id,	
-							session_start_ts,
-							session_end_ts,
-							session_duration,
+							start_ts,
+							end_ts,
 							username,	
 							h_workbooks_p_id,
 							h_projects_p_id,
 							publisher_h_users_p_id,
 							publisher_h_system_users_p_id,
 							h_sites_p_id,
+							user_type,
 							interactor_h_users_p_id,
 							interactor_h_system_users_p_id,
 							max_reporting_granularity,
@@ -80,52 +79,33 @@ begin
 							parent_vizql_destroy_sess_ts,
 							parent_process_type
 						)
+								
 						with t_slogs as
 						(
 						select
-							slogs.*,
-							max(ts) over (partition by sess) as last_ts_for_sess
+							slogs.*	
 						from 
-							palette.p_serverlogs slogs
+							#schema_name#.s_serverlogs_compressed slogs
+						inner join (select distinct host_name, process_id, thread_id
+									from
+										#schema_name#.p_threadinfo
+									where 
+										ts_rounded_15_secs between #v_act_ts_date# and (#v_act_ts_date# + 1) - interval''1 milliseconds''
+										and host_name = ''#host_name#''
+										and process_name = ''dataserver''
+									)  ti
+							on  
+									ti.host_name = slogs.host_name and
+									ti.process_id = slogs.process_id and
+									ti.thread_id = slogs.thread_id 
 						where
-							slogs.filename like ''tdeserver%'' and
-							slogs.host_name = ''#host_name#'' and
-							slogs.ts > #v_max_ts_date# - 2
-						),
-						t_slogs_agg as
-						(
-						 select host_name,
-						 		process_id,
-                                parent_vizql_session,
-								coalesce(parent_vizql_session, parent_dataserver_session) as session,
-                                parent_vizql_username,
-								parent_vizql_username as username,
-								parent_vizql_site,
-                                parent_dataserver_session,
-                                parent_process_type,
-                                min(spawned_by_parent_ts) as spawned_by_parent_ts,
-                                session_start_ts_utc as whole_session_start_ts ,
-								min(spawned_by_parent_ts) as session_start_ts,
-								max(parent_vizql_destroy_sess_ts) as parent_vizql_destroy_sess_ts,
-                                session_end_ts_utc as whole_session_end_ts,
-								last_ts_for_sess
-						from t_slogs
-						 group by 
-						 		host_name,
-						 		process_id,								
-                                parent_vizql_session,
-								coalesce(parent_vizql_session, parent_dataserver_session),
-								parent_vizql_username,
-								parent_vizql_site,
-                                parent_dataserver_session,
-                                parent_process_type,
-								last_ts_for_sess,
-								session_start_ts_utc,
-								session_end_ts_utc
-						)                        
+							slogs.process_name = ''dataserver'' and
+							slogs.host_name = ''#host_name#''
+						)
+						
 						SELECT
 						  thread_with_sess.p_id,
-						  thread_with_sess.ts,
+						  thread_with_sess.ts,  
 						  thread_with_sess.ts_rounded_15_secs,
 						  thread_with_sess.ts_rounded_15_secs::date as ts_date,
 						  DATE_TRUNC(''hour'', thread_with_sess.ts) as ts_day_hour,
@@ -133,20 +113,19 @@ begin
 						  http_req_wb.repository_url,
 						  http_req_wb.user_ip,
 						  http_req_wb.site_id,
-						  http_req_wb.workbook_id,
-						  thread_with_sess.cpu_time_delta_ticks / session_count as cpu_time_consumption_ticks,
-						  thread_with_sess.cpu_time_delta_ticks::numeric / 10000000 / session_count as cpu_time_consumption_seconds,
-						  thread_with_sess.cpu_time_delta_ticks::numeric / 10000000 / 60 / session_count as cpu_time_consumption_minutes,
-						  thread_with_sess.cpu_time_delta_ticks::numeric / 10000000 / 60 / 60 / session_count as cpu_time_consumption_hours,
-						  thread_with_sess.ts_interval_ticks / session_count as ts_interval_ticks,
-						  thread_with_sess.cpu_core_consumption / session_count as cpu_core_consumption,
-						  thread_with_sess.memory_usage_bytes / session_count as memory_usage_bytes,    
+						  http_req_wb.workbook_id,   
+						  thread_with_sess.cpu_time_delta_ticks as cpu_time_consumption_ticks,
+						  thread_with_sess.cpu_time_delta_ticks::numeric / 10000000 as cpu_time_consumption_seconds,
+						  thread_with_sess.cpu_time_delta_ticks::numeric / 10000000 / 60 as cpu_time_consumption_minutes,
+						  thread_with_sess.cpu_time_delta_ticks::numeric / 10000000 / 60 / 60 as cpu_time_consumption_hours,
+						  thread_with_sess.ts_interval_ticks,
+						  thread_with_sess.cpu_core_consumption,
+						  thread_with_sess.memory_usage_bytes as memory_usage_bytes,    
 						  thread_with_sess.process_name,
                           ''Tableau'' as process_owner,
 						  case when process_name in (''dataserver'',							
 													  ''tabprotosrv'',
-													  ''tdeserver'',
-													  ''tdeserver64'')
+													  ''tdeserver'')
 									then ''Y''
 									
 								when  process_name = ''vizqlserver'' and thread_with_sess.session is not null
@@ -158,25 +137,26 @@ begin
 						  thread_with_sess.is_thread_level,			  
 						  thread_with_sess.host_name,
 						  thread_with_sess.process_id,
-                          thread_with_sess.thread_id,
+						  thread_with_sess.thread_id,  
 						  thread_with_sess.whole_session_start_ts as start_ts,
 						  thread_with_sess.whole_session_end_ts as end_ts,
-						  extract(''epoch'' from (whole_session_end_ts - whole_session_start_ts)) as session_duration,
 						  thread_with_sess.username, 
 						  http_req_wb.h_workbooks_p_id,  
 						  http_req_wb.h_projects_p_id,
 						  http_req_wb.publisher_h_users_p_id,
 						  http_req_wb.publisher_h_system_users_p_id,
-						  http_req_wb.h_sites_p_id,    
+						  http_req_wb.h_sites_p_id,
+  						  http_req_wb.user_type,
 						  u.p_id as interactor_h_users_p_id,
 						  su.p_id as interactor_h_system_users_p_id,
 						  thread_with_sess.max_reporting_granularity,						  
-						  /*case when thread_with_sess.session in (''-'', ''default'') then ''Non-Interactor Dataserver'' else thread_with_sess.session end*/ NULL as dataserver_session,
-						  thread_with_sess.parent_vizql_session as parent_vizql_session,
-						  thread_with_sess.parent_dataserver_session as parent_dataserver_session,
+						  case when thread_with_sess.session in (''-'', ''default'') then ''Non-Interactor Dataserver'' else thread_with_sess.session end as dataserver_session,
+						  parent_vizql_session as parent_vizql_session,
+						  null as parent_dataserver_session,
 						  spawned_by_parent_ts as spawned_by_parent_ts,
 						  parent_vizql_destroy_sess_ts as parent_vizql_destroy_sess_ts,
 						  parent_process_type as parent_process_type
+						  --thread_with_sess.whole_session_duration as whole_session_duration
 						FROM 
 							(select
 									tri.p_id
@@ -186,7 +166,7 @@ begin
 							       ,tri.ts
 								   ,tri.ts_rounded_15_secs
 							       ,tri.process_id
-                                   ,tri.thread_id
+							       ,tri.thread_id
 							       ,tri.cpu_time_ticks
 							       ,tri.cpu_time_delta_ticks
 							       ,tri.ts_interval_ticks
@@ -199,7 +179,12 @@ begin
 								   ,slogs.session
 								   ,slogs.username
 								   ,slogs.session_start_ts as slog_session_start_ts
-								   ,sites.id as slog_site_id				
+								   ,sites.id as slog_site_id
+								   ,row_number() over (partition by tri.p_id order by case when slogs.session_start_ts between tri.start_ts and tri.ts 
+								   													      then 1 
+																						  else 2 
+																					  end asc, 																		  
+																					  slogs.session_start_ts desc) as rn
 									,slogs.parent_vizql_session
 									,slogs.parent_dataserver_session
 									,slogs.spawned_by_parent_ts
@@ -208,7 +193,6 @@ begin
 									,slogs.parent_vizql_username
 									,slogs.whole_session_start_ts
 								    ,slogs.whole_session_end_ts
-									,count(*) over (partition by slogs.host_name, slogs.process_id, tri.ts_rounded_15_secs) as session_count
 							from	
 								(select 
 									p_id
@@ -227,39 +211,40 @@ begin
 								   ,memory_usage_bytes
 								   ,case when thread_id = -1 then ''Process Level'' else ''Thread Level'' end as process_level
 								   ,is_thread_level
-								   ,/*case when is_thread_level = ''Y'' and thread_id = -1 then false else true end */ true as max_reporting_granularity
-								   ,start_ts
+								   ,case when is_thread_level = ''Y'' and thread_id = -1 then false else true end as max_reporting_granularity
+								   ,start_ts								   
 								from
-									palette.p_threadinfo
+									#schema_name#.p_threadinfo
 								where
-                                    ts_rounded_15_secs between #v_act_ts_date# and (#v_act_ts_date# + 1) - interval''1 milliseconds''
+									ts_rounded_15_secs between #v_act_ts_date# and (#v_act_ts_date# + 1) - interval''1 milliseconds''
 									and host_name = ''#host_name#''
 									and ts_interval_ticks is not null
-									and process_name like ''tdeserver%''
-                                    and thread_id = -1
+									and process_name = ''dataserver''
 								) tri
-								left outer join t_slogs_agg slogs ON (
+								left outer join t_slogs slogs ON (
 												tri.host_name = slogs.host_name AND
-							    				tri.process_id = slogs.process_id AND
-                                                slogs.session_start_ts <= tri.ts_rounded_15_secs  AND
-												coalesce(slogs.parent_vizql_destroy_sess_ts, slogs.last_ts_for_sess) >= tri.ts_rounded_15_secs
+							    				tri.process_id = slogs.process_id AND 
+							    				tri.thread_id = slogs.thread_id AND
+												slogs.session_start_ts between tri.start_ts and tri.ts + interval ''15 sec'' AND
+												tri.ts <= coalesce(slogs.parent_vizql_destroy_sess_ts, tri.ts)
 							  				)
-								left outer join palette.h_sites sites on (sites.name = slogs.parent_vizql_site and slogs.session_start_ts between sites.p_valid_from and sites.p_valid_to)
+								left outer join #schema_name#.h_sites sites on (sites.name = slogs.parent_vizql_site and slogs.session_start_ts between sites.p_valid_from and sites.p_valid_to)
 						   ) thread_with_sess
-						   LEFT OUTER JOIN palette.s_http_requests_with_workbooks http_req_wb ON (http_req_wb.vizql_session = thread_with_sess.parent_vizql_session)
+						   LEFT OUTER JOIN #schema_name#.s_http_requests_with_workbooks http_req_wb ON (http_req_wb.vizql_session = thread_with_sess.parent_vizql_session)
 						   
-						   left outer join palette.h_system_users su on (su.name = thread_with_sess.parent_vizql_username and   												 
+						   left outer join #schema_name#.h_system_users su on (su.name = thread_with_sess.parent_vizql_username and   												 
 						   												 thread_with_sess.slog_session_start_ts between su.p_valid_from and su.p_valid_to
 						  												   )												   
-						   left outer join palette.h_users u on (u.system_user_id = su.id and
+						   left outer join #schema_name#.h_users u on (u.system_user_id = su.id and
 						   										 u.site_id = thread_with_sess.slog_site_id and
 						   										 thread_with_sess.slog_session_start_ts between u.p_valid_from and u.p_valid_to										 
-						  										 )';
+						  										 )
+						where
+							thread_with_sess.rn = 1';
 
-					v_sql := replace(v_sql, 'palette', p_schema_name);
+					v_sql := replace(v_sql, '#schema_name#', p_schema_name);
 					v_sql := replace(v_sql, '#host_name#', rec.host_name);
 					v_sql := replace(v_sql, '#v_act_ts_date#', rec.ts_date);
-					v_sql := replace(v_sql, '#v_max_ts_date#', v_max_ts_date);
 					
 					raise notice 'I: %', v_sql;
 
