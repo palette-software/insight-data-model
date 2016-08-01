@@ -26,7 +26,15 @@ CREATE TABLE p_interactor_session
 	show_elapsed_secs double,
 	bootstrap_elapsed_secs double,
 	show_bootstrap_delay_secs double,
-	user_type TEXT
+	user_type TEXT,
+	currentsheet varchar(255),
+	http_referer varchar(255),
+	http_request_uri text,
+	remote_ip varchar(255),
+	user_ip varchar(255),
+	user_cookie varchar(255),
+	status integer,
+	first_show_created_at timestamp without time zone
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (vizql_session);
