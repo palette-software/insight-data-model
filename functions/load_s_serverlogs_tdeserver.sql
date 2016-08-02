@@ -25,11 +25,11 @@ begin
 			v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
 			execute v_sql_cur into v_max_ts_date_p_threadinfo;
 			v_max_ts_date_p_threadinfo := 'date''' || v_max_ts_date_p_threadinfo || '''';			
-						
-			drop table if exists tde_filename_pids;
+			
+			truncate table s_tde_filename_pids;
 			
 			v_sql := '
-			create table tde_filename_pids as
+			insert into s_tde_filename_pids as
 			select
 				host_name,
 				file_prefix,
@@ -60,13 +60,13 @@ begin
 			v_sql := replace(v_sql, '#max_ts_p_threadinfo#', v_max_ts_p_threadinfo);
 			execute v_sql;
 			
-			analyze tde_filename_pids;		
+			analyze s_tde_filename_pids;		
 			
 			
-			drop table if exists t_s_spawner;
+			truncate table s_serverlogs_spawner;
 			
 			v_sql := '
-			create table t_s_spawner as
+			insert into s_serverlogs_spawner as
                 (                    
 					select
 							b.spawner_host_name,
@@ -181,13 +181,13 @@ begin
 			v_sql := replace(v_sql, '#max_ts_p_threadinfo#', v_max_ts_p_threadinfo);
 			raise notice 'I: %', v_sql;	
 			execute v_sql;		
-			analyze t_s_spawner;
+			analyze s_serverlogs_spawner;
 			
 			
-			drop table if exists session_map;
+			truncate table s_plainlogs_session_map;
 			
 			v_sql := 
-			'create table session_map as 
+			'insert into s_plainlogs_session_map as 
 			(
 					select
 						tid,
@@ -229,7 +229,7 @@ begin
 			v_sql := replace(v_sql, '#max_ts_p_threadinfo#', v_max_ts_p_threadinfo);
 			raise notice 'I: %', v_sql;	
 			execute v_sql;			
-			analyze session_map;
+			analyze s_plainlogs_session_map;
 						
 			v_sql := 
 			'insert into s_serverlogs (
@@ -303,7 +303,7 @@ begin
 								substr(line, 1, greatest(position('':'' in line) - 1, 1)) as session_uid
                           from 
 						  		plainlogs pl0
-                     	  		left outer join tde_filename_pids p on (pl0.host_name = p.host_name and
+                     	  		left outer join s_tde_filename_pids p on (pl0.host_name = p.host_name and
 																		substring(pl0.filename from ''^[a-z_]+[0-9]+'') = p.file_prefix and
 						  										  		pl0.ts >= p.ts_from and 
 																		pl0.ts < p.ts_to
@@ -315,12 +315,12 @@ begin
 								pl0.ts >= #max_ts_date_p_serverlogs# - interval ''1 day'' and
 								pl0.ts <= #max_ts_p_threadinfo# + interval''15 sec''
                  		) pl
-						left join session_map sm on pl.file_prefix_to_join = sm.file_prefix_to_join
+						left join s_plainlogs_session_map sm on pl.file_prefix_to_join = sm.file_prefix_to_join
 						  							and pl.session_uid = sm.session_uid
 													and pl.ts >= sm.ts_start 
 													and pl.ts < sm.ts_end
 													
-						left join t_s_spawner sp on sp.spawner_session = sm.sessid
+						left join s_serverlogs_spawner sp on sp.spawner_session = sm.sessid
 						
 					where 1 = 1 -- pl.ts >= #max_ts_date_p_serverlogs# - interval ''1 day''
 						  -- and pl.ts < now()::date + 2
