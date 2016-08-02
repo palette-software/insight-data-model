@@ -48,7 +48,7 @@ begin
 						table_schema = p_schema_name and
 						column_name not in ('p_filepath') and
 						(table_name in ('h_sites', 'h_projects', 'h_workbooks', 'h_system_users') or
-						(table_name = 'p_cpu_usage' and column_name not in ('session_duration', 'session_start_ts', 'session_end_ts')))
+						(table_name = 'p_cpu_usage' and column_name not in ('start_ts', 'end_ts')))
 												
 					union all 
 
@@ -141,10 +141,23 @@ begin
 							execute v_sql_cur into v_max_ts_date;
 							v_max_ts_date := ''date'''''' || v_max_ts_date || '''''''';
 
-																					
-							v_sql := ''create table tmp_cpu0 as 
-										select distinct h_projects_p_id, h_sites_p_id, interactor_h_system_users_p_id, h_workbooks_p_id, publisher_h_users_p_id, publisher_h_system_users_p_id
-										from 	
+							truncate table s_cpu_usage_dist_dims;
+							
+							v_sql := ''insert into s_cpu_usage_dist_dims 
+												(h_projects_p_id, 
+												h_sites_p_id, 
+												interactor_h_system_users_p_id, 
+												h_workbooks_p_id, 
+												publisher_h_users_p_id, 
+												publisher_h_system_users_p_id)
+										select 
+												distinct h_projects_p_id, 
+												h_sites_p_id, 
+												interactor_h_system_users_p_id, 
+												h_workbooks_p_id, 
+												publisher_h_users_p_id, 
+												publisher_h_system_users_p_id
+										from
 											p_cpu_usage cpu
 										where
 											cpu.ts_rounded_15_secs >= #v_max_ts_date#
@@ -153,7 +166,7 @@ begin
 							v_sql := replace(v_sql, ''#v_max_ts_date#'', v_max_ts_date);	
 							execute v_sql;							
 							
-							analyze tmp_cpu0;
+							analyze s_cpu_usage_dist_dims;
 							
 							
 							v_sql := 
@@ -180,9 +193,9 @@ begin
 		
 		v_sql := v_sql || v_select_part;
 		
-		v_sql := v_sql || ' cpu.session_start_ts as session_start_ts,
-						   cpu.session_end_ts as session_end_ts,							
-						   cpu.session_duration,
+		v_sql := v_sql || ' cpu.start_ts as session_start_ts,
+						   cpu.end_ts as session_end_ts,							
+						   cpu.end_ts - cpu.start_ts as session_duration,
 						   cpu.process_name || '''':'''' || cpu.process_id || '''':'''' || cpu.thread_id as thread_name,							
 						   s.name || '''' ('''' || s.id || '''')'''' as site_name_id,
 						   p.name || '''' ('''' || p.id || '''')'''' as project_name_id,
@@ -191,7 +204,7 @@ begin
 				';
 		
 		v_sql := v_sql || '
-				FROM tmp_cpu0 cpu0
+				FROM s_cpu_usage_dist_dims cpu0
                     left outer join h_projects p on (p.p_id = cpu0.h_projects_p_id)
                     left outer join h_sites s on (s.p_id = cpu0.h_sites_p_id)
                     left outer join h_system_users su_int on (su_int.p_id = cpu0.interactor_h_system_users_p_id)
@@ -219,7 +232,6 @@ begin
 				execute v_sql;		
 				GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
 				
-				drop table tmp_cpu0;
 				
 				return v_num_inserted;
 		END;
