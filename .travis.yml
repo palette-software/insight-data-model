@@ -54,11 +54,11 @@ before_deploy:
   # Copy over the migrations
   - cp -Rv $SRC_DIR/migrations/v* _root/opt/palette-insight-reporting/migrations
 
-  # Clean the destination for the current version
-  - rm -rfv $CURRENT_VERSION_FULL_INSTALL_DIR
+  # # Clean the destination for the current version
+  # - rm -rfv $CURRENT_VERSION_FULL_INSTALL_DIR
 
-  # Overwrite the currently tagged versions directory with the
-  - unzip $SRC_DIR/$FULL_INSTALL_ZIP -d $CURRENT_VERSION_FULL_INSTALL_DIR
+  # # Overwrite the currently tagged versions directory with the
+  # - unzip $SRC_DIR/$FULL_INSTALL_ZIP -d $CURRENT_VERSION_FULL_INSTALL_DIR
 
   # Copy the shell script over
   - cp -v $SRC_DIR/insight-datamodel-install.sh _root/opt/palette-insight-reporting
