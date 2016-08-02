@@ -54,6 +54,7 @@ before_deploy:
   # Copy over the migrations
   - cp -Rv $SRC_DIR/migrations/v* _root/opt/palette-insight-reporting/migrations
 
+  # NOTE: Full installs are not required now. We are going to do them manully, in case we need a new one.
   # # Clean the destination for the current version
   # - rm -rfv $CURRENT_VERSION_FULL_INSTALL_DIR
 
