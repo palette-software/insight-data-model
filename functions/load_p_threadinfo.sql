@@ -7,7 +7,7 @@ declare
 	v_sql_cur text;
 	v_max_ts_p_threadinfo timestamp;
 	v_max_ts_p_cpu_usage_report timestamp;	
-	v_min_ts_date_threadinfo text;
+	v_min_ts_threadinfo text;
 BEGIN	
 
 			if (upper(p_load_type) not in ('FULL', 'DELTA'))
@@ -37,10 +37,10 @@ BEGIN
 			execute v_sql_cur into v_max_ts_date_p_threadinfo;
 			v_max_ts_date_p_threadinfo := 'date''' || v_max_ts_date_p_threadinfo || '''';
 									
-			v_sql_cur := 'select min(ts)::date from threadinfo where ts > timestamp''' || to_char(v_max_ts_p_threadinfo, 'yyyy-mm-dd hh24:mi:ss.ms') || ''' - interval ''10 minutes''';
+			v_sql_cur := 'select to_char(min(ts), ''yyyy-mm-dd hh24:mi:ss.ms'') from threadinfo where ts > timestamp''' || to_char(v_max_ts_p_threadinfo, 'yyyy-mm-dd hh24:mi:ss.ms') || ''' + interval ''30 seconds''';
 			v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);			
-			execute v_sql_cur into v_min_ts_date_threadinfo;
-			v_min_ts_date_threadinfo := 'date''' || v_min_ts_date_threadinfo || '''';
+			execute v_sql_cur into v_min_ts_threadinfo;
+			v_min_ts_threadinfo := 'timestamp''' || v_min_ts_threadinfo || '''';
 			
 			v_sql := 
 			'insert into p_threadinfo
@@ -206,8 +206,8 @@ BEGIN
 												where
 													ts_rounded_15_secs >= #max_ts_date_p_threadinfo#
 												), 0)
-								and ts >= #max_ts_date_p_threadinfo# - interval''1 hour'' and 
-									ts < #min_ts_date_threadinfo# + interval''28 hours''
+								and ts >= #max_ts_date_p_threadinfo# - interval''2 hours'' and 
+									ts < coalesce(#min_ts_threadinfo#, date''1001-01-01'') + interval''24 hours''
 								
 							union all
 							
@@ -240,7 +240,7 @@ BEGIN
 			
 			v_sql := replace(v_sql, '#schema_name#', p_schema_name);			
 			v_sql := replace(v_sql, '#max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);
-			v_sql := replace(v_sql, '#min_ts_date_threadinfo#', v_min_ts_date_threadinfo);
+			v_sql := replace(v_sql, '#min_ts_threadinfo#', v_min_ts_threadinfo);
 
 			execute v_sql;
 			
