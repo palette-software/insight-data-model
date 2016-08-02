@@ -58,8 +58,8 @@ if [ $VERSION_TABLE_EXISTS = 'f'  ]; then
   echo "VERSION TABLE DOES NOT EXIST, doing a full install"
 
   # Find the latest full install version
-  push ${FULL_INSTALL_DIR}
-  FULL_VERSIONS=`ls -d v* | gsort -r -V`
+  pushd ${FULL_INSTALL_DIR}
+  FULL_VERSIONS=`ls -d v* | sort -r -V`
   LATEST_FULL_INSTALL_VERSION=`echo $FULL_VERSIONS | cut -d' ' -f1`
   popd
 
