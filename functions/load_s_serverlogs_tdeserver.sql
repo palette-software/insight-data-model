@@ -26,7 +26,9 @@ begin
 			execute v_sql_cur into v_max_ts_date_p_threadinfo;
 			v_max_ts_date_p_threadinfo := 'date''' || v_max_ts_date_p_threadinfo || '''';			
 			
-			truncate table s_tde_filename_pids;
+			v_sql := 'truncate table #schema_name#.s_tde_filename_pids';
+			v_sql := replace(v_sql, '#schema_name#', p_schema_name);
+			execute v_sql;
 			
 			v_sql := '
 			insert into s_tde_filename_pids as
@@ -63,7 +65,9 @@ begin
 			analyze s_tde_filename_pids;		
 			
 			
-			truncate table s_serverlogs_spawner;
+			v_sql := 'truncate table #schema_name#.s_serverlogs_spawner';
+			v_sql := replace(v_sql, '#schema_name#', p_schema_name);
+			execute v_sql;
 			
 			v_sql := '
 			insert into s_serverlogs_spawner as
@@ -184,7 +188,9 @@ begin
 			analyze s_serverlogs_spawner;
 			
 			
-			truncate table s_plainlogs_session_map;
+			v_sql := 'truncate table #schema_name#.s_plainlogs_session_map';
+			v_sql := replace(v_sql, '#schema_name#', p_schema_name);
+			execute v_sql; 
 			
 			v_sql := 
 			'insert into s_plainlogs_session_map as 
