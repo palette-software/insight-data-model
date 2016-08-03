@@ -11,10 +11,12 @@ BEGIN;
 \i 005-up-create_load_s_cpu_usage_report.sql
 \i 006-up-load_s_serverlogs_tdeserver.sql
 
+set role palette_etl_user;
 drop table if exists session_map;
 drop table if exists t_s_spawner;
 drop table if exists tde_filename_pids;
 
+set role palette_palette_updater;
 select create_load_s_cpu_usage_report('#schema_name#');
 select handle_privileges('palette');
 
