@@ -31,7 +31,12 @@ begin
 			execute v_sql;
 			
 			v_sql := '
-			insert into s_tde_filename_pids as
+			insert into s_tde_filename_pids 
+				(host_name,
+				file_prefix,
+				pid,
+				ts_from,
+				ts_to)
 			select
 				host_name,
 				file_prefix,
@@ -70,8 +75,15 @@ begin
 			execute v_sql;
 			
 			v_sql := '
-			insert into s_serverlogs_spawner as
-                (                    
+			insert into s_serverlogs_spawner
+                			(spawner_host_name,
+							parent_vizql_site,														
+							process_name,
+							spawner_session,							
+							parent_vizql_username,														
+							parent_vizql_destroy_sess_ts,																					
+							spawner_ts_destroy_sess,
+							parent_ds_vizql_session)
 					select
 							b.spawner_host_name,
 							case when b.process_name = ''vizqlserver'' then b.parent_vizql_site
@@ -178,7 +190,7 @@ begin
 											sess
 									) ds on (ds.host_name = b.spawner_host_name and
 											 ds.sess = b.spawner_session)
-				)
+				
 				';
 			
 			v_sql := replace(v_sql, '#max_ts_date_p_serverlogs#', v_max_ts_date_p_serverlogs);
@@ -193,8 +205,16 @@ begin
 			execute v_sql; 
 			
 			v_sql := 
-			'insert into s_plainlogs_session_map as 
-			(
+			'insert into s_plainlogs_session_map
+					(tid,
+					sessid,
+					first_p_id,
+					last_p_id,
+					ts_start,
+					ts_end,
+					session_uid,
+					filename,
+					file_prefix_to_join)
 					select
 						tid,
 						sessid,
@@ -228,7 +248,7 @@ begin
 							and filename like ''tdeserver%''
 					) t
 					where line like ''(queryband%''
-				)
+				
 			';
 			
 			v_sql := replace(v_sql, '#max_ts_date_p_serverlogs#', v_max_ts_date_p_serverlogs);			
