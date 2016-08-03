@@ -11,11 +11,12 @@ BEGIN;
 \i 005-up-create_load_s_cpu_usage_report.sql
 \i 006-up-load_s_serverlogs_tdeserver.sql
 
-drop table if exists session_map
-drop table if exists t_s_spawner
-drop table if exists tde_filename_pids
+drop table if exists session_map;
+drop table if exists t_s_spawner;
+drop table if exists tde_filename_pids;
 
 select create_load_s_cpu_usage_report('#schema_name#');
+select handle_privileges('palette');
 
 insert into db_version_meta(version_number) values ('v1.10.11');
 
