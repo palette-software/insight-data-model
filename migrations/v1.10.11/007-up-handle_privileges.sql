@@ -16,7 +16,7 @@ begin
 									''
 							end as cmd_owner_to_palette,		
 							case when 
-									c.relname not like 'ext%' and				
+									c.relname not like 'ext\\_%' and
 									c.relname not like 's\\_%'				
 								then
 									'grant select on ' || s.nspname || '.' || c.relname || ' to palette_' || s.nspname || '_looker'
