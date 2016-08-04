@@ -141,7 +141,7 @@ begin
 							execute v_sql_cur into v_max_ts_date;
 							v_max_ts_date := ''date'''''' || v_max_ts_date || '''''''';
 
-							v_sql := ''truncate table #schema_name#.s_tde_filename_pids''
+							v_sql := ''truncate table #schema_name#.s_cpu_usage_dist_dims'';
 							v_sql := replace(v_sql, ''#schema_name#'', p_schema_name);
 							execute v_sql;
 																					
