@@ -12,10 +12,13 @@ BEGIN;
 \i 006-up-load_s_serverlogs_tdeserver.sql
 \i 007-up-handle_privileges.sql
 
+set role palette_etl_user;
+
 drop table if exists session_map;
 drop table if exists t_s_spawner;
 drop table if exists tde_filename_pids;
 
+set role palette_palette_updater;
 select create_load_s_cpu_usage_report('#schema_name#');
 
 insert into db_version_meta(version_number) values ('v1.10.11');
