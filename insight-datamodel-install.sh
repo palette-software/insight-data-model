@@ -78,7 +78,7 @@ if [ $VERSION_TABLE_EXISTS = 'f'  ]; then
   pushd ${TEMPLATED_DIR}
 
   # Run the full installer
-  psql -d palette  -U palette_etl_user -f full_install.sql
+  psql -d palette -f full_install.sql
 
   # Get back to the outer directory
   popd
@@ -140,8 +140,8 @@ do
       echo "Using temporary folder for migration: ${TEMPLATED_DIR}"
       pushd ${TEMPLATED_DIR}
 
-      # Run the full installer
-      psql -d ${SCHEMA_NAME} -U palette_etl_user -f "!install-up.sql"
+      # Run the migration installer
+      psql -d ${SCHEMA_NAME} -f "!install-up.sql"
 
       # Get back to the outer directory
       popd
