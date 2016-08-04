@@ -42,6 +42,10 @@ BEGIN
 			execute v_sql_cur into v_min_ts_threadinfo;
 			v_min_ts_threadinfo := 'timestamp''' || v_min_ts_threadinfo || '''';
 			
+			if v_min_ts_threadinfo is null then
+				return 0;
+			end if;
+			
 			v_sql := 
 			'insert into p_threadinfo
 			(	
@@ -207,7 +211,7 @@ BEGIN
 													ts_rounded_15_secs >= #max_ts_date_p_threadinfo#
 												), 0)
 								and ts >= #max_ts_date_p_threadinfo# - interval''2 hours'' and 
-									ts < coalesce(#min_ts_threadinfo#, date''1001-01-01'') + interval''24 hours''
+									ts < #min_ts_threadinfo# + interval''24 hours''
 								
 							union all
 							
