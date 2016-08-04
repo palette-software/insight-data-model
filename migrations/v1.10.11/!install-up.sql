@@ -3,7 +3,7 @@ set search_path = '#schema_name#';
 
 BEGIN;
 
-select handle_privileges('palette');
+select handle_privileges('#schema_name#');
 
 set role palette_palette_updater;
 
