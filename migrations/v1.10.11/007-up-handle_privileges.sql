@@ -32,9 +32,9 @@ begin
 						join pg_class c on (c.relnamespace = s.oid)
 						join pg_roles r on (c.relowner = r.oid)
 					where s.nspname = p_schema_name
-						and c.relkind in ('r','v', 'S')
+						and c.relkind in ('r','v')
 						and c.relchecks = 0						
-					order by 2
+					order by relkind desc, relname
 					)
 		loop
 			
