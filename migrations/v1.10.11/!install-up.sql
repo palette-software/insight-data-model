@@ -1,11 +1,8 @@
 \set ON_ERROR_STOP on
 set search_path = '#schema_name#';
+set role palette_palette_updater;
 
 BEGIN;
-
-select handle_privileges('#schema_name#');
-
-set role palette_palette_updater;
 
 \i 001-up-s_plainlogs_session_map.sql
 \i 002-up-s_serverlogs_spawner.sql
