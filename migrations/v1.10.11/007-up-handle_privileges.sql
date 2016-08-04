@@ -11,6 +11,11 @@ begin
 							c.relkind,
 							r.rolname rel_owner,
 							case when c.relname not in ('ext_error_table') then
+								'alter table ' || s.nspname || '.' || c.relname || ' owner to ' || 'gpadmin'
+								else
+									''
+							end as cmd_owner_to_gpadmin,
+							case when c.relname not in ('ext_error_table') then
 								'alter table ' || s.nspname || '.' || c.relname || ' owner to ' || 'palette_' || s.nspname || '_updater' 
 								else
 									''
@@ -32,6 +37,10 @@ begin
 					order by 2
 					)
 		loop
+			
+			v_sql := rec.cmd_owner_to_gpadmin;
+			raise notice 'I: %', v_sql;						
+			execute v_sql;			
 		
 			v_sql := rec.cmd_owner_to_palette;
 			raise notice 'I: %', v_sql;						
