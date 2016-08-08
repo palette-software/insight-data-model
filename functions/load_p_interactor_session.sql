@@ -161,7 +161,7 @@ BEGIN
 				MIN(user_cookie) as user_cookie,
 				MIN(status) as status,
 				MIN(first_show_created_at) as first_show_created_at,
-				MIN(min_ts_rounded_15_secs)
+				MIN(cpu_usage_ts_rounded_15_secs) as min_ts_rounded_15_secs
 		FROM    
 		        p_cpu_usage_report pcur        
 		        LEFT OUTER JOIN (
