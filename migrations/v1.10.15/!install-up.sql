@@ -4,6 +4,8 @@ set role palette_palette_updater;
 
 BEGIN;
 
+alter table p_interactor_session add column min_ts_rounded_15_secs timestamp without time zone default NULL;
+update p_interactor_session set min_ts_rounded_15_secs = session_start_ts;
 drop view p_interactor_session_normal;
 
 \i 001-up-p_interactor_session_normal.sql
