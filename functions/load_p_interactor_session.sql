@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION palette.load_p_interactor_session(p_schema_name text)
+CREATE OR REPLACE FUNCTION load_p_interactor_session(p_schema_name text)
 RETURNS bigint AS
 $BODY$
 declare
@@ -212,8 +212,10 @@ BEGIN
 						GROUP BY vizql_session
 					) actions2
 					ON (actions2.vizql_session = pcur.cpu_usage_parent_vizql_session)
-		WHERE cpu_usage_ts_rounded_15_secs >= #v_from# and
-			  cpu_usage_ts_rounded_15_secs <= #v_to# and
+		WHERE cpu_usage_ts_rounded_15_secs >= #v_from# - interval''15 seconds'' and
+			  cpu_usage_ts_rounded_15_secs <= #v_to# + interval''15 seconds'' and
+			  session_start_ts >= #v_from# and
+			  session_end_ts <= #v_to# and
 		      cpu_usage_parent_vizql_session IS NOT NULL
 			AND cpu_usage_parent_vizql_session || ''::'' || cpu_usage_process_name NOT IN (SELECT DISTINCT vizql_session || ''::'' || process_name FROM p_interactor_session)
 		GROUP BY cpu_usage_parent_vizql_session, cpu_usage_process_name;

@@ -4,8 +4,12 @@ set role palette_palette_updater;
 
 BEGIN;
 
-alter table p_cpu_usage_bootstrap_rpt alter column cpu_usage_parent_vizql_destroy_sess_ts type timestamp without time zone using to_timestamp(cpu_usage_parent_vizql_destroy_sess_ts, 'yyyy-mm-dd HH24.MI.SS.MS');
+drop view p_interactor_session_normal;
 
-insert into db_version_meta(version_number) values ('v1.10.14');
+\i 001-up-p_interactor_session_normal.sql
+
+grant select on p_interactor_session_normal to palette_palette_looker;
+
+insert into db_version_meta(version_number) values ('v1.10.15');
 
 COMMIT;
