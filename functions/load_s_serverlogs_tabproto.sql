@@ -207,7 +207,10 @@ begin
 											else ''-'' 
 						  				end
 									,''dataserver'',
-										a.parent_ds_vizql_session
+										case when a.ts > a.spawner_ts_destroy_sess then null
+											 else
+												a.parent_ds_vizql_session
+										end
 								, null) as parent_vizql_session
 						 , decode(a.spawner_process_type, ''dataserver'', case when a.start_ts = min(a.start_ts) over (partition by a.spawner_process_type, a.spawner_session, a.spawned_tabproto_process_id_ts, a.host_name, a.process_id) then
 								a.spawner_session

@@ -11,16 +11,17 @@ BEGIN
 
 		execute 'set local search_path = ' || p_schema_name;
 	
-		v_sql_cur := 'select to_char(coalesce(max(max_ts_rounded_15_secs)::date, date''1001-01-01''), ''yyyy-mm-dd'') from p_interactor_session';	
+		v_sql_cur := 'select to_char(coalesce(max(session_start_ts)::date, date''1001-01-01''), ''yyyy-mm-dd'') from p_interactor_session';	
 		execute v_sql_cur into v_from;
 		v_from := 'date''' || v_from || '''';		
 				
 		v_sql_cur := 'select 
-							to_char(coalesce(min(cpu_usage_ts_rounded_15_secs), #v_from# + 1), ''yyyy-mm-dd hh24:mi:ss.ms'')
+							to_char(coalesce(min(session_start_ts), #v_from# + 2), ''yyyy-mm-dd hh24:mi:ss.ms'')
 					  from
 					  		p_cpu_usage_report
 					  where
-					  		cpu_usage_ts_rounded_15_secs >= #v_from# + 1 and
+					  		session_start_ts >= #v_from# + 2 and
+					  		cpu_usage_ts_rounded_15_secs >= #v_from# and
 		        			cpu_usage_parent_vizql_session IS NOT NULL		
 					';
 					
@@ -30,8 +31,8 @@ BEGIN
 		
 		v_sql_cur := 'delete from p_interactor_session 
 					  where 
-					  		max_ts_rounded_15_secs >= #v_from# and
-							max_ts_rounded_15_secs <= #v_to#
+					  		session_start_ts >= #v_from# and
+							session_start_ts <= #v_to#
 					';
 					
 		v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);
@@ -75,8 +76,7 @@ BEGIN
 			user_ip,
 			user_cookie,
 			status,
-			first_show_created_at,
-			max_ts_rounded_15_secs
+			first_show_created_at			
 		)
 		WITH rownofilt AS (
 			SELECT 
@@ -160,8 +160,7 @@ BEGIN
 				MIN(user_ip) as user_ip,
 				MIN(user_cookie) as user_cookie,
 				MIN(status) as status,
-				MIN(first_show_created_at) as first_show_created_at,
-				MAX(cpu_usage_ts_rounded_15_secs) as max_ts_rounded_15_secs
+				MIN(first_show_created_at) as first_show_created_at				
 		FROM    
 		        p_cpu_usage_report pcur        
 		        LEFT OUTER JOIN (
@@ -214,8 +213,11 @@ BEGIN
 						GROUP BY vizql_session
 					) actions2
 					ON (actions2.vizql_session = pcur.cpu_usage_parent_vizql_session)
-		WHERE cpu_usage_ts_rounded_15_secs >= #v_from# and
-			  cpu_usage_ts_rounded_15_secs <= #v_to# and
+		WHERE 
+			  session_start_ts >= #v_from# and
+			  session_start_ts <= #v_to# and
+			  cpu_usage_ts_rounded_15_secs >= #v_from# - 1 and
+			  cpu_usage_ts_rounded_15_secs <= #v_to# + interval''1 day'' and
 		      cpu_usage_parent_vizql_session IS NOT NULL
 		GROUP BY cpu_usage_parent_vizql_session, cpu_usage_process_name;
 		';
@@ -253,15 +255,15 @@ BEGIN
 			from
 				p_interactor_session
 			where
-				max_ts_rounded_15_secs >= #v_from# - interval ''2 day'' and
-				max_ts_rounded_15_secs <= #v_to#				
+				session_start_ts >= #v_from# - interval ''2 day'' and
+				session_start_ts <= #v_to#
 			group by
 				vizql_session, process_name
 			having count(1) = 2
 			) s
 		where
-			t.max_ts_rounded_15_secs >= #v_from# - interval ''2 day'' and
-			t.max_ts_rounded_15_secs <= #v_to# and
+			t.session_start_ts >= #v_from# - interval ''2 day'' and
+			t.session_start_ts <= #v_to# and
 			t.vizql_session = s.vizql_session and
 			t.process_name = s.process_name
 		';
@@ -282,15 +284,15 @@ BEGIN
 				from
 					p_interactor_session
 			    where
-					max_ts_rounded_15_secs >= #v_from# - interval ''2 day'' and
-					max_ts_rounded_15_secs <= #v_to#
+					session_start_ts >= #v_from# - interval ''2 day'' and
+					session_start_ts <= #v_to#
 			    group by
 			  		vizql_session, process_name
 				having count(1) = 2
 			  ) s
 		where
-			max_ts_rounded_15_secs >= #v_from# - interval ''2 day'' and
-			max_ts_rounded_15_secs <= #v_to# and
+			session_start_ts >= #v_from# - interval ''2 day'' and
+			session_start_ts <= #v_to# and
 			t.p_id = s.p_id
 		'
 		;
