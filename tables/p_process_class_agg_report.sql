@@ -12,8 +12,7 @@ CREATE TABLE p_process_class_agg_report
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (p_id)
 PARTITION BY RANGE (ts_rounded_15_secs)
-(START (date '2016-01-01') INCLUSIVE
-	END (date '2019-01-01') EXCLUSIVE
-	every(interval '1 month')
+(PARTITION "100101" START (date '1001-01-01') INCLUSIVE
+	END (date '1001-02-01') EXCLUSIVE
 WITH (appendonly=true, orientation=column, compresstype=quicklz)	
 );
