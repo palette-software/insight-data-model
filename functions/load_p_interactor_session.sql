@@ -236,7 +236,7 @@ BEGIN
 			cpu_time_consumption_seconds = s.cpu_time_consumption_seconds,
 			session_start_ts = s.session_start_ts,
 		 	session_end_ts = s.session_end_ts,
-			session_duration = extract(''epoch'' from (s.session_end_ts - s.session_start_ts)) as session_duration,
+			session_duration = extract(''epoch'' from (s.session_end_ts - s.session_start_ts)),
 			num_fatals = s.num_fatals,
 			num_errors = s.num_errors,
 			num_warnings = s.num_warnings				
@@ -260,8 +260,8 @@ BEGIN
 			having count(1) = 2
 			) s
 		where
-			max_ts_rounded_15_secs >= #v_from# - interval ''2 day'' and
-			max_ts_rounded_15_secs <= #v_to# and
+			t.max_ts_rounded_15_secs >= #v_from# - interval ''2 day'' and
+			t.max_ts_rounded_15_secs <= #v_to# and
 			t.vizql_session = s.vizql_session and
 			t.process_name = s.process_name
 		';
@@ -290,7 +290,7 @@ BEGIN
 			  ) s
 		where
 			max_ts_rounded_15_secs >= #v_from# - interval ''2 day'' and
-			max_ts_rounded_15_secs <= #v_to#
+			max_ts_rounded_15_secs <= #v_to# and
 			t.p_id = s.p_id
 		'
 		;
