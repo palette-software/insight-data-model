@@ -11,7 +11,7 @@ BEGIN
 
 		execute 'set local search_path = ' || p_schema_name;
 	
-		v_sql_cur := 'select to_char(coalesce(max(min_ts_rounded_15_secs)::date, date''1001-01-01''), ''yyyy-mm-dd'') from p_interactor_session';	
+		v_sql_cur := 'select to_char(coalesce(max(max_ts_rounded_15_secs)::date, date''1001-01-01''), ''yyyy-mm-dd'') from p_interactor_session';	
 		execute v_sql_cur into v_from;
 		v_from := 'date''' || v_from || '''';		
 				
@@ -30,8 +30,8 @@ BEGIN
 		
 		v_sql_cur := 'delete from p_interactor_session 
 					  where 
-					  		min_ts_rounded_15_secs >= #v_from# and
-							min_ts_rounded_15_secs <= #v_to#
+					  		max_ts_rounded_15_secs >= #v_from# and
+							max_ts_rounded_15_secs <= #v_to#
 					';
 					
 		v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);
@@ -76,7 +76,7 @@ BEGIN
 			user_cookie,
 			status,
 			first_show_created_at,
-			min_ts_rounded_15_secs
+			max_ts_rounded_15_secs
 		)
 		WITH rownofilt AS (
 			SELECT 
@@ -161,7 +161,7 @@ BEGIN
 				MIN(user_cookie) as user_cookie,
 				MIN(status) as status,
 				MIN(first_show_created_at) as first_show_created_at,
-				MIN(cpu_usage_ts_rounded_15_secs) as min_ts_rounded_15_secs
+				MAX(cpu_usage_ts_rounded_15_secs) as max_ts_rounded_15_secs
 		FROM    
 		        p_cpu_usage_report pcur        
 		        LEFT OUTER JOIN (
@@ -217,20 +217,91 @@ BEGIN
 		WHERE cpu_usage_ts_rounded_15_secs >= #v_from# and
 			  cpu_usage_ts_rounded_15_secs <= #v_to# and
 		      cpu_usage_parent_vizql_session IS NOT NULL
-			AND cpu_usage_parent_vizql_session || ''::'' || cpu_usage_process_name NOT IN (SELECT DISTINCT vizql_session || ''::'' || process_name FROM p_interactor_session)
 		GROUP BY cpu_usage_parent_vizql_session, cpu_usage_process_name;
 		';
-
 			
-			v_sql := replace(v_sql, '#v_from#', v_from);
-			v_sql := replace(v_sql, '#v_to#', v_to);
+		v_sql := replace(v_sql, '#v_from#', v_from);
+		v_sql := replace(v_sql, '#v_to#', v_to);
+		
+		raise notice 'I: %', v_sql;
+		execute v_sql;
+		
+		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
 			
-			raise notice 'I: %', v_sql;
-			execute v_sql;
-			
-			GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
-			
-			return v_num_inserted;
+		
+		-- Eliminate dupplications because of utc midnight (update then delete)
+		v_sql := 
+		'update p_interactor_session t
+		set 
+			cpu_time_consumption_seconds = s.cpu_time_consumption_seconds,
+			session_start_ts = s.session_start_ts,
+		 	session_end_ts = s.session_end_ts,
+			session_duration = extract(''epoch'' from (s.session_end_ts - s.session_start_ts)) as session_duration,
+			num_fatals = s.num_fatals,
+			num_errors = s.num_errors,
+			num_warnings = s.num_warnings				
+		from
+			(select
+				vizql_session,
+				process_name,
+				sum(cpu_time_consumption_seconds) as cpu_time_consumption_seconds,
+				min(session_start_ts) as session_start_ts,
+				max(session_end_ts) as session_end_ts,
+				sum(num_fatals) as num_fatals,
+				sum(num_errors) as num_errors,
+				sum(num_warnings) as num_warnings
+			from
+				p_interactor_session
+			where
+				max_ts_rounded_15_secs >= #v_from# - interval ''2 day'' and
+				max_ts_rounded_15_secs <= #v_to#				
+			group by
+				vizql_session, process_name
+			having count(1) = 2
+			) s
+		where
+			max_ts_rounded_15_secs >= #v_from# - interval ''2 day'' and
+			max_ts_rounded_15_secs <= #v_to# and
+			t.vizql_session = s.vizql_session and
+			t.process_name = s.process_name
+		';
+		
+		v_sql := replace(v_sql, '#v_from#', v_from);
+		v_sql := replace(v_sql, '#v_to#', v_to);
+		
+		raise notice 'I: %', v_sql;
+		execute v_sql;
+		
+		v_sql := 
+		'delete from p_interactor_session t
+		 using (select 
+					vizql_session, 
+					process_name,
+					min(p_id) as p_id,
+					count(1) as cnt
+				from
+					p_interactor_session
+			    where
+					max_ts_rounded_15_secs >= #v_from# - interval ''2 day'' and
+					max_ts_rounded_15_secs <= #v_to#
+			    group by
+			  		vizql_session, process_name
+				having count(1) = 2
+			  ) s
+		where
+			max_ts_rounded_15_secs >= #v_from# - interval ''2 day'' and
+			max_ts_rounded_15_secs <= #v_to#
+			t.p_id = s.p_id
+		'
+		;
+		
+		v_sql := replace(v_sql, '#v_from#', v_from);
+		v_sql := replace(v_sql, '#v_to#', v_to);
+		
+		raise notice 'I: %', v_sql;
+		execute v_sql;
+												
+		return v_num_inserted;
 END;
 $BODY$
 LANGUAGE plpgsql VOLATILE SECURITY INVOKER;
