@@ -34,8 +34,7 @@ CREATE TABLE p_interactor_session
 	user_ip varchar(255),
 	user_cookie varchar(255),
 	status integer,
-	first_show_created_at timestamp without time zone,
-	min_ts_rounded_15_secs timestamp without time zone
+	first_show_created_at timestamp without time zone
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (vizql_session);
