@@ -174,7 +174,7 @@ BEGIN
 		                        p_serverlogs
 		                WHERE 
 								ts >= #v_from# - 1 and
-								ts <= #v_to#
+								ts <= #v_to# + interval''1 day''
 		                GROUP BY parent_vizql_session, process_name
 		        ) num_loglevels
 		                ON (pcur.cpu_usage_parent_vizql_session = num_loglevels.vizql_session AND pcur.cpu_usage_process_name = num_loglevels.process_name)
@@ -235,36 +235,30 @@ BEGIN
 		v_sql := 
 		'update p_interactor_session t
 		set 
-			cpu_time_consumption_seconds = s.cpu_time_consumption_seconds,
 			session_start_ts = s.session_start_ts,
 		 	session_end_ts = s.session_end_ts,
 			session_duration = extract(''epoch'' from (s.session_end_ts - s.session_start_ts)),
-			num_fatals = s.num_fatals,
-			num_errors = s.num_errors,
-			num_warnings = s.num_warnings				
+			cpu_time_consumption_seconds = s.cpu_time_consumption_seconds
 		from
 			(select
-				vizql_session,
+				parent_vizql_session,
 				process_name,
-				sum(cpu_time_consumption_seconds) as cpu_time_consumption_seconds,
 				min(session_start_ts) as session_start_ts,
 				max(session_end_ts) as session_end_ts,
-				sum(num_fatals) as num_fatals,
-				sum(num_errors) as num_errors,
-				sum(num_warnings) as num_warnings
+				sum(cpu_time_consumption_seconds) as cpu_time_consumption_seconds
 			from
-				p_interactor_session
+				p_cpu_usage
 			where
-				session_start_ts >= #v_from# - interval ''2 day'' and
-				session_start_ts <= #v_to#
+				ts_rounded_15_secs >= #v_from# - interval ''2 day'' and
+				ts_rounded_15_secs <= #v_to#
 			group by
-				vizql_session, process_name
-			having count(1) = 2
+				parent_vizql_session,
+				process_name
 			) s
 		where
 			t.session_start_ts >= #v_from# - interval ''2 day'' and
 			t.session_start_ts <= #v_to# and
-			t.vizql_session = s.vizql_session and
+			t.vizql_session = s.parent_vizql_session and
 			t.process_name = s.process_name
 		';
 		
