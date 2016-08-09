@@ -58,20 +58,21 @@ BEGIN
 						if (not does_part_exist(p_schema_name, p_table_name, to_char(rec.d, 'yyyy'))) then
 					  		execute v_sql;
 						end if;
-					exception when duplicate_object
-							then null;
+						--exception when duplicate_object
+						--	then null;
 					elseif p_table_name in ('p_process_class_agg_report', 'p_cpu_usage_bootstrap_rpt') then --month
 						if (not does_part_exist(p_schema_name, p_table_name, to_char(rec.d, 'yyyymm'))) then
 					  		execute v_sql;
 						end if;
-					exception when duplicate_object
-							then null;
+						--exception when duplicate_object
+						--	then null;
 					elseif p_table_name in ('p_serverlogs_bootstrap_rpt') then --day
 						if (not does_part_exist(p_schema_name, p_table_name, to_char(rec.d, 'yyyymmdd'))) then
 					  		execute v_sql;
 						end if;
-					exception when duplicate_object
-							then null;
+						--exception when duplicate_object
+						--	then null;
+					end if;
 				end;
 				
 				 raise notice 'I: %', v_sql;
