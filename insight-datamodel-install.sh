@@ -3,8 +3,8 @@
 set -e
 
 # Get the desired target version from the command line
-if [ "$#" -ne 1 ]; then
-  echo "Usage: $0 <TARGET-VERSION>"
+if [ "$#" -gt 1 ]; then
+  echo "Usage: $0 (<TARGET-VERSION>)"
   exit 1
 fi
 
@@ -105,9 +105,14 @@ EXISTING_VERSION_STR=`psql -d ${DB_NAME} -t -c "select version_number from ${SCH
 EXISTING_VERSION=${EXISTING_VERSION_STR//[[:blank:]]/}
 EXISTING_VERSION_IDX=`awk -v a="${MIGRATION_VERSIONS}" -v b="${EXISTING_VERSION}" 'BEGIN{print index(a,b)}'`
 
-TARGET_VERSION_IDX=`awk -v a="${MIGRATION_VERSIONS}" -v b="${TARGET_VERSION}" 'BEGIN{print index(a,b)}'`
-
-
+# Go for the latest version if not specified
+if [ "X" == "X$TARGET_VERSION" ]
+then
+    # We need to replace the newlines first to spaces as I was unable to use newline in awk split.
+    TARGET_VERSION_IDX=`echo "$MIGRATION_VERSIONS" | sed ':a;N;$!ba;s/\n/ /g' | awk -F" " 'END{print length($0)-length($NF)+1}'`
+else
+    TARGET_VERSION_IDX=`awk -v a="${MIGRATION_VERSIONS}" -v b="${TARGET_VERSION}" 'BEGIN{print index(a,b)}'`
+fi
 
   # Check if the existing version is actually in the list of migrations
 if [[ $TARGET_VERSION_IDX = 0 ]]; then
