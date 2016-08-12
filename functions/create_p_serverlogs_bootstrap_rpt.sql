@@ -48,9 +48,9 @@ begin
 		WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 		DISTRIBUTED BY (p_id)
 		PARTITION BY RANGE (start_ts)
-		(START (date ''2016-05-01'') INCLUSIVE
-			END (date ''2017-05-01'') EXCLUSIVE 
-			every(interval ''1 day'')		
+		(PARTITION "10010101" 
+			START (date ''1001-01-01'') INCLUSIVE
+			END (date ''1001-01-02'') EXCLUSIVE
 		)
 		';
 		
