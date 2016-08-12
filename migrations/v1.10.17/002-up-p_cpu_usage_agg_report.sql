@@ -32,8 +32,7 @@ CREATE TABLE p_cpu_usage_agg_report
 	cpu_usage_cpu_time_consumption_seconds DOUBLE PRECISION,
 	cpu_usage_cpu_time_consumption_minutes DOUBLE PRECISION,
 	cpu_usage_cpu_time_consumption_hours DOUBLE PRECISION,
-	vizql_session_count int,
-	p_cre_date timestamp without time zone default now()
+	vizql_session_count int
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (p_id)
