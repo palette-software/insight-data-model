@@ -5,6 +5,6 @@ set role palette_palette_updater;
 BEGIN;
 
 
-insert into db_version_meta(version_number) values ('v1.10.15');
+insert into db_version_meta(version_number) values ('v1.10.17');
 
 COMMIT;
