@@ -1,6 +1,8 @@
 alter table p_serverlogs_bootstrap_rpt rename to p_serverlogs_bootstrap_rpt_old;
+\i 001-up-p_serverlogs_bootstrap_rpt.sql
+\i 001-up-s_serverlogs_bootstrap_rpt.sql
+select create_s_serverlogs_bootstrap_rpt('palette');
 insert into s_serverlogs_bootstrap_rpt select * from p_serverlogs_bootstrap_rpt_old;
-select create_p_serverlogs_bootstrap_rpt('palette');
 select manage_partitions('palette', 'p_serverlogs_bootstrap_rpt');
 
 insert into p_serverlogs_bootstrap_rpt
@@ -89,6 +91,6 @@ insert into p_serverlogs_bootstrap_rpt
        , session_duration
        , currentsheet
        , p_cre_date
- FROM p_serverlogs_bootstrap_rpt_old;
+ FROM s_serverlogs_bootstrap_rpt;
  
  drop table p_serverlogs_bootstrap_rpt_old;
