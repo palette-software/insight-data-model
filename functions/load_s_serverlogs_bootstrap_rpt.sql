@@ -1,4 +1,4 @@
-CREATE or replace function load_p_serverlogs_bootstrap_rpt(p_schema_name text) returns bigint
+CREATE or replace function load_s_serverlogs_bootstrap_rpt(p_schema_name text) returns bigint
 AS $$
 declare
 	v_sql text;
@@ -45,22 +45,7 @@ begin
 	v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);	
 	raise notice 'I: %', v_sql_cur;
 	execute v_sql_cur into v_to;
-	
-	v_sql_cur := 
-	'delete
-		from  
-			p_serverlogs_bootstrap_rpt b	
-		where 
-			b.ts >= date''#v_from#'' and
-			b.ts <= timestamp''#v_to#''
-	';
-	v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);
-	v_sql_cur := replace(v_sql_cur, '#v_to#', v_to);
-
-    raise notice 'I: %', v_sql_cur;
-	execute v_sql_cur;
-
-	
+			
 	v_sql := 'insert into s_serverlogs_bootstrap_rpt
 	    (			
 	        p_serverlogs_p_id
@@ -175,95 +160,23 @@ begin
 		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
 		
 		perform manage_partitions('palette', 'p_serverlogs_bootstrap_rpt');
+        
+        
+        v_sql_cur := 
+    	'delete
+    		from  
+    			p_serverlogs_bootstrap_rpt b	
+    		where 
+    			b.ts >= date''#v_from#'' and
+    			b.ts <= timestamp''#v_to#''
+    	';
+    	v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);
+    	v_sql_cur := replace(v_sql_cur, '#v_to#', v_to);
+
+        raise notice 'I: %', v_sql_cur;
+    	execute v_sql_cur;
 		
-		insert into p_serverlogs_bootstrap_rpt (
-				 p_serverlogs_p_id
-		       , serverlogs_id
-		       , p_filepath
-		       , filename
-		       , process_name
-		       , host_name
-		       , ts
-		       , process_id
-		       , thread_id
-		       , sev
-		       , req
-		       , sess
-		       , site
-		       , username
-		       , username_without_domain
-		       , k
-		       , v
-		       , parent_vizql_session
-		       , parent_vizql_destroy_sess_ts
-		       , parent_dataserver_session
-		       , spawned_by_parent_ts
-		       , parent_process_type
-		       , parent_vizql_site
-		       , parent_vizql_username
-		       , parent_dataserver_site
-		       , parent_dataserver_username
-		       , p_serverlogs_p_cre_date
-		       , thread_name
-		       , elapsed_ms
-		       , start_ts
-		       , session_start_ts_utc
-		       , session_end_ts_utc
-		       , site_name_id
-		       , project_name_id
-		       , workbook_name_id
-		       , workbook_rev
-		       , publisher_username_id
-		       , user_type
-		       , session_elapsed_seconds
-		       , session_duration
-		       , currentsheet       
-		)
-		select
-			p_serverlogs_p_id
-		       , serverlogs_id
-		       , p_filepath
-		       , filename
-		       , process_name
-		       , host_name
-		       , ts
-		       , process_id
-		       , thread_id
-		       , sev
-		       , req
-		       , sess
-		       , site
-		       , username
-		       , username_without_domain
-		       , k
-		       , v
-		       , parent_vizql_session
-		       , parent_vizql_destroy_sess_ts
-		       , parent_dataserver_session
-		       , spawned_by_parent_ts
-		       , parent_process_type
-		       , parent_vizql_site
-		       , parent_vizql_username
-		       , parent_dataserver_site
-		       , parent_dataserver_username
-		       , p_serverlogs_p_cre_date
-		       , thread_name
-		       , elapsed_ms
-		       , start_ts
-		       , session_start_ts_utc
-		       , session_end_ts_utc
-		       , site_name_id
-		       , project_name_id
-		       , workbook_name_id
-		       , workbook_rev
-		       , publisher_username_id
-		       , user_type
-		       , session_elapsed_seconds
-		       , session_duration
-		       , currentsheet       
-		from
-			s_serverlogs_bootstrap_rpt
-		;
+        v_num_inserted := ins_stage_to_dwh(p_schema_name, 'p_serverlogs_bootstrap_rpt');
 		
 		return v_num_inserted;
 

@@ -5,8 +5,7 @@ declare
 	v_sql_cur text;
 	v_num_inserted bigint;
 	c refcursor;
-	rec record;
-	v_cols text;
+	rec record;	
 begin	
 		v_sql_cur := 'select distinct 
 							#column_host_name# as host_name,
@@ -51,36 +50,9 @@ begin
 			  
 		end loop;
 		close c;									
-		
-		v_cols := '';
-		
-		for rec in (select 
-						column_name
-					from 
-						information_schema.columns
-					where 
-						table_schema = p_schema_name and
-						table_name = p_table_name and
-						column_name <> 'p_id'						
-					order by
-						ordinal_position
-					)
-		loop
-			v_cols := v_cols || rec.column_name || ',';
-		end loop;
-		
-		v_cols := rtrim(v_cols, ','); 
-		
-		v_sql := 'insert into #schema_name#.p_#table_name#(' || v_cols || ')
-				  select ' || v_cols || ' from #schema_name#.s_#table_name#';
 				
-		v_sql := replace(v_sql, '#schema_name#', p_schema_name);
-		v_sql := replace(v_sql, '#table_name#', substr(p_table_name, 3));
-		
-		raise notice 'I: %', v_sql;
-		execute v_sql;
-				
-		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;			
+        v_num_inserted := ins_stage_to_dwh(p_schema_name, p_table_name);
+        
 		return v_num_inserted;
 END;
 $$ LANGUAGE plpgsql;
