@@ -19,8 +19,7 @@ CREATE INDEX p_cpu_usage_bootstrap_rpt_parent_vizql_session_idx
 
 
 drop function load_p_serverlogs_bootstrap_rpt(p_schema_name text);
-
-
+drop function load_p_cpu_usage_agg_report(p_schema_name text);
 
 
 insert into db_version_meta(version_number) values ('v1.10.17');
