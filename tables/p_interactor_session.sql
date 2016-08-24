@@ -37,4 +37,10 @@ CREATE TABLE p_interactor_session
 	first_show_created_at timestamp without time zone
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
-DISTRIBUTED BY (vizql_session);
+DISTRIBUTED BY (vizql_session)
+PARTITION BY RANGE (session_start_ts)
+(PARTITION "1001" 
+	START (date '1001-01-01') INCLUSIVE
+	END (date '1002-01-01') EXCLUSIVE 	
+WITH (appendonly=true, orientation=column, compresstype=quicklz)	
+);
