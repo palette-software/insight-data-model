@@ -5,6 +5,7 @@ declare
 	v_sql_cur text;
 	v_num_inserted bigint;	
 	v_cols text;
+	rec record;
 begin	
     
         execute 'set local search_path = ' || p_schema_name;
