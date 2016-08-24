@@ -27,7 +27,7 @@ drop function load_p_process_class_agg_report(p_schema_name text);
 \i 013-up-load_s_serverlogs_bootstrap_rpt.sql
 \i 014-up-load_s_cpu_usage_agg_report.sql
 \i 015-up-create_load_s_cpu_usage_bootstrap_rpt.sql
-select create_load_s_cpu_usage_bootstrap_rpt('#schema_name#')
+select create_load_s_cpu_usage_bootstrap_rpt('#schema_name#');
 \i 016-up-load_s_interactor_session.sql
 \i 017-up-load_s_process_class_agg_report.sql
 
