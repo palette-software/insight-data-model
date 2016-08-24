@@ -11,10 +11,8 @@ begin
 
 		if lower(p_table_name) in ('p_cpu_usage', 'p_cpu_usage_report') then
 			perform load_from_stage_to_dwh_multi_range_part(p_schema_name, p_table_name);
-		elseif lower(p_table_name) in ('p_cpu_usage_agg_report', 'p_interactor_session', 'p_process_class_agg_report', 'p_cpu_usage_bootstrap_rpt', 'p_serverlogs_bootstrap_rpt') then
-            -- todo
-            -- Currently, these actions are in the individual loads.
-			null;            
+		elsif lower(p_table_name) in ('p_cpu_usage_agg_report', 'p_interactor_session', 'p_process_class_agg_report', 'p_cpu_usage_bootstrap_rpt', 'p_serverlogs_bootstrap_rpt') then
+            perform load_from_stage_to_dwh_single_range_part(p_schema_name, p_table_name);
 		else 
             raise notice '--WARNING: No load management happened for % - wrong table specified?--', p_table_name;            
 		end if;
