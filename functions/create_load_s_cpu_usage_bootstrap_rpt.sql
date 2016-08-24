@@ -15,7 +15,7 @@ begin
 					from
 						information_schema.columns c
 					where
-						table_schema = s_schema_name and
+						table_schema = p_schema_name and
 						table_name = 'p_cpu_usage_bootstrap_rpt' and
 						column_name not in ('p_id', 'p_cre_date', 'session_elapsed_seconds', 'currentsheet')
 					order by
@@ -28,7 +28,7 @@ begin
 		v_col_list_select := ltrim(v_col_list_select, ' ,');
 		v_col_list_insert := ltrim(v_col_list_insert, ' ,');
 							
-		v_col_list_select := replace(v_col_list_select, 'cpu.s_cpu_usage_report_p_id', 'cpu.p_id');
+		v_col_list_select := replace(v_col_list_select, 'cpu.p_cpu_usage_report_p_id', 'cpu.p_id');
 		
 		v_sql := 
 				'

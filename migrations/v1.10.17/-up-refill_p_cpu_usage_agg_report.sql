@@ -1,6 +1,5 @@
 alter table p_cpu_usage_agg_report rename to p_cpu_usage_agg_report_old;
-\i 002-up-p_cpu_usage_agg_report.sql
-\i 002-up-s_cpu_usage_agg_report.sql
+\i -up-p_cpu_usage_agg_report.sql
 insert into s_cpu_usage_agg_report select * from p_cpu_usage_agg_report_old;
 select manage_partitions('palette', 'p_cpu_usage_agg_report');
 

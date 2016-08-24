@@ -4,27 +4,44 @@ set role palette_palette_updater;
 
 BEGIN;
 
---drop function create_p_serverlogs_bootstrap_rpt
+\i ins_stage_to_dwh.sql
+\i load_from_stage_to_dwh.sql
+\i load_from_stage_to_dwh_multi_range_part.sql
+\i load_from_stage_to_dwh_single_range_part.sql
+\i manage_multi_range_partitions.sql
+\i manage_partitions.sql
+\i manage_single_range_partitions.sql
+\i 
+\i 
+\i -up-s_cpu_usage_agg_report.sql
+\i -up-s_interactor_session.sql
+\i -up-s_process_class_agg_report.sql
+\i -up-s_serverlogs_bootstrap_rpt.sql
+\i -up-s_cpu_usage_bootstrap_report.sql
 
-\i 001-up-refill_p_serverlogs_bootstrap_rpt.sql
+
+
+
+\i -up-refill_p_serverlogs_bootstrap_rpt.sql
 select ins_from_stage_to_dwh('#schema_name#','p_serverlogs_bootstrap_rpt');
 
-\i 002-up-refill_p_cpu_usage_agg_report.sql
+\i -up-refill_p_cpu_usage_agg_report.sql
 select ins_from_stage_to_dwh('#schema_name#','p_cpu_usage_agg_report');
 
+
 alter table p_cpu_usage_bootstrap_rpt rename to p_cpu_usage_bootstrap_rpt_old;
-\i 003-up-create_p_cpu_usage_bootstrap_report.sql
+\i -up-create_p_cpu_usage_bootstrap_report.sql
 select create_p_cpu_usage_bootstrap_report('#schema_name#')
-\i 003-up-s_cpu_usage_bootstrap_report.sql
 insert into s_cpu_usage_bootstrap_rpt select * from p_cpu_usage_bootstrap_rpt_old;
 select manage_partitions('palette', 'p_cpu_usage_bootstrap_rpt');
 drop table p_cpu_usage_bootstrap_rpt_old;
 select ins_from_stage_to_dwh('#schema_name#','p_cpu_usage_bootstrap_rpt');
 
-\i 004-up-refill_p_interactor_session.sql
+
+\i -up-refill_p_interactor_session.sql
 select ins_from_stage_to_dwh('#schema_name#','p_interactor_session');
 
-\i 005-up-refill_p_process_class_agg_report.sql
+\i -up-refill_p_process_class_agg_report.sql
 select ins_from_stage_to_dwh('#schema_name#','p_process_class_agg_report');
 
 CREATE INDEX p_serverlogs_bootstrap_rpt_parent_vizql_session_idx
