@@ -158,26 +158,8 @@ begin
 		execute v_sql;
 
 		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
-		
 		perform manage_partitions('palette', 'p_serverlogs_bootstrap_rpt');
-        
-        
-        v_sql_cur := 
-    	'delete
-    		from  
-    			p_serverlogs_bootstrap_rpt b	
-    		where 
-    			b.ts >= date''#v_from#'' and
-    			b.ts <= timestamp''#v_to#''
-    	';
-    	v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);
-    	v_sql_cur := replace(v_sql_cur, '#v_to#', v_to);
-
-        raise notice 'I: %', v_sql_cur;
-    	execute v_sql_cur;
-		
         v_num_inserted := ins_stage_to_dwh(p_schema_name, 'p_serverlogs_bootstrap_rpt');
-		
 		return v_num_inserted;
 
 END;
