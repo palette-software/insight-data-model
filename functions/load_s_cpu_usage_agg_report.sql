@@ -121,17 +121,8 @@ BEGIN
 		execute v_sql;
 		
 		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
-						
-                        
-        v_sql_cur := 'delete from p_cpu_usage_agg_report where timestamp_utc::date >= #max_ts_date_p_cpu_usage_agg_report#';
-		v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_cpu_usage_agg_report#', v_max_ts_date_p_cpu_usage_agg_report);
-
-		raise notice 'I: %', v_sql_cur;
-		execute v_sql_cur;
-
 		perform manage_partitions('palette', 'p_cpu_usage_agg_report');
         v_num_inserted := ins_stage_to_dwh(p_schema_name, 'p_cpu_usage_agg_report');
-        
 		return v_num_inserted;
 END;
 $$ LANGUAGE plpgsql;
