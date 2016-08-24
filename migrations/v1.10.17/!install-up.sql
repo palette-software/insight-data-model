@@ -38,7 +38,7 @@ alter table p_interactor_session rename to p_interactor_session_old;
 alter table p_process_class_agg_report rename to p_process_class_agg_report_old;
 
 \i 018-up-create_p_serverlogs_bootstrap_rpt.sql
-select create_p_serverlogs_bootstrap_report('#p_schema_name#');
+select create_p_serverlogs_bootstrap_rpt('#p_schema_name#');
 \i 019-up-p_cpu_usage_agg_report.sql
 \i 020-up-create_p_cpu_usage_bootstrap_rpt.sql
 select create_p_cpu_usage_bootstrap_rpt('#p_schema_name#');
