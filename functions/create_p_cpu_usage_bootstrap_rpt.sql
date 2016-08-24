@@ -1,5 +1,6 @@
-CREATE or replace function create_p_cpu_usage_bootstrap_rpt(p_schema_name text) returns int
-AS $$
+CREATE OR REPLACE FUNCTION palette.create_p_cpu_usage_bootstrap_rpt(p_schema_name text)
+RETURNS integer AS
+$BODY$
 declare
 	v_sql text;			
 	rec record;	
@@ -41,18 +42,17 @@ begin
 		' ||
 			v_col_list		
 		||
-			'currentsheet varchar(255),
-			elapsed_seconds_to_bootstrap bigint,
+			'elapsed_seconds_to_bootstrap bigint,
 			p_cre_date timestamp without time zone default now()'			
 		||
 		')
-		WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)				
+		WITH (appendonly=true, orientation=column, compresstype=quicklz)
 		DISTRIBUTED BY (p_id)
 		PARTITION BY RANGE (cpu_usage_ts_rounded_15_secs)
-		(START (date ''2016-05-01'') INCLUSIVE
-			END (date ''2017-05-01'') EXCLUSIVE 
-			every(interval ''1 month'')		
-		)
+		(PARTITION "100101" 
+			START (date ''1001-01-01'') INCLUSIVE
+			END (date ''1001-02-01'') EXCLUSIVE 	
+		WITH (appendonly=true, orientation=column, compresstype=quicklz));
 		';
 		
 		raise notice 'I: %', v_sql;
@@ -60,4 +60,5 @@ begin
 		
 		return 0;
 END;
-$$ LANGUAGE plpgsql;
+$BODY$
+LANGUAGE plpgsql VOLATILE SECURITY INVOKER;

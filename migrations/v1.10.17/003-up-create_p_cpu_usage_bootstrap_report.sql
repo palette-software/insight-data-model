@@ -50,8 +50,8 @@ begin
 		DISTRIBUTED BY (p_id)
 		PARTITION BY RANGE (cpu_usage_ts_rounded_15_secs)
 		(PARTITION "100101" 
-			START (date '1001-01-01') INCLUSIVE
-			END (date '1001-02-01') EXCLUSIVE 	
+			START (date ''1001-01-01'') INCLUSIVE
+			END (date ''1001-02-01'') EXCLUSIVE 	
 		WITH (appendonly=true, orientation=column, compresstype=quicklz));
 		';
 		

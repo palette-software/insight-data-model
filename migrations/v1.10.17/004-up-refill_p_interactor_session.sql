@@ -1,7 +1,6 @@
 alter table p_interactor_session rename to p_interactor_session_old;
 \i 004-up-p_interactor_session.sql
 \i 004-up-s_interactor_session.sql
-select create_s_interactor_session('palette');
 insert into s_interactor_session select * from p_interactor_session_old;
 select manage_partitions('palette', 'p_interactor_session');
 

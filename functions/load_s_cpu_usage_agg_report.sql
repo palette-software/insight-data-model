@@ -7,8 +7,6 @@ declare
 	v_sql_cur text;
 BEGIN	
 
-		execute 'truncate table palette.s_cpu_usage_agg_report';
-
 		execute 'set local search_path = ' || p_schema_name;
 
 		v_sql_cur := 'select to_char(coalesce(max(timestamp_utc)::date, date''1001-01-01''), ''yyyy-mm-dd'') from p_cpu_usage_agg_report';		
@@ -121,8 +119,6 @@ BEGIN
 		execute v_sql;
 		
 		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
-		perform manage_partitions('palette', 'p_cpu_usage_agg_report');
-        v_num_inserted := ins_stage_to_dwh(p_schema_name, 'p_cpu_usage_agg_report');
 		return v_num_inserted;
 END;
 $$ LANGUAGE plpgsql;

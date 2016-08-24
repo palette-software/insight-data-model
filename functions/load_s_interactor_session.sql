@@ -1,47 +1,23 @@
-CREATE OR REPLACE FUNCTION load_p_interactor_session(p_schema_name text)
+CREATE OR REPLACE FUNCTION palette.load_s_interactor_session(p_schema_name text)
 RETURNS bigint AS
 $BODY$
 declare
 	v_sql text;
 	v_num_inserted bigint;	
-	v_from text;
-	v_to text;
+	v_max_ts_date_p_interactor_session text;
 	v_sql_cur text;
 BEGIN	
 
 		execute 'set local search_path = ' || p_schema_name;
 	
-		v_sql_cur := 'select to_char(coalesce(max(session_start_ts)::date, date''1001-01-01''), ''yyyy-mm-dd'') from p_interactor_session';	
-		execute v_sql_cur into v_from;
-		v_from := 'date''' || v_from || '''';		
-				
-		v_sql_cur := 'select 
-							to_char(coalesce(min(session_start_ts), #v_from# + 2), ''yyyy-mm-dd hh24:mi:ss.ms'')
-					  from
-					  		p_cpu_usage_report
-					  where
-					  		session_start_ts >= #v_from# + 2 and
-					  		cpu_usage_ts_rounded_15_secs >= #v_from# and
-		        			cpu_usage_parent_vizql_session IS NOT NULL		
-					';
-					
-		v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);
-		execute v_sql_cur into v_to;
-		v_to := 'timestamp''' || v_to || '''';								
-		
-		v_sql_cur := 'delete from p_interactor_session 
-					  where 
-					  		session_start_ts >= #v_from# and
-							session_start_ts <= #v_to#
-					';
-					
-		v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);
-		v_sql_cur := replace(v_sql_cur, '#v_to#', v_to);
-		
+		v_sql_cur := 'select to_char(coalesce(max(session_start_ts)::date, date''1001-01-01''), ''yyyy-mm-dd'') from p_interactor_session';		
+		execute v_sql_cur into v_max_ts_date_p_interactor_session;
+		v_max_ts_date_p_interactor_session := 'date''' || v_max_ts_date_p_interactor_session || '''';
+
 		raise notice 'I: %', v_sql_cur;
 		execute v_sql_cur;
 
-		v_sql := 'INSERT INTO p_interactor_session
+		v_sql := 'INSERT INTO s_interactor_session
 		(
 			vizql_session, 
 			process_name,
@@ -76,12 +52,11 @@ BEGIN
 			user_ip,
 			user_cookie,
 			status,
-			first_show_created_at			
+			first_show_created_at
 		)
 		WITH rownofilt AS (
 			SELECT 
-				rowno.*,
-				case when action = ''show'' then row_number() over (partition by vizql_session order by action desc, created_at asc) end AS rn_show_action
+				rowno.*
 			FROM
 				(
 					SELECT 
@@ -97,12 +72,12 @@ BEGIN
 						user_ip,
 						user_cookie,
 						status,
-						http_user_agent						
+						http_user_agent,
+						case when action = ''show'' then row_number() over (partition by vizql_session order by action desc, created_at asc) end AS rn_show_action
 					FROM p_http_requests
 				) rowno	
 			WHERE 
-				created_at >= #v_from# -1 and
-				created_at <= #v_to# + interval ''1 day'' and 
+				created_at >= #max_ts_date_p_interactor_session# -1 and
 				action in (''show'', ''bootstrapSession'')
 			)
 		SELECT  
@@ -160,9 +135,9 @@ BEGIN
 				MIN(user_ip) as user_ip,
 				MIN(user_cookie) as user_cookie,
 				MIN(status) as status,
-				MIN(first_show_created_at) as first_show_created_at				
+				MIN(first_show_created_at) as first_show_created_at
 		FROM    
-		        p_cpu_usage_report pcur        
+		        p_cpu_usage_report pcur		        
 		        LEFT OUTER JOIN (
 		                SELECT  
 		                        parent_vizql_session AS vizql_session,
@@ -172,9 +147,7 @@ BEGIN
 		                        SUM(CASE WHEN sev = ''warn'' THEN 1 ELSE 0 END) num_warn
 		                FROM 
 		                        p_serverlogs
-		                WHERE 
-								ts >= #v_from# - 1 and
-								ts <= #v_to# + interval''1 day''
+		                WHERE ts >= #max_ts_date_p_interactor_session# - 1
 		                GROUP BY parent_vizql_session, process_name
 		        ) num_loglevels
 		                ON (pcur.cpu_usage_parent_vizql_session = num_loglevels.vizql_session AND pcur.cpu_usage_process_name = num_loglevels.process_name)
@@ -213,91 +186,20 @@ BEGIN
 						GROUP BY vizql_session
 					) actions2
 					ON (actions2.vizql_session = pcur.cpu_usage_parent_vizql_session)
-		WHERE 
-			  session_start_ts >= #v_from# and
-			  session_start_ts <= #v_to# and
-			  cpu_usage_ts_rounded_15_secs >= #v_from# - 1 and
-			  cpu_usage_ts_rounded_15_secs <= #v_to# + interval''1 day'' and
-		      cpu_usage_parent_vizql_session IS NOT NULL
+		WHERE cpu_usage_ts_rounded_15_secs >= #max_ts_date_p_interactor_session#
+		        AND cpu_usage_parent_vizql_session IS NOT NULL
+			AND cpu_usage_parent_vizql_session || ''::'' || cpu_usage_process_name NOT IN (SELECT DISTINCT vizql_session || ''::'' || process_name FROM p_interactor_session)
 		GROUP BY cpu_usage_parent_vizql_session, cpu_usage_process_name;
 		';
+
 			
-		v_sql := replace(v_sql, '#v_from#', v_from);
-		v_sql := replace(v_sql, '#v_to#', v_to);
-		
-		raise notice 'I: %', v_sql;
-		execute v_sql;
-		
-		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
+			v_sql := replace(v_sql, '#max_ts_date_p_interactor_session#', v_max_ts_date_p_interactor_session);			
+
+			raise notice 'I: %', v_sql;
+			execute v_sql;
 			
-		
-		-- Eliminate dupplications because of utc midnight (update then delete)
-		v_sql := 
-		'update p_interactor_session t
-		set 
-			session_start_ts = s.session_start_ts,
-		 	session_end_ts = s.session_end_ts,
-			session_duration = extract(''epoch'' from (s.session_end_ts - s.session_start_ts)),
-			cpu_time_consumption_seconds = s.cpu_time_consumption_seconds
-		from
-			(select
-				parent_vizql_session,
-				process_name,
-				min(session_start_ts) as session_start_ts,
-				max(session_end_ts) as session_end_ts,
-				sum(cpu_time_consumption_seconds) as cpu_time_consumption_seconds
-			from
-				p_cpu_usage
-			where
-				ts_rounded_15_secs >= #v_from# - interval ''2 day'' and
-				ts_rounded_15_secs <= #v_to#
-			group by
-				parent_vizql_session,
-				process_name
-			) s
-		where
-			t.session_start_ts >= #v_from# - interval ''2 day'' and
-			t.session_start_ts <= #v_to# and
-			t.vizql_session = s.parent_vizql_session and
-			t.process_name = s.process_name
-		';
-		
-		v_sql := replace(v_sql, '#v_from#', v_from);
-		v_sql := replace(v_sql, '#v_to#', v_to);
-		
-		raise notice 'I: %', v_sql;
-		execute v_sql;
-		
-		v_sql := 
-		'delete from p_interactor_session t
-		 using (select 
-					vizql_session, 
-					process_name,
-					min(p_id) as p_id,
-					count(1) as cnt
-				from
-					p_interactor_session
-			    where
-					session_start_ts >= #v_from# - interval ''2 day'' and
-					session_start_ts <= #v_to#
-			    group by
-			  		vizql_session, process_name
-				having count(1) = 2
-			  ) s
-		where
-			session_start_ts >= #v_from# - interval ''2 day'' and
-			session_start_ts <= #v_to# and
-			t.p_id = s.p_id
-		'
-		;
-		
-		v_sql := replace(v_sql, '#v_from#', v_from);
-		v_sql := replace(v_sql, '#v_to#', v_to);
-		
-		raise notice 'I: %', v_sql;
-		execute v_sql;
-												
-		return v_num_inserted;
+			GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
+			return v_num_inserted;
 END;
 $BODY$
 LANGUAGE plpgsql VOLATILE SECURITY INVOKER;

@@ -2,64 +2,64 @@ CREATE or replace function load_from_stage_to_dwh_single_range_part(p_schema_nam
 AS $$
 declare
 	v_sql text;
-	v_sql_cur text;
-	v_num_inserted bigint;
-	c refcursor;
-	rec record;	
+	v_num_inserted bigint;	
+	v_cols text;
 begin	
-	v_sql_cur := 'select distinct 
-				#column_ts_date# as ts_date,
-				''delete from #schema_name#."p_#table_name#_1_prt_'' || to_char(#column_ts_date#, #datepart#) || ''"'' as delete_partition
-			from 
-				#schema_name#.s_#table_name#';
-	
-	v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
-	v_sql_cur := replace(v_sql_cur, '#table_name#', substr(p_table_name, 3));
 
-	if (lower(p_table_name) = 'p_serverlogs_bootstrap_rpt') then
-		v_sql_cur := replace(v_sql_cur, '#column_ts_date#', 'start_ts::date');
-		v_sql_cur := replace(v_sql_cur, '#datepart#', 'yyyymmdd');
-	elsif (lower(p_table_name) = 'p_cpu_usage_agg_report') then
-		v_sql_cur := replace(v_sql_cur, '#column_ts_date#', 'timestamp_utc::date');
-		v_sql_cur := replace(v_sql_cur, '#datepart#', 'yyyy');
-	elsif (lower(p_table_name) = 'p_cpu_usage_bootstrap_rpt') then
-		v_sql_cur := replace(v_sql_cur, '#column_ts_date#', 'cpu_usage_ts_rounded_15_secs::date');
-		v_sql_cur := replace(v_sql_cur, '#datepart#', 'yyyymm');
-	elsif (lower(p_table_name) = 'p_interactor_session') then
-		v_sql_cur := replace(v_sql_cur, '#column_ts_date#', 'session_start_ts::date');
-		v_sql_cur := replace(v_sql_cur, '#datepart#', 'yyyy');
-	elsif (lower(p_table_name) = 'p_process_class_agg_report') then
-		v_sql_cur := replace(v_sql_cur, '#column_ts_date#', 'ts_rounded_15_secs::date');
-		v_sql_cur := replace(v_sql_cur, '#datepart#', 'yyyymm');
-	end if;				
-
-	raise notice 'I: %', v_sql_cur;
-
-	open c for execute (v_sql_cur);
-	loop
-		fetch c into rec;
-		exit when not found;
-
-		v_sql := rec.delete_partition;
-		raise notice 'I: %', v_sql;
-			  
-		begin
-			execute v_sql;			  
-			exception when undefined_table 
-			-- the partition is not there (only possible when a new host's just installed)
-				then null;
-		end;
-
-		--v_sql := 'delete from #schema_name#."p_#table_name#_1_prt_' || to_char(rec.ts_date, 'yyyymmdd');
-		--v_sql := replace(v_sql, '#schema_name#', p_schema_name);
-		--v_sql := replace(v_sql, '#table_name#', substr(p_table_name, 3));
-		--execute v_sql;
-			  
-	end loop;
-	close c;									
-				
-        v_num_inserted := ins_stage_to_dwh(p_schema_name, p_table_name);
+        execute 'set local search_path = ' || p_schema_name;
         
-	return v_num_inserted;
+		v_sql := 'delete from p_#table_name#
+                  where
+                        #column_ts# between 
+                                    (select min(#column_ts#) from s_#table_name#) and
+                                    (select max(#column_ts#) from s_#table_name#)
+                     ';
+
+		v_sql := replace(v_sql, '#table_name#', substr(p_table_name, 3));
+                        
+		if (upper(p_table_name) = 'P_CPU_USAGE_AGG_REPORT') then
+			v_sql := replace(v_sql, '#column_ts#', 'timestamp_utc');
+		elsif (upper(p_table_name) = 'P_INTERACTOR_SESSION') then
+			v_sql := replace(v_sql, '#column_ts#', 'session_start_ts');
+        elsif (upper(p_table_name) = 'P_PROCESS_CLASS_AGG_REPORT') then
+			v_sql := replace(v_sql, '#column_ts#', 'ts_rounded_15_secs');
+        elsif (upper(p_table_name) = 'P_CPU_USAGE_BOOTSTRAP_RPT') then
+			v_sql := replace(v_sql, '#column_ts#', 'cpu_usage_ts_rounded_15_secs');
+        elsif (upper(p_table_name) = 'P_SERVERLOGS_BOOTSTRAP_RPT') then
+			v_sql := replace(v_sql, '#column_ts#', 'start_ts');
+		end if;
+                        
+		raise notice 'I: %', v_sql;		
+        execute v_sql;
+                		
+		v_cols := '';
+		
+		for rec in (select 
+						column_name
+					from 
+						information_schema.columns
+					where 
+						table_schema = p_schema_name and
+						table_name = p_table_name and
+						column_name not in ('p_id', 'p_cre_date')
+					order by
+						ordinal_position
+					)
+		loop
+			v_cols := v_cols || rec.column_name || ',';
+		end loop;
+		
+		v_cols := rtrim(v_cols, ','); 
+		
+		v_sql := 'insert into p_#table_name#(' || v_cols || ')
+				  select ' || v_cols || ' from s_#table_name#';
+                  
+		v_sql := replace(v_sql, '#table_name#', substr(p_table_name, 3));
+        
+		raise notice 'I: %', v_sql;
+		execute v_sql;
+        
+		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
+		return v_num_inserted;
 END;
 $$ LANGUAGE plpgsql;

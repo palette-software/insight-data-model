@@ -10,8 +10,6 @@ begin
 
 	execute 'set local search_path = ' || p_schema_name;
 	
-	execute 'truncate table palette.s_serverlogs_bootstrap_rpt';
-	
 	v_sql_cur := '
 	    select
 		    to_char(coalesce(
@@ -158,8 +156,6 @@ begin
 		execute v_sql;
 
 		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
-		perform manage_partitions('palette', 'p_serverlogs_bootstrap_rpt');
-        v_num_inserted := ins_stage_to_dwh(p_schema_name, 'p_serverlogs_bootstrap_rpt');
 		return v_num_inserted;
 
 END;

@@ -1,7 +1,6 @@
 alter table p_process_class_agg_report rename to p_process_class_agg_report_old;
 \i 005-up-p_process_class_agg_report.sql
 \i 005-up-s_process_class_agg_report.sql
-select create_s_process_class_agg_report('palette');
 insert into s_process_class_agg_report select * from p_process_class_agg_report_old;
 select manage_partitions('palette', 'p_process_class_agg_report');
 
