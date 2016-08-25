@@ -1,4 +1,4 @@
-CREATE or replace function manage_multi_range_partitions(p_schema_name text, v_table_name text) returns int
+CREATE or replace function manage_multi_range_partitions(p_schema_name text, p_table_name text) returns int
 AS $$
 declare
 	v_sql_cur text;
@@ -14,7 +14,7 @@ BEGIN
 		v_subpart_cols := '';
 		execute 'set local search_path = ' || p_schema_name;				
 
-        v_table_name := lower(v_table_name);        
+        v_table_name := lower(p_table_name);        
         
 		v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd'')';
 		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			

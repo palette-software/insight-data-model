@@ -57,11 +57,11 @@ select manage_partitions('#schema_name#', 'p_process_class_agg_report');
 select manage_partitions('#schema_name#', 'p_serverlogs_bootstrap_rpt');
 select manage_partitions('#schema_name#', 'p_cpu_usage_bootstrap_rpt');
 
-select ins_from_stage_to_dwh('#schema_name#','p_serverlogs_bootstrap_rpt');
-select ins_from_stage_to_dwh('#schema_name#','p_cpu_usage_agg_report');
-select ins_from_stage_to_dwh('#schema_name#','p_cpu_usage_bootstrap_rpt');
-select ins_from_stage_to_dwh('#schema_name#','p_interactor_session');
-select ins_from_stage_to_dwh('#schema_name#','p_process_class_agg_report');
+select ins_stage_to_dwh('#schema_name#','p_serverlogs_bootstrap_rpt');
+select ins_stage_to_dwh('#schema_name#','p_cpu_usage_agg_report');
+select ins_stage_to_dwh('#schema_name#','p_cpu_usage_bootstrap_rpt');
+select ins_stage_to_dwh('#schema_name#','p_interactor_session');
+select ins_stage_to_dwh('#schema_name#','p_process_class_agg_report');
 
 --drop table p_cpu_usage_agg_report_old;
 --drop table p_process_class_agg_report_old;

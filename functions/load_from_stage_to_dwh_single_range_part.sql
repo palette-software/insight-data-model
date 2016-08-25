@@ -2,8 +2,7 @@ CREATE or replace function load_from_stage_to_dwh_single_range_part(p_schema_nam
 AS $$
 declare
 	v_sql text;
-	v_num_inserted bigint;	
-	v_cols text;
+	v_num_inserted bigint;		
 begin	
 
         execute 'set local search_path = ' || p_schema_name;
@@ -31,35 +30,9 @@ begin
                         
 		raise notice 'I: %', v_sql;		
         execute v_sql;
-                		
-		v_cols := '';
+                				
+        v_num_inserted := ins_stage_to_dwh(p_schema_name, p_table_name);
 		
-		for rec in (select 
-						column_name
-					from 
-						information_schema.columns
-					where 
-						table_schema = p_schema_name and
-						table_name = p_table_name and
-						column_name not in ('p_id', 'p_cre_date')
-					order by
-						ordinal_position
-					)
-		loop
-			v_cols := v_cols || rec.column_name || ',';
-		end loop;
-		
-		v_cols := rtrim(v_cols, ','); 
-		
-		v_sql := 'insert into p_#table_name#(' || v_cols || ')
-				  select ' || v_cols || ' from s_#table_name#';
-                  
-		v_sql := replace(v_sql, '#table_name#', substr(p_table_name, 3));
-        
-		raise notice 'I: %', v_sql;
-		execute v_sql;
-        
-		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
 		return v_num_inserted;
 END;
 $$ LANGUAGE plpgsql;
