@@ -1,6 +1,6 @@
 \set ON_ERROR_STOP on
 set search_path = '#schema_name#';
-set role #schema_name#_#schema_name#_updater;
+set role palette_palette_updater;
 
 BEGIN;
 
@@ -36,12 +36,12 @@ alter table p_cpu_usage_agg_report rename to p_cpu_usage_agg_report_old;
 alter table p_cpu_usage_bootstrap_rpt rename to p_cpu_usage_bootstrap_rpt_old;
 alter table p_interactor_session rename to p_interactor_session_old;
 alter table p_process_class_agg_report rename to p_process_class_agg_report_old;
-
+---
 \i 018-up-create_p_serverlogs_bootstrap_rpt.sql
-select create_p_serverlogs_bootstrap_rpt('#p_schema_name#');
+select create_p_serverlogs_bootstrap_rpt('#schema_name#');
 \i 019-up-p_cpu_usage_agg_report.sql
 \i 020-up-create_p_cpu_usage_bootstrap_rpt.sql
-select create_p_cpu_usage_bootstrap_rpt('#p_schema_name#');
+select create_p_cpu_usage_bootstrap_rpt('#schema_name#');
 \i 021-up-p_interactor_session.sql
 \i 022-up-p_process_class_agg_report.sql
 
@@ -73,10 +73,10 @@ drop view p_interactor_session_normal;
 \i 023-up-p_interactor_session_normal.sql
 
 CREATE INDEX p_serverlogs_bootstrap_rpt_parent_vizql_session_idx
-		ON #schema_name#.p_serverlogs_bootstrap_rpt
+		ON p_serverlogs_bootstrap_rpt
 		USING btree (parent_vizql_session);
 CREATE INDEX p_cpu_usage_bootstrap_rpt_parent_vizql_session_idx
-		ON #schema_name#.p_cpu_usage_bootstrap_rpt
+		ON p_cpu_usage_bootstrap_rpt
 		USING btree (cpu_usage_parent_vizql_session);
 
 grant select on p_interactor_session_normal to palette_palette_looker;
