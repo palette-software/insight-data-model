@@ -8,7 +8,7 @@ env:
 
 
   # DEPLOYMENT DATA
-  - DEPLOY_HOST=rpm.palette-software.net
+  - DEPLOY_HOST=rpm.palette-software.com
   - DEPLOY_PATH=/var/palette-rpm-repo
   - DEPLOY_USER=palette-rpm
   - DEPLOY_KEY=deploy_key
