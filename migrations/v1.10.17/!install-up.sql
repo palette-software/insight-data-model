@@ -21,7 +21,6 @@ drop function load_p_serverlogs_bootstrap_rpt(p_schema_name text);
 drop function load_p_cpu_usage_agg_report(p_schema_name text);
 drop function create_load_p_cpu_usage_bootstrap_rpt(p_schema_name text);
 drop function load_p_cpu_usage_bootstrap_rpt(p_schema_name text);
-drop function load_p_cpu_usage_bootstrap_rpt(p_schema_name text);
 drop function load_p_interactor_session(p_schema_name text);
 drop function load_p_process_class_agg_report(p_schema_name text);
 
