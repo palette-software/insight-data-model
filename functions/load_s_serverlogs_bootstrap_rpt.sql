@@ -1,4 +1,4 @@
-CREATE or replace function load_p_serverlogs_bootstrap_rpt(p_schema_name text) returns bigint
+CREATE or replace function load_s_serverlogs_bootstrap_rpt(p_schema_name text) returns bigint
 AS $$
 declare
 	v_sql text;
@@ -43,23 +43,8 @@ begin
 	v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);	
 	raise notice 'I: %', v_sql_cur;
 	execute v_sql_cur into v_to;
-	
-	v_sql_cur := 
-	'delete
-		from  
-			p_serverlogs_bootstrap_rpt b	
-		where 
-			b.ts >= date''#v_from#'' and
-			b.ts <= timestamp''#v_to#''
-	';
-	v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);
-	v_sql_cur := replace(v_sql_cur, '#v_to#', v_to);
-
-    raise notice 'I: %', v_sql_cur;
-	execute v_sql_cur;
-
-	
-	v_sql := 'insert into p_serverlogs_bootstrap_rpt
+			
+	v_sql := 'insert into s_serverlogs_bootstrap_rpt
 	    (			
 	        p_serverlogs_p_id
 	       , serverlogs_id

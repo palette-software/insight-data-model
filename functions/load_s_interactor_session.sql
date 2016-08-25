@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION load_p_interactor_session(p_schema_name text)
+CREATE OR REPLACE FUNCTION load_s_interactor_session(p_schema_name text)
 RETURNS bigint AS
 $BODY$
 declare
@@ -28,20 +28,8 @@ BEGIN
 		v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);
 		execute v_sql_cur into v_to;
 		v_to := 'timestamp''' || v_to || '''';								
-		
-		v_sql_cur := 'delete from p_interactor_session 
-					  where 
-					  		session_start_ts >= #v_from# and
-							session_start_ts <= #v_to#
-					';
-					
-		v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);
-		v_sql_cur := replace(v_sql_cur, '#v_to#', v_to);
-		
-		raise notice 'I: %', v_sql_cur;
-		execute v_sql_cur;
-
-		v_sql := 'INSERT INTO p_interactor_session
+			
+		v_sql := 'INSERT INTO s_interactor_session
 		(
 			vizql_session, 
 			process_name,
@@ -229,8 +217,7 @@ BEGIN
 		execute v_sql;
 		
 		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
-			
-		
+					
 		-- Eliminate dupplications because of utc midnight (update then delete)
 		v_sql := 
 		'update p_interactor_session t

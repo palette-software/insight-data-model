@@ -1,4 +1,4 @@
-CREATE or replace function load_p_cpu_usage_agg_report(p_schema_name text) returns bigint
+CREATE or replace function load_s_cpu_usage_agg_report(p_schema_name text) returns bigint
 AS $$
 declare
 	v_sql text;
@@ -7,19 +7,13 @@ declare
 	v_sql_cur text;
 BEGIN	
 
-		v_sql_cur := 'select to_char(coalesce(max(timestamp_utc)::date, date''1001-01-01''), ''yyyy-mm-dd'') from #schema_name#.p_cpu_usage_agg_report';
-		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);		
+		execute 'set local search_path = ' || p_schema_name;
+
+		v_sql_cur := 'select to_char(coalesce(max(timestamp_utc)::date, date''1001-01-01''), ''yyyy-mm-dd'') from p_cpu_usage_agg_report';		
 		execute v_sql_cur into v_max_ts_date_p_cpu_usage_agg_report;
 		v_max_ts_date_p_cpu_usage_agg_report := 'date''' || v_max_ts_date_p_cpu_usage_agg_report || '''';
 				
-		v_sql_cur := 'delete from #schema_name#.p_cpu_usage_agg_report where timestamp_utc::date >= #max_ts_date_p_cpu_usage_agg_report#';
-		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);		
-		v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_cpu_usage_agg_report#', v_max_ts_date_p_cpu_usage_agg_report);				
-
-		raise notice 'I: %', v_sql_cur;
-		execute v_sql_cur;
-
-		v_sql := 'insert into #schema_name#.p_cpu_usage_agg_report 
+		v_sql := 'insert into s_cpu_usage_agg_report 
 				(cpu_usage_host_name
 		       , cpu_usage_process_name
 		       , timestamp_utc
@@ -93,7 +87,7 @@ BEGIN
 					end
 				   ) as vizql_session_count
 		from 
-			#schema_name#.p_cpu_usage_report
+			p_cpu_usage_report
 		where
 			cpu_usage_ts_rounded_15_secs >= #max_ts_date_p_cpu_usage_agg_report# and
 			cpu_usage_max_reporting_granularity
@@ -118,16 +112,13 @@ BEGIN
 				publisher_user_site_id,
 				workbook_revision
 		';
-
-
-			v_sql := replace(v_sql, '#schema_name#', p_schema_name);			
-			v_sql := replace(v_sql, '#max_ts_date_p_cpu_usage_agg_report#', v_max_ts_date_p_cpu_usage_agg_report);			
-
-			raise notice 'I: %', v_sql;
-			execute v_sql;
 			
-			GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
-			
-			return v_num_inserted;
+		v_sql := replace(v_sql, '#max_ts_date_p_cpu_usage_agg_report#', v_max_ts_date_p_cpu_usage_agg_report);			
+
+		raise notice 'I: %', v_sql;
+		execute v_sql;
+		
+		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
+		return v_num_inserted;
 END;
 $$ LANGUAGE plpgsql;

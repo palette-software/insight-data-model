@@ -1,11 +1,11 @@
-CREATE or replace function create_load_p_cpu_usage_bootstrap_rpt(p_schema_name text) returns int
+CREATE or replace function create_load_s_cpu_usage_bootstrap_rpt(p_schema_name text) returns int
 AS $$
 declare	
 	rec record;
 	v_sql text;
 	v_col_list_select text;
 	v_col_list_insert text;
-begin							
+begin
 	
 		v_col_list_select := '';
 		v_col_list_insert := '';
@@ -30,9 +30,9 @@ begin
 							
 		v_col_list_select := replace(v_col_list_select, 'cpu.p_cpu_usage_report_p_id', 'cpu.p_id');
 		
-		v_sql := 		
+		v_sql := 
 				'
-				CREATE or replace function load_p_cpu_usage_bootstrap_rpt(p_schema_name text) returns bigint
+				CREATE or replace function load_s_cpu_usage_bootstrap_rpt(p_schema_name text) returns bigint
 				AS \$\$
 				declare
 					v_sql text;
@@ -78,22 +78,8 @@ begin
 					raise notice ''I: %'', v_sql_cur;
 					execute v_sql_cur into v_to;
 
-					v_sql_cur := 
-					''delete
-						from  
-							p_cpu_usage_bootstrap_rpt b	
-						where 
-							b.cpu_usage_ts_rounded_15_secs >= date''''#v_from#'''' and
-							b.cpu_usage_ts_rounded_15_secs <= timestamp''''#v_to#''''
-					'';
-					v_sql_cur := replace(v_sql_cur, ''#v_from#'', v_from);
-					v_sql_cur := replace(v_sql_cur, ''#v_to#'', v_to);
-
-				    raise notice ''I: %'', v_sql_cur;
-					execute v_sql_cur;
-					
 						
-					v_sql := ''insert into p_cpu_usage_bootstrap_rpt
+					v_sql := ''insert into s_cpu_usage_bootstrap_rpt
 					    (\n'
 						||
 							v_col_list_insert

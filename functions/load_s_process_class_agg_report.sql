@@ -1,6 +1,6 @@
 -- One parametered version searches for the last loaded day or now::date and calles the
 -- method with same name but two arguments. We always load one day at once.
-CREATE OR REPLACE FUNCTION load_p_process_class_agg_report(p_schema_name text) returns bigint
+CREATE OR REPLACE FUNCTION load_s_process_class_agg_report(p_schema_name text) returns bigint
 AS $$
 declare
 	v_sql text;
@@ -21,7 +21,7 @@ BEGIN
 	raise notice 'I: %', v_sql_cur;
 	execute v_sql_cur into v_from;
 	
-  	v_sql_cur := 'select load_p_process_class_agg_report(''#p_schema_name#'', ''#v_from#'')';
+  	v_sql_cur := 'select load_s_process_class_agg_report(''#p_schema_name#'', ''#v_from#'')';
 	v_sql_cur := replace(v_sql_cur, '#p_schema_name#', p_schema_name);
 	v_sql_cur := replace(v_sql_cur, '#v_from#', v_from);
 	raise notice 'I: %', v_sql_cur;
@@ -31,7 +31,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 
-CREATE or replace function load_p_process_class_agg_report(p_schema_name text, p_from text) returns bigint
+CREATE or replace function load_s_process_class_agg_report(p_schema_name text, p_from text) returns bigint
 AS $$
 declare
 	v_sql text;
@@ -55,24 +55,11 @@ BEGIN
 	raise notice 'I: %', v_sql_cur;
 	execute v_sql_cur into v_to;
 
-	-- We delete at most two days here as if we deleted only one we never would progress if
-	-- loading is a couple of days behind.
-	v_sql_cur := 'delete
-		from p_process_class_agg_report
-		where ts_rounded_15_secs >= date''#p_from#''
-		and ts_rounded_15_secs <= timestamp''#v_to#''
-	';
-	v_sql_cur := replace(v_sql_cur, '#p_from#', p_from);
-	v_sql_cur := replace(v_sql_cur, '#v_to#', v_to);
-
-    raise notice 'I: %', v_sql_cur;
-	execute v_sql_cur;
-
 	-- Loading with the same logic as delete. When everything is find we load only "today" but if we lagged
     -- behind we load two days as that is needed for "progressing" and not getting stuck in a single day.
 	-- The plus 1 in the to clause is needed as we compare timestamp to date and in that case date is
 	-- implicit converted to timestamp at 00:00:00.000
-	v_sql := 'insert into p_process_class_agg_report
+	v_sql := 'insert into s_process_class_agg_report
 	    (
             ts_rounded_15_secs,
             process_name,
