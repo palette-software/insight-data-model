@@ -1,4 +1,4 @@
-CREATE OR REPLACE FUNCTION palette.create_p_cpu_usage_bootstrap_rpt(p_schema_name text)
+CREATE OR REPLACE FUNCTION create_p_cpu_usage_bootstrap_rpt(p_schema_name text)
 RETURNS integer AS
 $BODY$
 declare
@@ -42,7 +42,8 @@ begin
 		' ||
 			v_col_list		
 		||
-			'elapsed_seconds_to_bootstrap bigint,
+			'session_elapsed_seconds bigint,
+            currentsheet varchar(255),
 			p_cre_date timestamp without time zone default now()'			
 		||
 		')

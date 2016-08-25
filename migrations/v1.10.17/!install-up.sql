@@ -21,6 +21,7 @@ drop function load_p_serverlogs_bootstrap_rpt(p_schema_name text);
 drop function load_p_cpu_usage_agg_report(p_schema_name text);
 drop function create_load_p_cpu_usage_bootstrap_rpt(p_schema_name text);
 drop function load_p_cpu_usage_bootstrap_rpt(p_schema_name text);
+drop function load_p_cpu_usage_bootstrap_rpt(p_schema_name text);
 drop function load_p_interactor_session(p_schema_name text);
 drop function load_p_process_class_agg_report(p_schema_name text);
 
@@ -63,11 +64,14 @@ select ins_stage_to_dwh('#schema_name#','p_cpu_usage_bootstrap_rpt');
 select ins_stage_to_dwh('#schema_name#','p_interactor_session');
 select ins_stage_to_dwh('#schema_name#','p_process_class_agg_report');
 
+drop view p_interactor_session_normal;
 --drop table p_cpu_usage_agg_report_old;
 --drop table p_process_class_agg_report_old;
 --drop table p_serverlogs_bootstrap_rpt_old;
 --drop table p_interactor_session_old;
 --drop table p_cpu_usage_bootstrap_rpt_old;
+
+\i 023-up-p_interactor_session_normal.sql
 
 CREATE INDEX p_serverlogs_bootstrap_rpt_parent_vizql_session_idx
 		ON #schema_name#.p_serverlogs_bootstrap_rpt
@@ -76,6 +80,12 @@ CREATE INDEX p_cpu_usage_bootstrap_rpt_parent_vizql_session_idx
 		ON #schema_name#.p_cpu_usage_bootstrap_rpt
 		USING btree (cpu_usage_parent_vizql_session);
 
+grant select on p_interactor_session_normal to palette_palette_looker;
+grant select on p_cpu_usage_agg_report to palette_palette_looker;
+grant select on p_process_class_agg_report to palette_palette_looker;
+grant select on p_serverlogs_bootstrap_rpt to palette_palette_looker;
+grant select on p_interactor_session to palette_palette_looker;
+grant select on p_cpu_usage_bootstrap_rpt to palette_palette_looker;
 
 
 insert into db_version_meta(version_number) values ('v1.10.17');
