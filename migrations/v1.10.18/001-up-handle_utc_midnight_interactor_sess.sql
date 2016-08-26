@@ -90,7 +90,7 @@ BEGIN
 		raise notice 'I: %', v_sql;
 		execute v_sql;
 												
-		return v_num_inserted;
+		return 0;
 END;
 $BODY$
 LANGUAGE plpgsql VOLATILE SECURITY INVOKER;
