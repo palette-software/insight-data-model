@@ -72,9 +72,13 @@ drop view p_interactor_session_normal;
 
 \i 023-up-p_interactor_session_normal.sql
 
+drop index if exists p_serverlogs_bootstrap_rpt_parent_vizql_session_idx;
+drop index if exists p_cpu_usage_bootstrap_rpt_parent_vizql_session_idx;
+
 CREATE INDEX p_serverlogs_bootstrap_rpt_parent_vizql_session_idx
 		ON p_serverlogs_bootstrap_rpt
-		USING btree (parent_vizql_session);
+		USING btree (parent_vizql_session);		
+		
 CREATE INDEX p_cpu_usage_bootstrap_rpt_parent_vizql_session_idx
 		ON p_cpu_usage_bootstrap_rpt
 		USING btree (cpu_usage_parent_vizql_session);
@@ -85,7 +89,6 @@ grant select on p_process_class_agg_report to palette_palette_looker;
 grant select on p_serverlogs_bootstrap_rpt to palette_palette_looker;
 grant select on p_interactor_session to palette_palette_looker;
 grant select on p_cpu_usage_bootstrap_rpt to palette_palette_looker;
-
 
 insert into db_version_meta(version_number) values ('v1.10.17');
 
