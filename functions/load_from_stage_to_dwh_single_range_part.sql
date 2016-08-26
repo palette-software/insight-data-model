@@ -25,12 +25,12 @@ begin
 			v_col_ts := 'start_ts';
 		end if;
                 
-        v_sql_cur := 'select to_char(coalesce(min(#column_ts#)::date, date''1001-01-01''), ''yyyy-mm-dd'') from s_#table_name#';
+        v_sql_cur := 'select to_char(coalesce(min(#column_ts#), date''1001-01-01''), ''yyyy-mm-dd hh24:mi:ss.ms'') from s_#table_name#';
         v_sql_cur := replace(v_sql_cur, '#table_name#', substr(p_table_name, 3));
         v_sql_cur := replace(v_sql_cur, '#column_ts#', v_col_ts);
         raise notice 'I: %', v_sql_cur;
 		execute v_sql_cur into v_from;                
-		v_from := 'date''' || v_from || '''';
+		v_from := 'timestamp''' || v_from || '''';
 
 		v_sql_cur := 'select 
 							to_char(coalesce(max(#column_ts#), date''1001-01-01''), ''yyyy-mm-dd hh24:mi:ss.ms'')
@@ -48,10 +48,14 @@ begin
                         #column_ts# <= #v_to#';
         
         v_sql := replace(v_sql, '#table_name#', substr(p_table_name, 3));
-        v_sql := replace(v_sql, '#column_ts#', v_col_ts);			                                
+        v_sql := replace(v_sql, '#column_ts#', v_col_ts);
+        v_sql := replace(v_sql, '#v_from#', v_from);
+        v_sql := replace(v_sql, '#v_to#', v_to);
 		raise notice 'I: %', v_sql;
         execute v_sql;
-                				        
-		return 0;
+        
+        v_num_inserted := ins_stage_to_dwh(p_schema_name, p_table_name);
+
+		return v_num_inserted;
 END;
 $$ LANGUAGE plpgsql;
