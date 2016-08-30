@@ -295,7 +295,7 @@ begin
 							p_id,
 							pl.p_filepath,
 							pl.filename,
-							substr(p1.filename, 1, 9) as process_name,
+							substr(pl.filename, 1, 9) as process_name,
 							pl.host_name,
 							pl.ts,
 							pl.process_id as pid,
