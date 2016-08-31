@@ -16,12 +16,12 @@ PARTITION BY RANGE (ts)
 WITH (appendonly=true, orientation=column, compresstype=quicklz)	
 );
 
-
 -- todo: select manage_partitions('#schema_name#', 'plainlogs'); new function then drop...
 
-alter sequence plainlogs_p_id_seq owned by plainlogs.p_id;
+\i 001-up-create_plainlogs_part.sql
+select create_plainlogs_part('#schema_name#', 'plainlogs');
 
--- todo: maintenance
+alter sequence plainlogs_p_id_seq owned by plainlogs.p_id;
 
 insert into plainlogs (
          p_filepath
