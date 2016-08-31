@@ -29,6 +29,8 @@ BEGIN
 			v_sql_cur := 'select distinct cpu_usage_ts_rounded_15_secs::date d from '|| 's' || ltrim(v_table_name, 'p');
 		elseif v_table_name in ('p_serverlogs_bootstrap_rpt') then --day
 			v_sql_cur := 'select distinct start_ts::date d from '|| 's' || ltrim(v_table_name, 'p');
+        elseif v_table_name in ('plainlogs') then --day
+			v_sql_cur := 'select distinct ts::date d from ' || 'ext_plainlogs';
 		end if;
 		
 		
@@ -50,7 +52,7 @@ BEGIN
 					v_sql := replace(v_sql, '#partition_name#', to_char(rec.d, 'yyyymm'));
 					v_sql := replace(v_sql, '#start_date#', to_char(rec.d, 'yyyy-mm') || '-01');
 					v_sql := replace(v_sql, '#end_date#', to_char(rec.d + interval'1 month', 'yyyy-mm') || '-01');
-				elseif v_table_name in ('p_serverlogs_bootstrap_rpt') then --day
+				elseif v_table_name in ('p_serverlogs_bootstrap_rpt', 'plainlogs') then --day
 					v_sql := replace(v_sql, '#partition_name#', to_char(rec.d, 'yyyymmdd'));
 					v_sql := replace(v_sql, '#start_date#', to_char(rec.d, 'yyyy-mm-dd'));
 					v_sql := replace(v_sql, '#end_date#', to_char(rec.d + 1, 'yyyy-mm-dd'));
@@ -69,7 +71,7 @@ BEGIN
 						end if;
 						--exception when duplicate_object
 						--	then null;
-					elseif v_table_name in ('p_serverlogs_bootstrap_rpt') then --day
+					elseif v_table_name in ('p_serverlogs_bootstrap_rpt', 'plainlogs') then --day
 						if (not does_part_exist(p_schema_name, v_table_name, to_char(rec.d, 'yyyymmdd'))) then
 					  		execute v_sql;
 						end if;
