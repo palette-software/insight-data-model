@@ -16,7 +16,7 @@ PARTITION BY RANGE (ts)
 WITH (appendonly=true, orientation=column, compresstype=quicklz)	
 );
 
--- todo: select manage_partitions('#schema_name#', 'plainlogs'); new function then drop...
+alter table plainlogs alter column p_cre_date default now
 
 \i 001-up-create_plainlogs_part.sql
 select create_plainlogs_part('#schema_name#', 'plainlogs');
@@ -31,7 +31,8 @@ insert into plainlogs (
        , pid
        , line
        , elapsed_ms
-       , start_ts)        
+       , start_ts
+       , p_cre_date)        
 SELECT  p_filepath
        , filename
        , host_name
@@ -40,11 +41,13 @@ SELECT  p_filepath
        , line
        , elapsed_ms
        , start_ts       
+       , p_cre_date
 FROM plainlogs_old;
+
+drop table plainlogs_old;
+drop function create_plainlogs_part(p_schema_name text, p_table_name text);
 
 
 insert into db_version_meta(version_number) values ('v1.10.20');
-
---drop table plainlogs_old;
 
 COMMIT;
