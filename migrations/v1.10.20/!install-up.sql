@@ -16,9 +16,10 @@ PARTITION BY RANGE (ts)
 WITH (appendonly=true, orientation=column, compresstype=quicklz)	
 );
 
-alter table plainlogs alter column p_cre_date default now
-
 \i 001-up-create_plainlogs_part.sql
+\i 002-up-manage_single_range_partitions.sql
+\i 003-up-manage_partitions.sql
+
 select create_plainlogs_part('#schema_name#', 'plainlogs');
 
 alter sequence plainlogs_p_id_seq owned by plainlogs.p_id;
