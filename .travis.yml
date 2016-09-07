@@ -25,7 +25,7 @@ script:
   - zip -r -j $INCREMENTAL_INSTALL_ZIP migrations/$LATEST_MIGRATION_VERSION/*.sql
 
   # Build the RPM file
-  - VERSION=$(echo $TRAVIS_TAG | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\(\.[0-9][0-9]\)*')
+  - export VERSION=$(echo $TRAVIS_TAG | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\(\.[0-9][0-9]\)*')
   - export VERSION=${VERSION:-$LATEST_MIGRATION_VERSION} # When build is not tagged
   - echo "Building RPM version $VERSION"
   - pushd rpm-build
