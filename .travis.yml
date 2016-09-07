@@ -60,11 +60,6 @@ before_deploy:
   # # Overwrite the currently tagged versions directory with the
   # - unzip $SRC_DIR/$FULL_INSTALL_ZIP -d $CURRENT_VERSION_FULL_INSTALL_DIR
 
-  # Copy the install/update shell scripts over
-  - cp -v $SRC_DIR/insight-datamodel-install.sh _root/opt/palette-insight-reporting
-  - cp -v $SRC_DIR/update-data-model.sh _root/opt/palette-insight-reporting
-  - cp -v $SRC_DIR/gpadmin-install-data-model.sh _root/opt/palette-insight-reporting
-
   # Pack the rpm archvie
   - rpmbuild -bb --buildroot "$(pwd)/_root" --define "_rpmdir $(pwd)/_build" --define "version $VERSION" --define "buildrelease $TRAVIS_BUILD_NUMBER" palette-insight-reporting.spec
 
