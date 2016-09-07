@@ -2,13 +2,13 @@
   name: Set environment
   queries:
     -
-      name: Palette Insight - Reporting {{Version}}
-      query: set application_name = 'Palette Insight - Reporting {{Version}}'
+      name: Palette Insight - Reporting Version={{Version}}
+      query: set application_name = 'Palette Insight - Reporting Version={{Version}}'
     -
       name: Set search_path to {{Schema}}
       query: set search_path={{Schema}}
     -
-      name: Log datamodel version
+      name: Log Data Model Version
       query: select first_value(version_number) over (order by id desc) as model_version from db_version_meta v limit 1
 -
   name: Load p_threadinfo
