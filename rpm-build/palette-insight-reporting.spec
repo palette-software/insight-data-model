@@ -66,8 +66,9 @@ Palette Insight Reporting SQL Jobs
 %defattr(-,root,root,-)
 
 # Reject config files already listed or parent directories, then prefix files
-# with "/", then make sure paths with spaces are quoted. I hate rpm so much.
+# with "/", then make sure paths with spaces are quoted.
 /opt/palette-insight-reporting
+/etc/palette-insight-server
 
 %changelog
 
