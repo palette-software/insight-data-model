@@ -14,17 +14,6 @@ env:
   - DEPLOY_KEY=deploy_key
 
 script:
-  - echo "Nothing to build. Done."
-
-# install the RPM package
-addons:
-  apt:
-    packages:
-      - rpm
-
-before_install:
-
-before_deploy:
   # Create the full installer
   - sed -i "s/#version_number#/$TRAVIS_TAG/g" ./full_install.sql
   - cat full_install.sql
@@ -37,6 +26,7 @@ before_deploy:
 
   # Build the RPM file
   - export VERSION=$(echo $TRAVIS_TAG | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\(\.[0-9][0-9]\)*')
+  - export VERSION=${VERSION:-$LATEST_MIGRATION_VERSION} # When build is not tagged
   - echo "Building RPM version $VERSION"
   - pushd rpm-build
 
@@ -66,6 +56,15 @@ before_deploy:
   # Pack it as a zip also
   - zip -r $SRC_DIR/$PACKED_ZIP _root/opt/palette-insight-reporting
 
+# install the RPM package
+addons:
+  apt:
+    packages:
+      - rpm
+
+before_install:
+
+before_deploy:
   # Decrypt the SSH key for deployment
   - openssl aes-256-cbc -K $encrypted_9fbb5ae586fd_key -iv $encrypted_9fbb5ae586fd_iv -in ../deploy_key.enc -out $DEPLOY_KEY -d
 
