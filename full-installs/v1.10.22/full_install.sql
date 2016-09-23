@@ -179,6 +179,6 @@ CREATE INDEX p_serverlogs_bootstrap_rpt_parent_vizql_session_idx ON p_serverlogs
 
 select handle_privileges('#schema_name#');
 
-insert into db_version_meta(version_number) values ('1.10.21');
+insert into db_version_meta(version_number) values ('1.10.22');
 
 COMMIT;
