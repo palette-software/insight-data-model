@@ -32,10 +32,14 @@ CREATE TABLE p_serverlogs
 	start_ts timestamp without time zone,
 	session_start_ts_utc timestamp without time zone,
     session_end_ts_utc timestamp without time zone,
+    site_id int,
    	site_name_id text,
+    project_id int
     project_name_id text,
+    workbook_id int
     workbook_name_id text,
     workbook_rev text,
+    publisher_id int,
     publisher_username_id text,
     user_type text,
 	session_duration double precision default 0,
