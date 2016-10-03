@@ -16,7 +16,10 @@ alter table s_interactor_session add column view_id int default null;
 
 \i 001-up-create_load_p_http_requests.sql
 select create_load_p_http_requests('#schema_name#');
-
+\i 002-up-load_s_interactor_session.sql
+\i 003-up-load_s_serverlogs_bootstrap_rpt.sql
+\i 004-up-create_load_s_cpu_usage_bootstrap_rpt.sql
+select create_load_s_cpu_usage_bootstrap_rpt('#schema_name#');
 
 insert into db_version_meta(version_number) values ('v1.10.25');
 
