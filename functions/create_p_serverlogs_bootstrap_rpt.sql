@@ -42,6 +42,7 @@ begin
 			v_col_list		
 		||
 			'currentsheet varchar(255)
+            ,view_id int
 			,p_cre_date timestamp without time zone default now()'
 		||
 		')

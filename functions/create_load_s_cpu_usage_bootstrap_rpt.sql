@@ -86,6 +86,7 @@ begin
 						||
 						',session_elapsed_seconds
 						 ,currentsheet
+                         ,view_id
 						)
 						
 						select \n' 
@@ -100,6 +101,7 @@ begin
 																		a.cpu_usage_p_id 
 																ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW) as session_elapsed_seconds
 							,currentsheet
+                            ,view_id
 						from
 								(
 								select \n' 
@@ -114,6 +116,7 @@ begin
 																															cpu.cpu_usage_p_id),
 																													interval ''''0'''') as ts_diff
 									,s.currentsheet
+                                    ,s.view_id
 								from
 									p_cpu_usage_report cpu
 								left outer join p_interactor_session s on (

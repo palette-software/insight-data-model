@@ -44,6 +44,7 @@ begin
 		||
 			'session_elapsed_seconds double precision,
             currentsheet varchar(255),
+            view_id int,
 			p_cre_date timestamp without time zone default now()'			
 		||
 		')

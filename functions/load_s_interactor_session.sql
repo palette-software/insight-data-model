@@ -69,7 +69,8 @@ BEGIN
 			user_ip,
 			user_cookie,
 			status,
-			first_show_created_at			
+			first_show_created_at,
+            view_id
 		)
 		WITH rownofilt AS (
 			SELECT 
@@ -90,7 +91,8 @@ BEGIN
 						user_ip,
 						user_cookie,
 						status,
-						http_user_agent						
+						http_user_agent,
+                        view_id
 					FROM p_http_requests
 				) rowno	
 			WHERE 
@@ -158,7 +160,8 @@ BEGIN
 				MIN(user_ip) as user_ip,
 				MIN(user_cookie) as user_cookie,
 				MIN(status) as status,
-				MIN(first_show_created_at) as first_show_created_at				
+				MIN(first_show_created_at) as first_show_created_at,
+                MIN(view_id) as view_id
 		FROM    
 		        p_cpu_usage_report pcur        
 		        LEFT OUTER JOIN (
@@ -190,7 +193,8 @@ BEGIN
 								min(case when rn_show_action = 1 then user_cookie end) as user_cookie,
 								min(case when rn_show_action = 1 then status end) as status,
 								min(case when rn_show_action = 1 then http_user_agent end) as http_user_agent,
-								min(case when rn_show_action = 1 then created_at end) as first_show_created_at
+								min(case when rn_show_action = 1 then created_at end) as first_show_created_at,
+                                min(case when rn_show_action = 1 then view_id end) as view_id
 						FROM rownofilt ro
 						GROUP BY vizql_session
 					) actions1

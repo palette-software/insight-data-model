@@ -91,6 +91,7 @@ begin
 		   , session_duration
 		   , session_elapsed_seconds
 		   , currentsheet
+           , view_id
 		)
 		select     
 	   		 srvlog.p_id	       
@@ -138,6 +139,7 @@ begin
 		   , srvlog.session_duration
 		   , srvlog.session_elapsed_seconds
 		   , s.currentsheet
+           , s.view_id
 		from
 		    p_serverlogs srvlog
 		left outer join p_interactor_session s on (

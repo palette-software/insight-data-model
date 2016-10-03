@@ -48,7 +48,8 @@ begin
 				 "h_sites_p_id" Bigint,
 				 "h_workbooks_p_id" Bigint,
 				 "interactor_h_users_p_id" Bigint,
-				 "interactor_h_system_users_p_id" Bigint';
+				 "interactor_h_system_users_p_id" Bigint,
+                 "view_id" int';
 				
 		v_sql := v_sql || ')
 		WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
