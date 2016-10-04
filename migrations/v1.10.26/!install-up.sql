@@ -6,6 +6,7 @@ BEGIN;
 
 alter table p_serverlogs add column v_truncated varchar(300) default null;
 alter table p_serverlogs_bootstrap_rpt add column v_truncated varchar(300) default null;
+alter table s_serverlogs_bootstrap_rpt add column v_truncated varchar(300) default null;
 
 \i 001-up-insert_p_serverlogs_from_s_serverlogs.sql
 \i 002-up-load_s_serverlogs_bootstrap_rpt.sql
