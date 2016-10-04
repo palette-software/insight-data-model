@@ -19,6 +19,10 @@ grant select on p_serverlogs_report to palette_palette_looker;
 update p_serverlogs set v_truncated = substr(v, 1, 300);
 update p_serverlogs_bootstrap_rpt set v_truncated = substr(v, 1, 300);
 
+drop view if exists p_srvlogs_bootstrap_r_multiline;
+\i 004-up-p_srvlogs_bootstrap_r_multiline.sql
+grant select on p_srvlogs_bootstrap_r_multiline to palette_palette_looker;
+
 insert into db_version_meta(version_number) values ('v1.10.26');
 
 COMMIT;
