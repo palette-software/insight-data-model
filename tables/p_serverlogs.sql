@@ -43,7 +43,8 @@ CREATE TABLE p_serverlogs
     publisher_username_id text,
     user_type text,
 	session_duration double precision default 0,
-	session_elapsed_seconds double precision default 0	
+	session_elapsed_seconds double precision default 0,
+    v_truncated varchar(300)
 )
 DISTRIBUTED BY (host_name, process_id, thread_id)
 PARTITION BY RANGE (ts)
