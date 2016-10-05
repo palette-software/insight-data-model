@@ -21,7 +21,7 @@
       name: load_p_threadinfo
       query: select load_p_threadinfo('{{Schema}}', 'DELTA')
 -
-  name: Load p_serverlogs
+  name: Load s_serverlogs
   transaction: False
   queries:
     -
@@ -45,6 +45,10 @@
     -
       name: p_serverlogs - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_serverlogs')
+-
+  name: Load p_serverlogs
+  transaction: True
+  queries:        
     -
       name: delete_recent_records_from_p_serverlogs
       query: select delete_recent_records_from_p_serverlogs('{{Schema}}')
