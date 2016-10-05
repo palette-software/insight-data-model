@@ -207,7 +207,7 @@ begin
 								
         v_sql := replace(v_sql, '#v_max_ts_date_s_serverlogs#', v_max_ts_date_s_serverlogs);
 		raise notice 'I: %', v_sql;
-		execute v_sql;        
+		execute v_sql;
 				
 		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;			
 		return v_num_inserted;
