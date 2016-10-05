@@ -4,9 +4,16 @@ $BODY$
 declare
 	v_sql text;
 	v_num_inserted bigint;
+    v_sql_cur text;
+    v_max_ts_date_s_serverlogs text;
 begin							
 		
 		execute 'set local search_path = ' || p_schema_name;
+                
+        v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''s_serverlogs'')), ''yyyy-mm-dd'')';
+		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
+        execute v_sql_cur into v_max_ts_date_s_serverlogs;
+        v_max_ts_date_s_serverlogs := 'date''' || v_max_ts_date_s_serverlogs || '''';
 		
 		v_sql := 'insert into p_serverlogs(
 							        serverlogs_id
@@ -91,6 +98,7 @@ begin
 						FROM 
 							p_http_requests r					
 						WHERE
+                          created_at >= #v_max_ts_date_s_serverlogs# - 1 AND
 						  coalesce(r.currentsheet, '''') <> '''' AND 
 						  r.vizql_session IS NOT NULL AND 
 						  r.vizql_session <> ''-'' AND 
@@ -197,6 +205,7 @@ begin
 					) a
 				';
 								
+        v_sql := replace(v_sql, '#v_max_ts_date_s_serverlogs#', v_max_ts_date_s_serverlogs);
 		raise notice 'I: %', v_sql;
 		execute v_sql;
 				
