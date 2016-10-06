@@ -1,0 +1,39 @@
+-
+  name: Set environment
+  queries:
+    -
+      name: Palette Insight - Reporting Version={{Version}}
+      query: set application_name = 'Palette Insight - Reporting Version={{Version}}'
+    -
+      name: Set search_path to {{Schema}}
+      query: set search_path={{Schema}}
+    -
+      name: Log Data Model Version
+      query: select first_value(version_number) over (order by id desc) as model_version from db_version_meta v limit 1
+-
+  name: Load p_threadinfo_delta
+  transaction: False
+  queries:
+    -
+      name: p_threadinfo_delta - manage_partitions
+      query: select manage_partitions('{{Schema}}', 'p_threadinfo_delta')
+    -
+      name: load_p_threadinfo_delta
+      query: select load_p_threadinfo_delta('{{Schema}}')
+-
+  name: Load p_process_class_agg_report
+  transaction: False
+  queries:
+    -
+      name: truncate table s_process_class_agg_report
+      query: truncate table s_process_class_agg_report
+    -
+      name: load_s_process_class_agg_report
+      query: select load_s_process_class_agg_report('{{Schema}}')
+    -
+      name: p_process_class_agg_report - manage_partitions
+      query: select manage_partitions('{{Schema}}', 'p_process_class_agg_report')
+    -
+      name: p_process_class_agg_report - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_process_class_agg_report')
+

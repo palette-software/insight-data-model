@@ -177,22 +177,6 @@
       name: handle_utc_midnight_interactor_sess
       query: select handle_utc_midnight_interactor_sess('{{Schema}}')
 -
-  name: Load p_process_class_agg_report
-  transaction: False
-  queries:
-    -
-      name: truncate table s_process_class_agg_report
-      query: truncate table s_process_class_agg_report
-    -
-      name: load_s_process_class_agg_report
-      query: select load_s_process_class_agg_report('{{Schema}}')
-    -
-      name: p_process_class_agg_report - manage_partitions
-      query: select manage_partitions('{{Schema}}', 'p_process_class_agg_report')
-    -
-      name: p_process_class_agg_report - load_from_stage_to_dwh
-      query: select load_from_stage_to_dwh('{{Schema}}', 'p_process_class_agg_report')
--
   name: Load p_serverlogs_bootstrap_rpt
   transaction: False
   queries:

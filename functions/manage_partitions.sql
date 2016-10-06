@@ -4,7 +4,7 @@ BEGIN
 		
 		execute 'set search_path = ' || p_schema_name;
 		
-		if lower(p_table_name) in ('threadinfo', 'serverlogs', 'p_serverlogs', 'p_threadinfo', 'p_cpu_usage', 'p_cpu_usage_report') then
+		if lower(p_table_name) in ('threadinfo', 'serverlogs', 'p_serverlogs', 'p_threadinfo', 'p_threadinfo_delta', 'p_cpu_usage', 'p_cpu_usage_report') then
 			perform manage_multi_range_partitions(p_schema_name, p_table_name);
 		elsif lower(p_table_name) in ('plainlogs', 'p_cpu_usage_agg_report', 'p_interactor_session', 'p_process_class_agg_report', 'p_cpu_usage_bootstrap_rpt', 'p_serverlogs_bootstrap_rpt') then
 			perform manage_single_range_partitions(p_schema_name, p_table_name);
