@@ -9,7 +9,7 @@ begin
 
 		v_max_timestamp := null;
 		v_column_name := case 	when p_table_name = 'p_cpu_usage_report' then 'cpu_usage_ts_rounded_15_secs'
-						when p_table_name in ('p_threadinfo', 'p_cpu_usage') then 'ts_rounded_15_secs'
+						when p_table_name in ('p_threadinfo', 'p_threadinfo_delta', 'p_process_class_agg_report', 'p_cpu_usage') then 'ts_rounded_15_secs'
 						when p_table_name = 'p_cpu_usage_agg_report' then 'timestamp_utc'
 						when p_table_name = 'p_interactor_session_agg_cpu_usage' then 'session_start_ts'
 						else 'ts'

@@ -31,7 +31,7 @@ BEGIN
 		elseif v_table_name in ('p_serverlogs') then
 			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.s_serverlogs						   
 			';
-		elseif v_table_name in ('p_threadinfo') then
+		elseif v_table_name in ('p_threadinfo', 'p_threadinfo_delta') then
 			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.threadinfo 
 							where ts >= #max_ts_date_p_threadinfo# - interval ''1 hour''
 						';
@@ -94,7 +94,7 @@ BEGIN
 		elseif v_table_name in ('p_serverlogs') then
 			v_sql_cur := 'select distinct ts::date d from #schema_name#.s_serverlogs						  
 					      order by 1';
-		elseif v_table_name in ('p_threadinfo') then
+		elseif v_table_name in ('p_threadinfo', 'p_threadinfo_delta') then
 			v_sql_cur := 'select distinct poll_cycle_ts::date d from #schema_name#.threadinfo
 						   where ts >= #max_ts_date_p_threadinfo# - interval''1 hour''
 						   order by 1';
