@@ -173,10 +173,6 @@ select create_load_s_cpu_usage_report('#schema_name#');
 \i manage_partitions.sql
 \i drop_child_indexes.sql
 
-CREATE INDEX p_cpu_usage_bootstrap_rpt_parent_vizql_session_idx ON p_cpu_usage_bootstrap_rpt (cpu_usage_parent_vizql_session);
-CREATE INDEX p_cpu_usage_report_cpu_usage_parent_vizql_session_idx ON p_cpu_usage_report (cpu_usage_parent_vizql_session);
-CREATE INDEX p_serverlogs_bootstrap_rpt_parent_vizql_session_idx ON p_serverlogs_bootstrap_rpt (parent_vizql_session);
-
 select handle_privileges('#schema_name#');
 
 insert into db_version_meta(version_number) values ('1.10.21');

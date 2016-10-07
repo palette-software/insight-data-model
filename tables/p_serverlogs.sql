@@ -55,7 +55,3 @@ WITH (appendonly=true, orientation=column, compresstype=quicklz))
 	END (date '1001-01-02') EXCLUSIVE 
 WITH (appendonly=true, orientation=column, compresstype=quicklz)
 );
-
-create index p_serverlogs_parent_vizql_session_idx on p_serverlogs(parent_vizql_session);
- 
-create index p_serverlogs_p_id_idx on p_serverlogs(p_id);
