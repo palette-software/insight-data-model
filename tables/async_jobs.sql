@@ -2,7 +2,7 @@ CREATE TABLE async_jobs
 (
 	p_id bigserial,
 	p_filepath text,
-	id	integer,
+	id integer,
 	job_type character varying(255),
 	success boolean,
 	worker character varying(255),
