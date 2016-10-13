@@ -5,22 +5,16 @@ declare
 	c refcursor;
 	rec record;
 	v_sql text;
-	v_max_ts_date_p_threadinfo text;
+	v_max_ts_date_p_threadinfo text;    
 	v_max_ts_date_p_serverlogs text;
 	v_subpart_cols text;
     v_table_name text;
+    v_max_ts_date_p_threadinfo_delta text;
 BEGIN
 
 		v_subpart_cols := '';
-		execute 'set local search_path = ' || p_schema_name;				
-
-        v_table_name := lower(p_table_name);        
-        
-		v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd'')';
-		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
-		execute v_sql_cur into v_max_ts_date_p_threadinfo;
-		v_max_ts_date_p_threadinfo := 'date''' || v_max_ts_date_p_threadinfo || '''';
-						
+		execute 'set local search_path = ' || p_schema_name;
+        v_table_name := lower(p_table_name);
 		v_sql_cur := '';
 		v_sql := '';
 		
@@ -31,10 +25,28 @@ BEGIN
 		elseif v_table_name in ('p_serverlogs') then
 			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.s_serverlogs						   
 			';
-		elseif v_table_name in ('p_threadinfo', 'p_threadinfo_delta') then
+		elseif v_table_name in ('p_threadinfo') then
+            v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd'')';
+    		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
+    		execute v_sql_cur into v_max_ts_date_p_threadinfo;
+    		v_max_ts_date_p_threadinfo := 'date''' || v_max_ts_date_p_threadinfo || '''';
+            
 			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.threadinfo 
 							where ts >= #max_ts_date_p_threadinfo# - interval ''1 hour''
 						';
+            v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);
+            
+        elseif v_table_name in ('p_threadinfo_delta') then
+            v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_threadinfo_delta'')), ''yyyy-mm-dd'')';
+		    v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);			
+	    	execute v_sql_cur into v_max_ts_date_p_threadinfo_delta;
+    		v_max_ts_date_p_threadinfo_delta := 'date''' || v_max_ts_date_p_threadinfo_delta || '''';
+        
+			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.threadinfo 
+							where ts >= #max_ts_date_p_threadinfo_delta# - interval ''1 hour''
+						';
+            v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_threadinfo_delta#', v_max_ts_date_p_threadinfo_delta);
+            
 		elseif v_table_name in ('p_cpu_usage') then
 			v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.s_cpu_usage';
 			
@@ -55,8 +67,7 @@ BEGIN
 					
 		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
 		v_sql_cur := replace(v_sql_cur, '#table_name#', v_table_name);
-		v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);		
-		
+        
 		v_sql := 'ALTER TABLE #schema_name#.#table_name# SET SUBPARTITION TEMPLATE (';		
 
 		open c for execute (v_sql_cur);
