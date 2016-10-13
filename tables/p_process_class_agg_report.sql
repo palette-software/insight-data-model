@@ -1,6 +1,7 @@
 CREATE TABLE p_process_class_agg_report
 (
   p_id                         BIGSERIAL,
+  min_tho_p_id                 BIGSERIAL, 
   ts_rounded_15_secs           TIMESTAMP,
   process_name                 TEXT,
   host_name                    TEXT,
