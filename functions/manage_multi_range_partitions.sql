@@ -105,10 +105,16 @@ BEGIN
 		elseif v_table_name in ('p_serverlogs') then
 			v_sql_cur := 'select distinct ts::date d from #schema_name#.s_serverlogs						  
 					      order by 1';
-		elseif v_table_name in ('p_threadinfo', 'p_threadinfo_delta') then
+		elseif v_table_name in ('p_threadinfo') then
 			v_sql_cur := 'select distinct poll_cycle_ts::date d from #schema_name#.threadinfo
 						   where ts >= #max_ts_date_p_threadinfo# - interval''1 hour''
 						   order by 1';
+            v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);
+        elseif v_table_name in ('p_threadinfo_delta') then
+			v_sql_cur := 'select distinct poll_cycle_ts::date d from #schema_name#.threadinfo
+						   where ts >= #max_ts_date_p_threadinfo_delta# - interval''1 hour''
+						   order by 1';
+            v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_threadinfo_delta#', v_max_ts_date_p_threadinfo_delta);
 		elseif v_table_name in ('p_cpu_usage') then
 			v_sql_cur := 'select distinct ts_rounded_15_secs::date d from #schema_name#.s_cpu_usage							
 							order by 1';			
@@ -118,9 +124,7 @@ BEGIN
 		end if;
 		
 		v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
-		v_sql_cur := replace(v_sql_cur, '#table_name#',  v_table_name);
-		v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);		
-
+		v_sql_cur := replace(v_sql_cur, '#table_name#',  v_table_name);		
 		
 		open c for execute (v_sql_cur);
 			loop
