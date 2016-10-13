@@ -12,7 +12,6 @@ select create_p_threadinfo_delta('#schema_name#');
 \i 004-up-manage_multi_range_partitions.sql
 \i 005-up-manage_partitions.sql
 
-select manage_partitions('palette', 'p_threadinfo_delta');
 
 drop function load_s_process_class_agg_report(p_schema_name text, p_from text);
 
