@@ -4,7 +4,11 @@ set role palette_palette_updater;
 
 BEGIN;
 
+drop view p_interactor_session_normal;
+
 \i 001-up-p_interactor_session_normal.sql
+
+grant select on p_interactor_session_normal to palette_palette_looker;
 
 insert into db_version_meta(version_number) values ('v1.10.32');
 
