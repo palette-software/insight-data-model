@@ -21,12 +21,6 @@ alter table s_process_class_agg_report add column max_tho_p_id bigint default nu
 
 \i 006-up-load_s_process_class_agg_report.sql
 
-update p_process_class_agg_report
-set
-    max_tho_p_id = -1
-where
-    ts_rounded_15_secs >= (select get_max_ts_date('#schema_name#', 'p_process_class_agg_report'));
-
 insert into db_version_meta(version_number) values ('v1.11.0');
 
 COMMIT;
