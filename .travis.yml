@@ -42,6 +42,7 @@ script:
   - cp -Rv $SRC_DIR/full-installs/v* _root/opt/palette-insight-reporting/full-installs
   - cp -Rv $SRC_DIR/migrations/v* _root/opt/palette-insight-reporting/migrations
   - cp -v $SRC_DIR/workflow_reporting.yml _root/etc/palette-insight-server
+  - cp -v $SRC_DIR/workflow_reporting_delta.yml _root/etc/palette-insight-server
   
   # NOTE: Full installs are not required now. We are going to do them manully, in case we need a new one.
   # # Clean the destination for the current version
