@@ -13,31 +13,33 @@ select create_p_threadinfo_delta('#schema_name#');
 \i 005-up-manage_partitions.sql
 
 select manage_partitions('palette', 'p_threadinfo_delta');
- 
+
 insert into p_threadinfo_delta
-select
-     -1,
-     max(threadinfo_id),
-     max(host_name),
-     '-1',
-     max(ts),
-     max(ts_rounded_15_secs),
-     max(ts_date),
-     0,
-     0,
-     max(start_ts),
-     0,
-     0,
-     0,
-     0,
-     0,
-     0,
-     'N'
+select *
 from
-    p_threadinfo
-;
-
-
+    (select
+         -1,
+         max(threadinfo_id),
+         max(host_name),
+         '-1',
+         max(ts) as ts,
+         max(ts_rounded_15_secs),
+         max(ts_date),
+         0,
+         0,
+         max(start_ts),
+         0,
+         0,
+         0,
+         0,
+         0,
+         0,
+         'N'
+    from
+        p_threadinfo
+    ) m    
+where
+    m.ts > date'1001-01-01';
 
 drop function load_s_process_class_agg_report(p_schema_name text, p_from text);
 
