@@ -81,13 +81,13 @@ BEGIN
             tableau_process
         ) a
     where
-        a.max_tho_p_id > (select max(coalesce(max_tho_p_id, 0))
-                          from
-                            p_process_class_agg_report
-                          where
-                            ts_rounded_15_secs >= date''#v_from#'' - 1
-                            and a.host_name = host_name
-                         )
+        a.max_tho_p_id > coalesce((select max(max_tho_p_id)
+                                  from
+                                    p_process_class_agg_report
+                                  where
+                                    ts_rounded_15_secs >= date''#v_from#'' - 1
+                                    and a.host_name = host_name
+                                 ), 0)
     ';
                 
     v_sql := replace(v_sql, '#v_from#', v_from);
