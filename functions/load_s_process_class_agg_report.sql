@@ -1,36 +1,3 @@
--- One parametered version searches for the last loaded day or now::date and calles the
--- method with same name but two arguments. We always load one day at once.
-
-select load_p_threadinfo_delta('palette')
-
-select load_s_process_class_agg_report('palette');
-    
-select manage_partitions('palette', 'p_process_class_agg_report')
-select ins_stage_to_dwh('palette', 'p_process_class_agg_report')
-      
-truncate table s_process_class_agg_report;
-
-select host_name, max(ts_rounded_15_secs), count(1)
-from s_process_class_agg_report
-group by host_name;
-
--- DEV-TABLEAU10	2016-10-25 07:16:45
-select host_name, max(ts_rounded_15_secs), count(1)
-from p_process_class_agg_report
-group by host_name;
-
-
-select host_name,
-       max(ts_rounded_15_secs), 
-       count(1)
-from p_threadinfo_delta
-where
-    ts_rounded_15_secs > now()::date -2
-group by host_name;
-
-
-
-
 CREATE OR REPLACE FUNCTION load_s_process_class_agg_report(p_schema_name text) returns bigint
 AS $$
 declare
