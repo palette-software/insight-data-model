@@ -75,7 +75,7 @@ BEGIN
                 left outer join p_process_classification pc on (pc.process_name = tho.process_name)
             where
             	tho.thread_id = -1
-            	and tho.ts_rounded_15_secs >= date''#v_from_for_host#'' - 1
+            	and tho.ts_rounded_15_secs >= date''#v_from_for_host#''
                 -- The last 15 seconds could have new records with the new p_threadinfo load so
                 -- we always skip the very recent 15 seconds in order to avoid "merge"
                 -- This way the max(tho.p_id) always be the same for the group by
@@ -86,7 +86,7 @@ BEGIN
                                                 p_threadinfo_delta
                                             where
                                                 host_name = ''#host_name#''
-                                                and ts_rounded_15_secs >= date''#v_from_for_host#'' - 1
+                                                and ts_rounded_15_secs >= date''#v_from_for_host#''
                                             )
 
             group by
