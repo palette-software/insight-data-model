@@ -41,7 +41,7 @@ BEGIN
     		/*No p_threadinfo load since it is already ahead.
     		Probably some problem occured during the load after loading p_threadinfo*/
     		raise notice 'I: %', 'Skip p_threadinfo load since it is already ahead.';
-    		return 0;
+    		continue;
     	end if;						
     				
     	v_max_ts_date_p_threadinfo := 'date''' || to_char(v_max_ts_p_threadinfo, 'yyyy-mm-dd') || '''';
