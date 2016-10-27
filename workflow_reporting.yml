@@ -102,6 +102,9 @@
       name: load_s_serverlogs_dataserver_compressed
       query: select load_s_serverlogs_dataserver_compressed('{{Schema}}')
     -
+      name: analyze s_serverlogs_compressed
+      query: analyze s_serverlogs_compressed
+    -
       name: truncate table s_cpu_usage
       query: truncate table s_cpu_usage
     -
