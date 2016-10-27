@@ -75,6 +75,9 @@
     -
       name: load_s_http_requests_with_workbooks
       query: select load_s_http_requests_with_workbooks('{{Schema}}')
+    -
+      name: analyze s_http_requests_with_workbooks
+      query: analyze s_http_requests_with_workbooks
 -
   name: Load p_background_jobs
   transaction: True
