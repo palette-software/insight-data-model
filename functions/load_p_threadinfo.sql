@@ -15,14 +15,9 @@ BEGIN
     execute 'set local search_path = ' || p_schema_name;												
     
     -- Get host_names for threadinfo
-    for rec in (select distinct partitionname as host_name
+    for rec in (select distinct host_name
                 from 
-                    pg_partitions
-                where 
-                    schemaname = p_schema_name
-                    and tablename = 'threadinfo'
-                    and partitionlevel = 1
-                    and partitionname not in ('init')
+                    threadinfo
                 order by 1   
                 )   
     loop
@@ -53,7 +48,7 @@ BEGIN
     	v_min_ts_threadinfo := 'timestamp''' || v_min_ts_threadinfo || '''';
     	
     	if v_min_ts_threadinfo is null then
-    		return 0;
+    		continue;
     	end if;
     	
     	v_sql := 
