@@ -14,14 +14,14 @@ BEGIN
 	
     execute 'set local search_path = ' || p_schema_name;												
 
-    v_sql_cur := 'select palette.get_max_ts_date(''#schema_name#'', ''p_threadinfo'')';
+    v_sql_cur := 'select get_max_ts_date(''#schema_name#'', ''p_threadinfo'')';
   	v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
     execute v_sql_cur into v_max_ts_p_threadinfo;
     
     -- Get host_names for threadinfo
     for rec in execute ('select distinct host_name
                         from 
-                            palette.threadinfo
+                            threadinfo
                         where
                             ts >= date''' || to_char(v_max_ts_p_threadinfo, 'yyyy-mm-dd') ||'''
                         order by 1'
