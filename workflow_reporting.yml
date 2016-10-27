@@ -75,6 +75,9 @@
     -
       name: load_s_http_requests_with_workbooks
       query: select load_s_http_requests_with_workbooks('{{Schema}}')
+    -
+      name: analyze s_http_requests_with_workbooks
+      query: analyze s_http_requests_with_workbooks
 -
   name: Load p_background_jobs
   transaction: True
@@ -101,6 +104,9 @@
     -
       name: load_s_serverlogs_dataserver_compressed
       query: select load_s_serverlogs_dataserver_compressed('{{Schema}}')
+    -
+      name: analyze s_serverlogs_compressed
+      query: analyze s_serverlogs_compressed
     -
       name: truncate table s_cpu_usage
       query: truncate table s_cpu_usage
