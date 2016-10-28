@@ -19,6 +19,8 @@ BEGIN
     execute v_sql_cur into v_max_ts_p_threadinfo;
     
     -- Get host_names for threadinfo
+    -- If one host is always lag behind more than 1 day for some reason
+    -- we will loose data
     for rec in execute ('select distinct host_name
                         from 
                             threadinfo
