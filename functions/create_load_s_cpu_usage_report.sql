@@ -4,8 +4,7 @@ declare
 	rec record;
 	v_sql text;
 	v_insert_part text;
-	v_select_part text;
-		
+	v_select_part text;    
 begin							
 	
 		v_insert_part := '';
@@ -124,22 +123,16 @@ begin
 					
 					
 		v_sql := 		
-				'CREATE OR REPLACE FUNCTION #function_schema_name#.load_s_cpu_usage_report(p_schema_name text) returns bigint
+				'CREATE OR REPLACE FUNCTION #function_schema_name#.load_s_cpu_usage_report(p_schema_name text, p_load_date date) returns bigint
 				AS \$\$
 				declare
 					v_sql text;
 					v_sql_cur text;
 					v_num_inserted bigint;
-					v_max_ts_date text;
-					
+					v_load_date_txt text := to_char(p_load_date, ''yyyy-mm-dd'');
 				begin	
 
-							execute ''set local search_path = '' || p_schema_name;
-							
-							v_sql_cur := ''select to_char((select get_max_ts_date(''''#schema_name#'''', ''''p_cpu_usage_report'''')), ''''yyyy-mm-dd'''')'';
-							v_sql_cur := replace(v_sql_cur, ''#schema_name#'', p_schema_name);													
-							execute v_sql_cur into v_max_ts_date;
-							v_max_ts_date := ''date'''''' || v_max_ts_date || '''''''';
+							execute ''set local search_path = '' || p_schema_name;														
 
 							v_sql := ''truncate table #schema_name#.s_cpu_usage_dist_dims'';
 							v_sql := replace(v_sql, ''#schema_name#'', p_schema_name);
@@ -162,10 +155,12 @@ begin
 										from 	
 											p_cpu_usage cpu
 										where
-											cpu.ts_rounded_15_secs >= #v_max_ts_date#
+                                            1 = 1
+											and cpu.ts_rounded_15_secs >= date''''#v_load_date_txt#''''
+                                            and cpu.ts_rounded_15_secs < date''''#v_load_date_txt#'''' + interval''''1 day''''
 										'';
 							
-							v_sql := replace(v_sql, ''#v_max_ts_date#'', v_max_ts_date);	
+							v_sql := replace(v_sql, ''#v_load_date_txt#'', v_load_date_txt);
 							execute v_sql;							
 							
 							analyze s_cpu_usage_dist_dims;
@@ -221,13 +216,16 @@ begin
                      AND coalesce(cpu.publisher_h_users_p_id, -1) = coalesce(cpu0.publisher_h_users_p_id, -1)
                      AND coalesce(cpu.publisher_h_system_users_p_id, -1) = coalesce(cpu0.publisher_h_system_users_p_id, -1)
                     )
-                WHERE cpu.ts_rounded_15_secs >= #v_max_ts_date#
+                WHERE
+                    1 = 1
+                    and cpu.ts_rounded_15_secs >= date''''#v_load_date_txt#''''
+                    and cpu.ts_rounded_15_secs < date''''#v_load_date_txt#'''' + interval''''1 day''''
 		';
 		
 		v_sql := v_sql || '
 				'';
 
-				v_sql := replace(v_sql, ''#v_max_ts_date#'', v_max_ts_date);
+				v_sql := replace(v_sql, ''#v_load_date_txt#'', v_load_date_txt);
 				
 				raise notice ''I: %'', v_sql;
 				execute ''set local join_collapse_limit = 1'';
