@@ -32,52 +32,15 @@ begin
 		
 		v_sql := 
 				'
-				CREATE or replace function load_s_cpu_usage_bootstrap_rpt(p_schema_name text) returns bigint
+				CREATE or replace function load_s_cpu_usage_bootstrap_rpt(p_schema_name text, p_load_date date) returns bigint
 				AS \$\$
 				declare
 					v_sql text;
 					v_num_inserted bigint;
-					v_from text;
-					v_to text;
-					v_sql_cur text;	
+                    v_load_date_txt text := to_char(p_load_date, ''yyyy-mm-dd'');
 				begin		
 
-					execute ''set local search_path = '' || p_schema_name;
-					
-					v_sql_cur := ''
-					    select
-						    to_char(coalesce(
-							    max(cpu_usage_ts_rounded_15_secs),
-								date''''1001-01-01''''), ''''yyyy-mm-dd'''')
-						from p_cpu_usage_bootstrap_rpt'';
-						
-					raise notice ''I: %'', v_sql_cur;
-					execute v_sql_cur into v_from;
-						
-					v_sql_cur := 
-						''select
-							to_char(coalesce(min(cpu_usage_ts_rounded_15_secs), date''''#v_from#'''' + 1), ''''yyyy-mm-dd hh24:mi:ss.ms'''')
-						from
-							p_cpu_usage_report cpu
-							left outer join p_interactor_session s on (
-						                                    s.session_start_ts >= date''''#v_from#'''' and		                                    
-						                                    s.vizql_session = cpu.cpu_usage_parent_vizql_session and
-						                                    s.process_name = ''''vizqlserver'''')
-						where        
-						 	cpu.cpu_usage_parent_vizql_session is not null and
-							cpu.cpu_usage_parent_vizql_session not in (''''Non-Interactor Vizql'''', ''''-'''') and
-						 	cpu.cpu_usage_ts_rounded_15_secs >= date''''#v_from#'''' + 1 and
-							cpu.cpu_usage_ts <= s.session_start_ts +
-																(interval''''1 second'''' * coalesce(s.bootstrap_elapsed_secs, 0)) +
-																(interval''''1 second'''' * coalesce(s.show_elapsed_secs,0)) +
-																(interval''''1 second'''' * coalesce(s.show_bootstrap_delay_secs,0))										
-														+ interval ''''15 second''''
-						'';
-					
-					v_sql_cur := replace(v_sql_cur, ''#v_from#'', v_from);	
-					raise notice ''I: %'', v_sql_cur;
-					execute v_sql_cur into v_to;
-
+					execute ''set local search_path = '' || p_schema_name;					
 						
 					v_sql := ''insert into s_cpu_usage_bootstrap_rpt
 					    (\n'
@@ -119,29 +82,28 @@ begin
                                     ,s.view_id
 								from
 									p_cpu_usage_report cpu
-								left outer join p_interactor_session s on (
-								                                    s.session_start_ts >= date''''#v_from#'''' and
-																	-- plus one hour as a safety net
-								                                    s.session_start_ts <= timestamp''''#v_to#'''' + interval''''1 hour'''' and
-								                                    s.vizql_session = cpu.cpu_usage_parent_vizql_session and
-								                                    s.process_name = ''''vizqlserver'''')
+								left outer join p_interactor_session s on (1 = 1
+    								                                    and s.session_start_ts >= date''''#v_load_date_txt#'''' - interval''''2 hours''''
+    								                                    and s.session_start_ts < date''''#v_load_date_txt#'''' + interval''''1 day''''
+    								                                    and s.vizql_session = cpu.cpu_usage_parent_vizql_session
+    								                                    and s.process_name = ''''vizqlserver'''')
 																	
 								where
-									cpu.cpu_usage_ts_rounded_15_secs >= date''''#v_from#'''' and	
-									cpu.cpu_usage_ts_rounded_15_secs <= timestamp''''#v_to#'''' and	
-									cpu_usage_parent_vizql_session is not null and
-								    cpu_usage_parent_vizql_session not in (''''Non-Interactor Vizql'''', ''''-'''')  and
-								                      cpu_usage_ts <= s.session_start_ts +
-																		(interval''''1 second'''' * coalesce(s.bootstrap_elapsed_secs, 0)) +
-																		(interval''''1 second'''' * coalesce(s.show_elapsed_secs,0)) +
-																		(interval''''1 second'''' * coalesce(s.show_bootstrap_delay_secs,0))										
-																+ interval ''''15 second''''
+                                    1 = 1
+									and cpu.cpu_usage_ts_rounded_15_secs >= date''''#v_load_date_txt#''''
+									and cpu.cpu_usage_ts_rounded_15_secs < date''''#v_load_date_txt#'''' + interval''''1 day''''
+									and cpu_usage_parent_vizql_session is not null
+								    and cpu_usage_parent_vizql_session not in (''''Non-Interactor Vizql'''', ''''-'''')
+    			                    and cpu_usage_ts <= s.session_start_ts +
+                    													(interval''''1 second'''' * coalesce(s.bootstrap_elapsed_secs, 0)) +
+                    													(interval''''1 second'''' * coalesce(s.show_elapsed_secs,0)) +
+                    													(interval''''1 second'''' * coalesce(s.show_bootstrap_delay_secs,0)) +
+                    								    			    interval ''''15 second''''
 								) a
 								''															
 						;
 							
-						v_sql := replace(v_sql, ''#v_from#'', v_from);
-						v_sql := replace(v_sql, ''#v_to#'', v_to);		
+						v_sql := replace(v_sql, ''#v_load_date_txt#'', v_load_date_txt);							
 						
 						raise notice ''I: %'', v_sql;
 						execute v_sql;
