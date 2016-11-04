@@ -16,7 +16,7 @@ begin
     
 	v_sql_cur := 'select distinct host_name 
                 from 
-                    p_threadinfo
+                    p_threadinfo_delta
 				where
 				    1 = 1
         		  	and ts_rounded_15_secs >= date''#v_load_date_txt#''
@@ -90,7 +90,7 @@ begin
 					s_serverlogs_compressed slogs
 				inner join (select distinct host_name, process_id, thread_id
 							from
-								p_threadinfo
+								p_threadinfo_delta
 							where 
                                 1 = 1
 								and ts_rounded_15_secs >= date''#v_load_date_txt#''
@@ -216,7 +216,7 @@ begin
 						   ,case when is_thread_level = ''Y'' and thread_id = -1 then false else true end as max_reporting_granularity
 						   ,start_ts								   
 						from
-							p_threadinfo
+							p_threadinfo_delta
 						where
                             1 = 1
 							and ts_rounded_15_secs >= date''#v_load_date_txt#''

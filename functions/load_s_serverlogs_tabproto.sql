@@ -127,7 +127,7 @@ begin
 								process_id, 
 								start_ts
 						from
-								p_threadinfo
+								p_threadinfo_delta
 						where
 							thread_id = -1 and
 							ts_rounded_15_secs >= date''#v_load_date_txt#'' - interval''24 hours'' and

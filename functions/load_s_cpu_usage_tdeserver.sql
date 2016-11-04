@@ -15,7 +15,7 @@ begin
     perform check_if_load_date_already_in_table(p_schema_name, 'p_cpu_usage', p_load_date, false);
     
 	v_sql_cur := 'select distinct host_name 
-                from p_threadinfo
+                from p_threadinfo_delta
 				where
                     1 = 1
 				    and ts_rounded_15_secs >= date''#v_load_date_txt#''
@@ -232,7 +232,7 @@ begin
 						   ,/*case when is_thread_level = ''Y'' and thread_id = -1 then false else true end */ true as max_reporting_granularity
 						   ,start_ts
 						from
-							p_threadinfo
+							p_threadinfo_delta
 						where
                             1 = 1
 				            and ts_rounded_15_secs >= date''#v_load_date_txt#''
