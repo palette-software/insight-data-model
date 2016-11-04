@@ -16,8 +16,8 @@ env:
 
 script:
   # Freeze the dependencies of requirements
-  - export GREENPLUM_INSTALLER_VERSION=$(curl https://rpm.palette-software.com/centos/dev/x86_64/ | grep palette-greenplum-installer | sed -e's/.*palette-greenplum-installer-\([0-9.-]*\)\..*/\1/g' | sort -V | tail -1)
-  - 'sed -i "s/Requires: palette-greenplum-installer/Requires: palette-greenplum-installer = ${GREENPLUM_INSTALLER_VERSION}"' rpm-build/palette-insight-reporting.spec
+  - export GREENPLUM_INSTALLER_VERSION=$(curl https://rpm.palette-software.com/centos/dev/x86_64/ | grep palette-greenplum-installer | sed -e"s/.*palette-greenplum-installer-\([0-9.-]*\)\..*/\1/g" | sort -V | tail -1)
+  - 'sed -i "s/Requires: palette-greenplum-installer/Requires: palette-greenplum-installer = ${GREENPLUM_INSTALLER_VERSION}" rpm-build/palette-insight-reporting.spec'
 
   # Create the full installer
   - sed -i "s/#version_number#/$TRAVIS_TAG/g" ./full_install.sql
