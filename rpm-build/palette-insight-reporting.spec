@@ -28,7 +28,9 @@ Vendor: Palette Software
 URL: http://www.palette-software.com
 Packager: Palette Developers <developers@palette-software.com>
 
-Requires: palette-insight-reporting-framework palette-greenplum-installer palette-insight-toolkit
+Requires: palette-greenplum-installer
+Requires: palette-insight-toolkit
+Requires: palette-insight-reporting-framework
 
 %description
 Palette Insight Reporting SQL Jobs
