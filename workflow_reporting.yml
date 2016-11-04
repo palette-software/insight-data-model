@@ -2,7 +2,7 @@
   name: Set environment
   queries:
     -
-      name: Palette Insight - Reporting Version={{Version}}, load_date: {{LoadDate}}
+      name: Palette Insight - Reporting Version={{Version}}, load_date={{LoadDate}}
       query: set application_name = 'Palette Insight - Reporting Version={{Version}}'
     -
       name: Set search_path to {{Schema}}
