@@ -16,7 +16,7 @@ CHANNEL_ARCH=$2
 TARGET_SPEC_FILE=$3
 
 # Query the latest RPM version number of the specified package
-LATEST_VERSION=$(curl https://rpm.palette-software.com/centos/dev/${CHANNEL_ARCH}/ | grep ${PACKAGE_NAME} | sed -e"s/.*${PACKAGE_NAME}-[v]*\([0-9.-]*\)\..*/\1/g" | sort -V | tail -1)
+LATEST_VERSION=$(curl https://rpm.palette-software.com/centos/dev/${CHANNEL_ARCH}/ | grep ${PACKAGE_NAME} | sed -e"s/.*${PACKAGE_NAME}-[v]*\([0-9.-]*\)\.${CHANNEL_ARCH}.*/\1/g" | sort -V | tail -1)
 # Replace the requirement line in the specified spec file
 # For example this script would turn a line like this
 #   Requires: palette-insight-agent
