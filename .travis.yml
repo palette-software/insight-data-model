@@ -15,10 +15,6 @@ env:
   - DEPLOY_KEY=deploy_key
 
 script:
-  # Freeze the dependencies of requirements
-  - export GREENPLUM_INSTALLER_VERSION=$(curl https://rpm.palette-software.com/centos/dev/x86_64/ | grep palette-greenplum-installer | sed -e"s/.*palette-greenplum-installer-\([0-9.-]*\)\..*/\1/g" | sort -V | tail -1)
-  - 'sed -i "s/Requires: palette-greenplum-installer/Requires: palette-greenplum-installer = ${GREENPLUM_INSTALLER_VERSION}" rpm-build/palette-insight-reporting.spec'
-
   # Create the full installer
   - sed -i "s/#version_number#/$TRAVIS_TAG/g" ./full_install.sql
   - cat full_install.sql
@@ -34,6 +30,14 @@ script:
   - export VERSION=${VERSION:-$LATEST_MIGRATION_VERSION} # When build is not tagged
   - echo "Building RPM version $VERSION"
   - pushd rpm-build
+
+  # Freeze the dependencies of requirements
+  - export SPEC_FILE=palette-insight-reporting.spec
+  - ./freeze-requirement.sh palette-greenplum-installer x86_64 ${SPEC_FILE}
+  - ./freeze-requirement.sh palette-insight-toolkit x86_64 ${SPEC_FILE}
+  - ./freeze-requirement.sh palette-insight-reporting-framework x86_64 ${SPEC_FILE}
+  # Show the contents of the modified (frozen versions) spec file
+  - cat ${SPEC_FILE}
 
   # Create directories
   - mkdir -p _root/opt/palette-insight-reporting/full-installs
@@ -57,7 +61,7 @@ script:
   # - unzip $SRC_DIR/$FULL_INSTALL_ZIP -d $CURRENT_VERSION_FULL_INSTALL_DIR
 
   # Pack the rpm archvie
-  - rpmbuild -bb --buildroot "$(pwd)/_root" --define "_rpmdir $(pwd)/_build" --define "version $VERSION" --define "buildrelease $TRAVIS_BUILD_NUMBER" palette-insight-reporting.spec
+  - rpmbuild -bb --buildroot "$(pwd)/_root" --define "_rpmdir $(pwd)/_build" --define "version $VERSION" --define "buildrelease $TRAVIS_BUILD_NUMBER" ${SPEC_FILE}
 
   # Pack it as a zip also
   - zip -r $SRC_DIR/$PACKED_ZIP _root/opt/palette-insight-reporting
