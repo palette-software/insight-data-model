@@ -12,6 +12,8 @@ begin
 
     execute 'set local search_path = ' || p_schema_name;
     
+    perform check_if_load_date_already_in_table(p_schema_name, 'p_cpu_usage', p_load_date, false);
+    
 	v_sql_cur := 'select distinct host_name
                 from 
                     p_threadinfo

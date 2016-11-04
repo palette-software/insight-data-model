@@ -7,7 +7,9 @@ declare
 BEGIN	
 
 	execute 'set local search_path = ' || p_schema_name;
-			
+    
+    perform check_if_load_date_already_in_table(p_schema_name, 'p_cpu_usage_agg_repor', p_load_date, false);
+    
 	v_sql := 'insert into s_cpu_usage_agg_report 
 			(cpu_usage_host_name
 	       , cpu_usage_process_name

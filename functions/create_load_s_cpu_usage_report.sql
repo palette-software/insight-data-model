@@ -134,6 +134,8 @@ begin
 
 							execute ''set local search_path = '' || p_schema_name;														
 
+                            perform check_if_load_date_already_in_table(p_schema_name, ''p_cpu_usage_report'', p_load_date, false);
+                            
 							v_sql := ''truncate table #schema_name#.s_cpu_usage_dist_dims'';
 							v_sql := replace(v_sql, ''#schema_name#'', p_schema_name);
 							execute v_sql;
