@@ -3,11 +3,11 @@ AS $$
 declare
 	v_sql text;
     v_num_inserted bigint := 0;
-    v_num_inserted_host bigint := 0;
-	v_max_ts_date_p_threadinfo_delta text;
+    v_num_inserted_host bigint := 0;	
 	v_sql_cur text;
-	v_max_ts_p_threadinfo_delta timestamp;	
-	v_min_ts_threadinfo text;
+	v_max_ts_p_threadinfo timestamp;
+    v_max_ts_p_threadinfo_host timestamp;
+	v_min_ts_threadinfo_host timestamp;
     rec record;
 BEGIN	
 			
@@ -15,7 +15,7 @@ BEGIN
 
 	v_sql_cur := 'select get_max_ts(''#schema_name#'', ''p_threadinfo_delta'')';
 	v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);	
-	execute v_sql_cur into v_max_ts_p_threadinfo_delta;
+	execute v_sql_cur into v_max_ts_p_threadinfo;
 		
     -- Get host_names for threadinfo
     -- If one host is always lag behind more than 1 day for some reason
@@ -24,26 +24,24 @@ BEGIN
                         from 
                             threadinfo
                         where
-                            ts >= date''' || to_char(v_max_ts_p_threadinfo_delta, 'yyyy-mm-dd') ||'''
+                            ts >= date''' || to_char(v_max_ts_p_threadinfo, 'yyyy-mm-dd') ||'''
                         order by 1'
                         )   
     loop
         
-        v_sql_cur := 'select to_char((select get_max_ts_date_by_host(''#schema_name#'', ''p_threadinfo_delta'', ''#host_name#'', ''ts_rounded_15_secs'')), ''yyyy-mm-dd'')';
+        v_sql_cur := 'select get_max_ts_by_host(''#schema_name#'', ''p_threadinfo_delta'', ''#host_name#'', ''ts_rounded_15_secs'')';
     	v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
         v_sql_cur := replace(v_sql_cur, '#host_name#', rec.host_name);
-    	execute v_sql_cur into v_max_ts_date_p_threadinfo_delta;
-    	v_max_ts_date_p_threadinfo_delta := 'date''' || v_max_ts_date_p_threadinfo_delta || '''';
+    	execute v_sql_cur into v_max_ts_p_threadinfo_host;
     							
-    	v_sql_cur := 'select to_char(min(ts), ''yyyy-mm-dd hh24:mi:ss.ms'') from threadinfo where host_name = ''#host_name#'' and ts > timestamp''' || to_char(v_max_ts_p_threadinfo_delta, 'yyyy-mm-dd hh24:mi:ss.ms') || ''' + interval ''30 seconds''';
-    	v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_threadinfo_delta#', v_max_ts_date_p_threadinfo_delta);			
-    	execute v_sql_cur into v_min_ts_threadinfo;
-    	v_min_ts_threadinfo := 'timestamp''' || v_min_ts_threadinfo || '''';
+    	v_sql_cur := 'select min(ts) from threadinfo where host_name = ''#host_name#'' and ts > timestamp''' || to_char(v_max_ts_p_threadinfo_host, 'yyyy-mm-dd hh24:mi:ss.ms') || ''' + interval ''30 seconds''';
+        v_sql_cur := replace(v_sql_cur, '#host_name#', rec.host_name);	
+    	execute v_sql_cur into v_min_ts_threadinfo_host;
                 
-        if v_min_ts_threadinfo is null then
+        if v_min_ts_threadinfo_host is null then
 		    continue;
 	    end if;
-    
+        
     	v_sql := 
     	'insert into p_threadinfo_delta
     	(	
@@ -191,15 +189,15 @@ BEGIN
                     where
                         host_name = ''#host_name#''
 						and p_id > coalesce((select
-											max(a.threadinfo_id)
-										from 
-											p_threadinfo_delta a
-										where
-                                            host_name = ''#host_name#''
-											and ts_rounded_15_secs >= #max_ts_date_p_threadinfo_delta#
-										), 0)
-						and ts >= #max_ts_date_p_threadinfo_delta#
-					    and ts < #min_ts_threadinfo# + interval''24 hours''
+											    max(a.threadinfo_id)
+    										from 
+    											p_threadinfo_delta a
+    										where
+                                                host_name = ''#host_name#''
+    											and ts_rounded_15_secs >= date''#max_ts_p_threadinfo_host#''
+    										), 0)
+						and ts >= date''#max_ts_p_threadinfo_host#''
+					    and ts < timestamp''#min_ts_threadinfo_host#'' + interval''24 hours''
 						
     				union all
     				
@@ -225,7 +223,7 @@ BEGIN
     						p_threadinfo_delta last_ti
     					where
                             host_name = ''#host_name#''
-    						and last_ti.ts_rounded_15_secs >= #max_ts_date_p_threadinfo_delta# - interval''1 hour''
+    						and last_ti.ts_rounded_15_secs >= date''#max_ts_p_threadinfo_host#'' - interval''1 hour''
 
     					) a 
     				where rn = 1                                                
@@ -236,8 +234,8 @@ BEGIN
     	) ext_threadinfo';			
 
         v_sql := replace(v_sql, '#host_name#', rec.host_name);
-    	v_sql := replace(v_sql, '#max_ts_date_p_threadinfo_delta#', v_max_ts_date_p_threadinfo_delta);
-    	v_sql := replace(v_sql, '#min_ts_threadinfo#', v_min_ts_threadinfo);
+    	v_sql := replace(v_sql, '#max_ts_p_threadinfo_host#', to_char(v_max_ts_p_threadinfo_host, 'yyyy-mm-dd'));
+    	v_sql := replace(v_sql, '#min_ts_threadinfo_host#', to_char(v_min_ts_threadinfo_host, 'yyyy-mm-dd hh24:mi:ss.ms'));
 
         raise notice 'I: %', v_sql;
     	execute v_sql;
