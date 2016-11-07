@@ -32,7 +32,7 @@ script:
   - pushd rpm-build
 
   # # Freeze the dependencies of requirements
-  # - export SPEC_FILE=palette-insight-reporting.spec
+  - export SPEC_FILE=palette-insight-reporting.spec
   # - ./freeze-requirement.sh palette-greenplum-installer x86_64 ${SPEC_FILE}
   # - ./freeze-requirement.sh palette-insight-toolkit x86_64 ${SPEC_FILE}
   # - ./freeze-requirement.sh palette-insight-reporting-framework x86_64 ${SPEC_FILE}
