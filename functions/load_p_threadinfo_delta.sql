@@ -185,7 +185,7 @@ BEGIN
     				       , thread_level
     				       , p_cre_date						       
     		  		from
-    		  				threadinfo curr_ti                                						
+    		  				threadinfo curr_ti
                     where
                         host_name = ''#host_name#''
 						and p_id > coalesce((select
@@ -197,8 +197,8 @@ BEGIN
     											and ts_rounded_15_secs >= date''#max_ts_p_threadinfo_host#''
     										), 0)
 						and ts >= date''#max_ts_p_threadinfo_host#''
-					    and ts < timestamp''#min_ts_threadinfo_host#'' + interval''24 hours''
-						
+					    and ts < (timestamp''#min_ts_threadinfo_host#'' + interval''24 hours'')::date
+					
     				union all
     				
     				SELECT  null as p_id
@@ -226,8 +226,8 @@ BEGIN
     						and last_ti.ts_rounded_15_secs >= date''#max_ts_p_threadinfo_host#'' - interval''1 hour''
 
     					) a 
-    				where rn = 1                                                
-    				) ti	  
+    				where rn = 1
+    				) ti
     	      ) threadinfo
     		  where
     		  	p_id is not null
