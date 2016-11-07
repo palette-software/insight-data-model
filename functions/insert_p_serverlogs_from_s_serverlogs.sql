@@ -256,7 +256,9 @@ begin
                                                 p_serverlogs
                                             where
                                                 1 = 1
-                                                and ts >= date''#v_load_date_txt#'') ps on (ps.process_name = s.process_name and ps.serverlogs_id = s.serverlogs_id)
+                                                and ts >= date''#v_load_date_txt#''
+                                                and ts <= date''#v_load_date_txt#'' + interval''2 hours''
+                                            ) ps on (ps.process_name = s.process_name and ps.serverlogs_id = s.serverlogs_id)
                             where
                                     1 = 1
                                     and s.ts >= date''#v_load_date_txt#''
