@@ -128,7 +128,9 @@ begin
 				declare
 					v_sql text;
 					v_sql_cur text;
-					v_num_inserted bigint;
+                    rec record;
+					v_num_inserted bigint := 0;
+                    v_num_inserted_all bigint := 0;
 					v_load_date_txt text := to_char(p_load_date, ''yyyy-mm-dd'');
 				begin	
 
@@ -136,41 +138,56 @@ begin
 
                             perform check_if_load_date_already_in_table(p_schema_name, ''p_cpu_usage_report'', p_load_date, false);
                             
-							v_sql := ''truncate table #schema_name#.s_cpu_usage_dist_dims'';
-							v_sql := replace(v_sql, ''#schema_name#'', p_schema_name);
-							execute v_sql;
-																					
-							v_sql := ''insert into s_cpu_usage_dist_dims 
-												(h_projects_p_id, 
-												h_sites_p_id, 
-												interactor_h_system_users_p_id, 
-												h_workbooks_p_id, 
-												publisher_h_users_p_id, 
-												publisher_h_system_users_p_id)
-										select 
-												distinct h_projects_p_id, 
-												h_sites_p_id, 
-												interactor_h_system_users_p_id, 
-												h_workbooks_p_id, 
-												publisher_h_users_p_id, 
-												publisher_h_system_users_p_id
-										from 	
-											p_cpu_usage cpu
-										where
-                                            1 = 1
-											and cpu.ts_rounded_15_secs >= date''''#v_load_date_txt#''''
-                                            and cpu.ts_rounded_15_secs < date''''#v_load_date_txt#'''' + interval''''1 day''''
-										'';
-							
-							v_sql := replace(v_sql, ''#v_load_date_txt#'', v_load_date_txt);
-							execute v_sql;							
-							
-							analyze s_cpu_usage_dist_dims;
+                            v_sql_cur := ''select distinct host_name
+                                        from
+                                            p_cpu_usage
+                                        where
+                        				    1 = 1
+                                		  	and ts_rounded_15_secs >= date''''#v_load_date_txt#''''
+                                            and ts_rounded_15_secs < date''''#v_load_date_txt#'''' + interval''''1 day''''
+                        				order by 1'';
+                            
+                            v_sql_cur := replace(v_sql_cur, ''#v_load_date_txt#'', v_load_date_txt);
+                            
+                            for rec in execute(v_sql_cur)
+                            loop
+    							v_sql := ''truncate table #schema_name#.s_cpu_usage_dist_dims'';
+    							v_sql := replace(v_sql, ''#schema_name#'', p_schema_name);
+    							execute v_sql;
+    																					
+    							v_sql := ''insert into s_cpu_usage_dist_dims 
+    												(h_projects_p_id, 
+    												h_sites_p_id, 
+    												interactor_h_system_users_p_id, 
+    												h_workbooks_p_id, 
+    												publisher_h_users_p_id, 
+    												publisher_h_system_users_p_id)
+    										select 
+    												distinct h_projects_p_id, 
+    												h_sites_p_id, 
+    												interactor_h_system_users_p_id, 
+    												h_workbooks_p_id, 
+    												publisher_h_users_p_id, 
+    												publisher_h_system_users_p_id
+    										from 	
+    											p_cpu_usage cpu
+    										where
+                                                1 = 1
+                                                and cpu.host_name = ''''#host_name#''''
+    											and cpu.ts_rounded_15_secs >= date''''#v_load_date_txt#''''
+                                                and cpu.ts_rounded_15_secs < date''''#v_load_date_txt#'''' + interval''''1 day''''
+    										'';
+    							
+    							v_sql := replace(v_sql, ''#v_load_date_txt#'', v_load_date_txt);
+                                v_sql := replace(v_sql, ''#host_name#'', rec.host_name);
+    							execute v_sql;							
+    							
+    							analyze s_cpu_usage_dist_dims;
 							
 							
 							v_sql := 
 								''								
-				';
+				            ';
 					
 					
 		v_sql := v_sql || 'insert into s_cpu_usage_report (';	
@@ -220,6 +237,7 @@ begin
                     )
                 WHERE
                     1 = 1
+                    and host_name = ''''#host_name#''''
                     and cpu.ts_rounded_15_secs >= date''''#v_load_date_txt#''''
                     and cpu.ts_rounded_15_secs < date''''#v_load_date_txt#'''' + interval''''1 day''''
 		';
@@ -228,14 +246,16 @@ begin
 				'';
 
 				v_sql := replace(v_sql, ''#v_load_date_txt#'', v_load_date_txt);
+                v_sql := replace(v_sql, ''#host_name#'', rec.host_name);
 				
 				raise notice ''I: %'', v_sql;
 				execute ''set local join_collapse_limit = 1'';
 				execute v_sql;		
 				GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
 				
-				
-				return v_num_inserted;
+			end loop;
+            
+			return v_num_inserted;
 		END;
 		\$\$ LANGUAGE plpgsql;';
 				
