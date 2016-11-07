@@ -83,10 +83,10 @@ BEGIN
 			action in (''show'', ''bootstrapSession'')
 		)
 	SELECT  
-        cpu_usage_parent_vizql_session AS vizql_session,
-        cpu_usage_process_name AS process_name,
-        MIN(cpu_usage_host_name) AS host_name,
-        SUM(cpu_usage_cpu_time_consumption_seconds) AS cpu_time_consumption_seconds,
+        parent_vizql_session AS vizql_session,
+        process_name AS process_name,
+        MIN(host_name) AS host_name,
+        SUM(cpu_time_consumption_seconds) AS cpu_time_consumption_seconds,
         MIN(session_start_ts) AS session_start_ts,
         MIN(session_end_ts) AS session_end_ts,
         MIN(session_duration) as session_duration,
@@ -134,7 +134,7 @@ BEGIN
 			WHEN MIN(bootstrap_count) = 0 or MIN(show_count) = 0 THEN NULL
 			ELSE MIN(show_bootstrap_delay_secs) 
 		END AS show_bootstrap_delay_secs,
-		MIN(cpu_usage_user_type) as user_type,
+		MIN(user_type) as user_type,
 		MIN(currentsheet) as currentsheet,
 		MIN(http_referer) as http_referer,
 		MIN(http_request_uri) as http_request_uri,
@@ -145,7 +145,7 @@ BEGIN
 		MIN(first_show_created_at) as first_show_created_at,
         MIN(view_id) as view_id
 	FROM    
-        p_cpu_usage_report pcur        
+        p_cpu_usage cpu
         LEFT OUTER JOIN (
                 SELECT  
                         parent_vizql_session AS vizql_session,
@@ -163,7 +163,7 @@ BEGIN
                     parent_vizql_session, 
                     process_name
         ) num_loglevels
-                ON (pcur.cpu_usage_parent_vizql_session = num_loglevels.vizql_session AND pcur.cpu_usage_process_name = num_loglevels.process_name)
+                ON (cpu.parent_vizql_session = num_loglevels.vizql_session AND cpu.process_name = num_loglevels.process_name)
 		LEFT OUTER JOIN (
 				SELECT ro.vizql_session, 
 						sum(case when (ro.action = ''show'' and ro.rn = 1) or (ro.action = ''bootstrapSession'' and ro.rn = 2) then 1 else 0 end) as normal,
@@ -183,7 +183,7 @@ BEGIN
 				FROM rownofilt ro
 				GROUP BY vizql_session
 			) actions1
-			ON (actions1.vizql_session = pcur.cpu_usage_parent_vizql_session)
+			ON (actions1.vizql_session = cpu.parent_vizql_session)
 		LEFT OUTER JOIN (
 				SELECT vizql_session,
 						extract(''epoch'' from (min(rored.completed_at) - min(rored.created_at))) as show_elapsed_secs,
@@ -199,18 +199,18 @@ BEGIN
 					) rored
 				GROUP BY vizql_session
 			) actions2
-			ON (actions2.vizql_session = pcur.cpu_usage_parent_vizql_session)
+			ON (actions2.vizql_session = cpu.parent_vizql_session)
 	WHERE
         1 = 1
         and session_start_ts >= date''#v_load_date_txt#''
         and session_start_ts < date''#v_load_date_txt#'' + interval''1 day''
-        and cpu_usage_ts_rounded_15_secs >= date''#v_load_date_txt#''
-        and cpu_usage_ts_rounded_15_secs < date''#v_load_date_txt#'' + interval''26 hours''
-        and cpu_usage_parent_vizql_session IS NOT NULL
-        and cpu_usage_parent_vizql_session not in (''default'', ''-'')
+        and ts_rounded_15_secs >= date''#v_load_date_txt#''
+        and ts_rounded_15_secs < date''#v_load_date_txt#'' + interval''26 hours''
+        and parent_vizql_session IS NOT NULL
+        and parent_vizql_session not in (''default'', ''-'')
 	GROUP BY 
-        cpu_usage_parent_vizql_session,
-        cpu_usage_process_name;
+        parent_vizql_session,
+        process_name;
 	';
 		
 	v_sql := replace(v_sql, '#v_load_date_txt#', v_load_date_txt);   
