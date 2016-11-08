@@ -2,6 +2,7 @@ CREATE or replace function load_s_cpu_usage_dataserver(p_schema_name text, p_loa
 AS $$
 declare
 	v_sql text;
+    v_sql_filter text;
 	v_num_inserted bigint := 0;
 	v_num_inserted_all bigint := 0;
 	v_sql_cur text;
@@ -12,7 +13,7 @@ begin
 
     execute 'set local search_path = ' || p_schema_name;
 
-    perform check_if_load_date_already_in_table(p_schema_name, 'p_cpu_usage', p_load_date, false);
+    perform check_if_load_date_already_in_table(p_schema_name, 'p_cpu_usage', p_load_date, true);
 
 	v_sql_cur := 'select distinct host_name 
                 from 
@@ -92,7 +93,7 @@ begin
 							where 
                                 1 = 1
 								and ts_rounded_15_secs >= date''#v_load_date_txt#''
-                                and ts_rounded_15_secs < date''#v_load_date_txt#'' + interval''1 day''
+                                and ts_rounded_15_secs <= date''#v_load_date_txt#'' + interval''26 hours''
 								and host_name = ''#host_name#''
 								and process_name = ''dataserver''
 							)  ti
@@ -126,13 +127,23 @@ begin
 						   ,start_ts								   
 						from
 							p_threadinfo_delta
+                        left outer join (select p_threadinfo_id
+                                    from
+                                        p_cpu_usage
+                                    where
+                                        1 = 1
+                                        and host_name = ''#host_name#''
+                                        and process_name = ''dataserver''
+                                        and ts_rounded_15_secs >= date''#v_load_date_txt#''
+                                        and ts_rounded_15_secs <= date''#v_load_date_txt#'' + interval''2 hours''
+                                    ) already_in on (already_in.p_threadinfo_id = threadinfo_id)
 						where
                             1 = 1
-							and ts_rounded_15_secs >= date''#v_load_date_txt#''
-                            and ts_rounded_15_secs < date''#v_load_date_txt#'' + interval''1 day''
+							#load_date_filter#
 							and host_name = ''#host_name#''
 							and ts_interval_ticks is not null
 							and process_name = ''dataserver''
+                            and already_in.p_threadinfo_id is null
 						)
 
 				SELECT
@@ -271,18 +282,39 @@ begin
 				   										 thread_with_sess.slog_session_start_ts between u.p_valid_from and u.p_valid_to										 
 				  										 )
 				where
-					1 = 1 --thread_with_sess.rn = 1';
+					1 = 1 --thread_with_sess.rn = 1
+                    #filter#
+            ';
 			
-			v_sql := replace(v_sql, '#host_name#', rec.host_name);
-			v_sql := replace(v_sql, '#v_load_date_txt#', v_load_date_txt);
-			
-			raise notice 'I: %', v_sql;
-
-			execute v_sql;
-		  
+		    v_sql := replace(v_sql, '#host_name#', rec.host_name);			
+            v_sql_filter := replace(v_sql, '#load_date_filter#',
+                    ' and ts_rounded_15_secs >= date''#v_load_date_txt#''
+                    and ts_rounded_15_secs < date''#v_load_date_txt#'' + interval''1 day''                    
+                    ');
+            v_sql_filter := replace(v_sql_filter, '#v_load_date_txt#', v_load_date_txt);
+            v_sql_filter := replace(v_sql_filter, '#filter#',
+                    ' and 1 = 1
+                    ');
+                    
+			raise notice 'I: %', v_sql_filter;
+			execute v_sql_filter;
 			GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
 			v_num_inserted_all := v_num_inserted_all + v_num_inserted;
 		  
+            v_sql_filter := replace(v_sql, '#load_date_filter#',
+                    ' and ts_rounded_15_secs >= date''#v_load_date_txt#'' + interval''24 hours''
+                    and ts_rounded_15_secs <= date''#v_load_date_txt#'' + interval''26 hours''
+                    ');                    
+            v_sql_filter := replace(v_sql_filter, '#filter#',
+                    ' and thread_with_sess.whole_session_start_ts::date = date''#v_load_date_txt#''
+                    ');
+            v_sql_filter := replace(v_sql_filter, '#v_load_date_txt#', v_load_date_txt);        
+                    
+            raise notice 'I: %', v_sql_filter;                    
+            execute v_sql_filter;
+			GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
+			v_num_inserted_all := v_num_inserted_all + v_num_inserted;
+            
 	end loop;
 	close c;
 
