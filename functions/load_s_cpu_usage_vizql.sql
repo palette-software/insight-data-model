@@ -279,7 +279,8 @@ begin
                     and ts_rounded_15_secs <= date''#v_load_date_txt#'' + interval''26 hours''
                     ');                    
             v_sql_filter := replace(v_sql_filter, '#filter#',
-                    ' and thread_with_sess.whole_session_start_ts::date = date''#v_load_date_txt#''
+                    ' and thread_with_sess.whole_session_end_ts is not null
+                    and thread_with_sess.whole_session_start_ts::date = date''#v_load_date_txt#''
                     ');
             v_sql_filter := replace(v_sql_filter, '#v_load_date_txt#', v_load_date_txt);        
                     
