@@ -1,8 +1,3 @@
-select * from palette.p_interactor_session;
-
-select load_s_interactor_session('palette', date'2016-11-01');
-
-
 CREATE OR REPLACE FUNCTION load_s_interactor_session(p_schema_name text, p_load_date date)
  RETURNS bigint AS
  $BODY$

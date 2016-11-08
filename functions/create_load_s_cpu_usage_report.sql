@@ -1,3 +1,16 @@
+select create_load_s_cpu_usage_report('palette');
+
+truncate table palette.p_cpu_usage_report;
+truncate table palette.s_cpu_usage_report;
+
+select manage_partitions('palette', 'p_cpu_usage_report');
+select load_from_stage_to_dwh('palette', 'p_cpu_usage_report');
+
+-- 38071328
+select count(*) from palette.p_cpu_usage_report
+where cpu_usage_ts > date'2016-11-02'
+limit 10;
+
 CREATE or replace function create_load_s_cpu_usage_report(p_schema_name text) returns int
 AS $$
 declare	
@@ -136,7 +149,7 @@ begin
 
 							execute ''set local search_path = '' || p_schema_name;														
 
-                            perform check_if_load_date_already_in_table(p_schema_name, ''p_cpu_usage_report'', p_load_date, false);
+                            perform check_if_load_date_already_in_table(p_schema_name, ''p_cpu_usage_report'', p_load_date, true);
                             
                             v_sql_cur := ''select distinct host_name
                                         from
@@ -175,7 +188,7 @@ begin
                                                 1 = 1
                                                 and cpu.host_name = ''''#host_name#''''
     											and cpu.ts_rounded_15_secs >= date''''#v_load_date_txt#''''
-                                                and cpu.ts_rounded_15_secs < date''''#v_load_date_txt#'''' + interval''''1 day''''
+                                                and cpu.ts_rounded_15_secs <= date''''#v_load_date_txt#'''' + interval''''26 hours''''
     										'';
     							
     							v_sql := replace(v_sql, ''#v_load_date_txt#'', v_load_date_txt);
@@ -227,19 +240,29 @@ begin
                     left outer join h_workbooks wb on (wb.p_id = cpu0.h_workbooks_p_id)       
                     left outer join h_users u_pub on (u_pub.p_id = cpu0.publisher_h_users_p_id)
                     left outer join h_system_users us_pub on (us_pub.p_id = cpu0.publisher_h_system_users_p_id)
-                    inner join p_cpu_usage cpu on
-                    (coalesce(cpu.h_projects_p_id, -1) = coalesce(cpu0.h_projects_p_id, -1)
-                     AND coalesce(cpu.h_sites_p_id, -1) = coalesce(cpu0.h_sites_p_id, -1)
-                     AND coalesce(cpu.interactor_h_system_users_p_id, -1) = coalesce(cpu0.interactor_h_system_users_p_id, -1)
-                     AND coalesce(cpu.h_workbooks_p_id, -1) = coalesce(cpu0.h_workbooks_p_id, -1)
-                     AND coalesce(cpu.publisher_h_users_p_id, -1) = coalesce(cpu0.publisher_h_users_p_id, -1)
-                     AND coalesce(cpu.publisher_h_system_users_p_id, -1) = coalesce(cpu0.publisher_h_system_users_p_id, -1)
-                    )
+                    inner join p_cpu_usage cpu on (coalesce(cpu.h_projects_p_id, -1) = coalesce(cpu0.h_projects_p_id, -1)
+                                                     AND coalesce(cpu.h_sites_p_id, -1) = coalesce(cpu0.h_sites_p_id, -1)
+                                                     AND coalesce(cpu.interactor_h_system_users_p_id, -1) = coalesce(cpu0.interactor_h_system_users_p_id, -1)
+                                                     AND coalesce(cpu.h_workbooks_p_id, -1) = coalesce(cpu0.h_workbooks_p_id, -1)
+                                                     AND coalesce(cpu.publisher_h_users_p_id, -1) = coalesce(cpu0.publisher_h_users_p_id, -1)
+                                                     AND coalesce(cpu.publisher_h_system_users_p_id, -1) = coalesce(cpu0.publisher_h_system_users_p_id, -1)
+                                                    )
+                     left outer join (
+                                    select 
+                                        cpu_usage_p_id
+                                    from
+                                        p_cpu_usage_report
+                                    where 1 = 1
+                                        and cpu_usage_host_name = ''''#host_name#''''
+                                        and cpu_usage_ts_rounded_15_secs >= date''''#v_load_date_txt#''''
+                                        and cpu_usage_ts_rounded_15_secs <= date''''#v_load_date_txt#'''' + interval''''2 hours''''
+                                     ) already_in on (already_in.cpu_usage_p_id = cpu.p_id)
                 WHERE
                     1 = 1
                     and host_name = ''''#host_name#''''
+                    and already_in.cpu_usage_p_id is null                    
                     and cpu.ts_rounded_15_secs >= date''''#v_load_date_txt#''''
-                    and cpu.ts_rounded_15_secs < date''''#v_load_date_txt#'''' + interval''''1 day''''
+                    and cpu.ts_rounded_15_secs <= date''''#v_load_date_txt#'''' + interval''''26 hours''''
 		';
 		
 		v_sql := v_sql || '
@@ -252,10 +275,11 @@ begin
 				execute ''set local join_collapse_limit = 1'';
 				execute v_sql;		
 				GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
+                v_num_inserted_all := v_num_inserted_all + v_num_inserted;
 				
 			end loop;
             
-			return v_num_inserted;
+			return v_num_inserted_all;
 		END;
 		\$\$ LANGUAGE plpgsql;';
 				
