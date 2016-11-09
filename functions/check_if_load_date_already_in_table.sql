@@ -4,7 +4,8 @@ declare
 	v_sql_cur text;
     v_max_ts timestamp;
     v_load_date timestamp := p_load_date;
-    v_day_overflow interval := interval'2 hours';
+    -- 2 hours plus 5 minutes since ts can be a bit bigger than ts_rounded_15_secs
+    v_day_overflow interval := interval'125 minutes';
 begin
     
     execute 'set local search_path = ' || p_schema_name;
