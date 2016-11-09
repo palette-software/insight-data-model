@@ -1,18 +1,27 @@
 language: bash
+# install the RPM package
+addons:
+  apt:
+    packages:
+      - rpm
+      # To deploy the rpms, we need to ssh into places, and we dont want to store keys for now
+      - sshpass
+
 env:
   global:
+  # travis encrypt DEPLOY_PASS=...
+  - secure: "qZfId4hpkMx9LIJcdYISR/sDB2yBEQ8sZupqOFMQvW2UK49pSWNE5kiPSohpPT/P8X485ZTsfZztD8/enIVXZhswwHBqQyyslU4NcCDyNG0caMEWFx9kElpONSgcRrwgkRks+4HX3JhzEWgN9dmpgW1HBsNCzbSwFqMp4WS5+kSCWIbvVLIDLt7rxBO7EyIRIOq3iyrBdBugH26OjkeZfTqGLIRZ7koFXorWtf8K6lfwjHaZ9Z6BgytFPQNunqluqenvLRh0vT8T+c6gWcqIfTyu6BWq5HtBBSgr9Mqgo8zJCdYNAEkaB6IbWG8/bRrMNdBdxPKsHAOJKUW0W8OyNZltPy/+fgOVXOZo+0+WXbKjvDqKvoVDoOxToizlJAE8R4DHEJBZGhOFmUlo8yoNB0vpbUF8O4rLDdjqQ0ySwOJk1+ADm3jk8Ahsj6RzrC0GRyUsy1SX9vkMseDTegYIdJx6PFv1CJEXKVI7EKjhITKft96lPBSdz4DOV4VFK/KRYOrYf3uLQcbl52xQuAhSjusT9Dc0O1CwKayA3kWVNH+nb/Df4dMOBIoAvH/PLwrvmldMqdYsFuQ+3f41FmhBQxOKPRu8QdBpkFRcIlMYDGWJP1qJLaw9FIsTOsxI/GbyJbgLV8DWC1OOPEmwaxuWwDjPMKAbnjYy5gxZLiJI1nc="
+
   - FULL_INSTALL_ZIP=palette-insight-reporting-$TRAVIS_TAG-full-install.zip
   - INCREMENTAL_INSTALL_ZIP=palette-insight-reporting-$TRAVIS_TAG-install.zip
   - PACKED_ZIP=palette-insight-reporting--packed--$TRAVIS_TAG.zip
 
   - CURRENT_VERSION_FULL_INSTALL_DIR=_root/opt/palette-insight-reporting/full-installs/$TRAVIS_TAG
 
-
   # DEPLOYMENT DATA
   - DEPLOY_HOST=rpm.palette-software.com
   - DEPLOY_PATH=/var/palette-rpm-repo
   - DEPLOY_USER=palette-rpm
-  - DEPLOY_KEY=deploy_key
 
 script:
   # Create the full installer
@@ -43,16 +52,16 @@ script:
   - mkdir -p _root/opt/palette-insight-reporting/full-installs
   - mkdir -p _root/opt/palette-insight-reporting/migrations
   - mkdir -p _root/etc/palette-insight-server
-  - mkdir -p _build  
+  - mkdir -p _build
 
   # As dirs +1 returns paths with a tilde in them, we need to expand it
   - export SRC_DIR=$(eval echo `dirs +1`)
-  
+
   - cp -Rv $SRC_DIR/full-installs/v* _root/opt/palette-insight-reporting/full-installs
   - cp -Rv $SRC_DIR/migrations/v* _root/opt/palette-insight-reporting/migrations
   - cp -v $SRC_DIR/workflow_reporting.yml _root/etc/palette-insight-server
   - cp -v $SRC_DIR/workflow_reporting_delta.yml _root/etc/palette-insight-server
-  
+
   # NOTE: Full installs are not required now. We are going to do them manully, in case we need a new one.
   # # Clean the destination for the current version
   # - rm -rfv $CURRENT_VERSION_FULL_INSTALL_DIR
@@ -65,31 +74,17 @@ script:
 
   # Pack it as a zip also
   - zip -r $SRC_DIR/$PACKED_ZIP _root/opt/palette-insight-reporting
-
-# install the RPM package
-addons:
-  apt:
-    packages:
-      - rpm
+  - popd
 
 before_deploy:
-  # Decrypt the SSH key for deployment
-  - openssl aes-256-cbc -K $encrypted_9fbb5ae586fd_key -iv $encrypted_9fbb5ae586fd_iv -in ../deploy_key.enc -out $DEPLOY_KEY -d
-
-  # kill openssl warnings because of bad permissions
-  - chmod 600 $DEPLOY_KEY
-
   # Upload the RPM to the RPM repository
   # by exportin it to SSHPASS, sshpass wont log the command line and the password
-  - echo "scp -i $DEPLOY_KEY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r _build/* $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH"
-  - scp -i $DEPLOY_KEY -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r _build/* $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
+  - export SSHPASS=$DEPLOY_PASS
+  - sshpass -e scp -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -r rpm-build/_build/* $DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH
 
   # Update the RPM repository
-  - export DEPLOY_CMD="createrepo $DEPLOY_PATH/"
-  - ssh -i $DEPLOY_KEY  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST $DEPLOY_CMD
-
-  # Go back to the original root dir, so travis can find the zip files
-  - popd
+  - export DEPLOY_CMD="createrepo ${DEPLOY_PATH}/"
+  - sshpass -e ssh  -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no $DEPLOY_USER@$DEPLOY_HOST $DEPLOY_CMD
 
 deploy:
   provider: releases
