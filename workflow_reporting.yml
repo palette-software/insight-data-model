@@ -36,6 +36,13 @@
       name: p_serverlogs - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_serverlogs')
 -
+  name: Load s_serverlogs_plus_2_hours
+  transaction: False
+  queries:
+    -
+      name: load_s_serverlogs_plus_2_hours
+      query: select load_s_serverlogs_plus_2_hours('{{Schema}}', date'{{LoadDate}}')
+-
   name: Load p_serverlogs
   transaction: False
   queries:
