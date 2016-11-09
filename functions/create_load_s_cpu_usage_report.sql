@@ -1,16 +1,3 @@
-select create_load_s_cpu_usage_report('palette');
-
-truncate table palette.p_cpu_usage_report;
-truncate table palette.s_cpu_usage_report;
-
-select manage_partitions('palette', 'p_cpu_usage_report');
-select load_from_stage_to_dwh('palette', 'p_cpu_usage_report');
-
--- 38071328
-select count(*) from palette.p_cpu_usage_report
-where cpu_usage_ts > date'2016-11-02'
-limit 10;
-
 CREATE or replace function create_load_s_cpu_usage_report(p_schema_name text) returns int
 AS $$
 declare	

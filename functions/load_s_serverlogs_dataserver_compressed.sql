@@ -107,7 +107,7 @@ begin
 							session_start_ts_utc,
 							session_end_ts_utc
 				from
-						p_serverlogs
+						s_serverlogs_plus_2_hours
 				where
                     1 = 1
 					and process_name = ''dataserver''

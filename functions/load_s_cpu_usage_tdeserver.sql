@@ -1,8 +1,7 @@
 CREATE OR REPLACE FUNCTION load_s_cpu_usage_tdeserver(p_schema_name text, p_load_date date) RETURNS bigint
 AS $$
 declare
-	v_sql text;
-    v_sql_filter text;
+	v_sql text;    
 	v_num_inserted bigint := 0;
 	v_num_inserted_all bigint := 0;
 	v_sql_cur text;
@@ -244,7 +243,8 @@ begin
                                     ) already_in on (already_in.p_threadinfo_id = threadinfo_id)
 						where
                             1 = 1
-				            #load_date_filter#
+				            and ts_rounded_15_secs >= date''#v_load_date_txt#''
+                            and ts_rounded_15_secs <= date''#v_load_date_txt#'' + interval''26 hours''
 							and host_name = ''#host_name#''
 							and ts_interval_ticks is not null
 							and process_name like ''tdeserver%''
@@ -270,35 +270,25 @@ begin
 				  										 )
                     where
                         1 = 1                        
-                        #filter#';
+                       and 
+                    (
+                        (ts_rounded_15_secs >= date''#v_load_date_txt#'' and ts_rounded_15_secs < date''#v_load_date_txt#'' + interval''1 day'')
+                        or
+                        (
+                            ts_rounded_15_secs >= date''#v_load_date_txt#'' + interval''24 hours'' and ts_rounded_15_secs <= date''#v_load_date_txt#'' + interval''26 hours''
+                            and (parent_vizql_session in (select distinct session from cross_utc_midnight_sessions where parent_process_name = ''vizqlserver'')
+                                or
+                                parent_dataserver_session in (select distinct session from cross_utc_midnight_sessions where parent_process_name = ''dataserver'')
+                                )
+                        )
+                   )
+            ';
 			
-			v_sql := replace(v_sql, '#host_name#', rec.host_name);			
-            v_sql_filter := replace(v_sql, '#load_date_filter#',
-                    ' and ts_rounded_15_secs >= date''#v_load_date_txt#''
-                    and ts_rounded_15_secs < date''#v_load_date_txt#'' + interval''1 day''                    
-                    ');
-            v_sql_filter := replace(v_sql_filter, '#v_load_date_txt#', v_load_date_txt);
-            v_sql_filter := replace(v_sql_filter, '#filter#',
-                    ' and 1 = 1
-                    ');
-                    
-			raise notice 'I: %', v_sql_filter;
-			execute v_sql_filter;
-			GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
-			v_num_inserted_all := v_num_inserted_all + v_num_inserted;
-		  
-            v_sql_filter := replace(v_sql, '#load_date_filter#',
-                    ' and ts_rounded_15_secs >= date''#v_load_date_txt#'' + interval''24 hours''
-                    and ts_rounded_15_secs <= date''#v_load_date_txt#'' + interval''26 hours''
-                    ');                    
-            v_sql_filter := replace(v_sql_filter, '#filter#',
-                    ' and thread_with_sess.whole_session_end_ts is not null
-                    and thread_with_sess.whole_session_start_ts::date = date''#v_load_date_txt#''
-                    ');
-            v_sql_filter := replace(v_sql_filter, '#v_load_date_txt#', v_load_date_txt);        
-                    
-            raise notice 'I: %', v_sql_filter;                    
-            execute v_sql_filter;
+			v_sql := replace(v_sql, '#host_name#', rec.host_name);
+            v_sql := replace(v_sql, '#v_load_date_txt#', v_load_date_txt);
+                                            
+            raise notice 'I: %', v_sql;
+            execute v_sql;
 			GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
 			v_num_inserted_all := v_num_inserted_all + v_num_inserted;
 		  
