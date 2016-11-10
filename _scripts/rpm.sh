@@ -21,12 +21,12 @@ mkdir -p _build
 # As dirs +1 returns paths with a tilde in them, we need to expand it
 export SRC_DIR=$(eval echo `dirs +1`)
 
-cp -v $SRC_DIR/gpadmin-install-data-model.sh _root/opt/palette-insight-reporting/
-cp -v $SRC_DIR/insight-datamodel-install.sh _root/opt/palette-insight-reporting/
-cp -Rv $SRC_DIR/full-installs/v* _root/opt/palette-insight-reporting/full-installs
-cp -Rv $SRC_DIR/migrations/v* _root/opt/palette-insight-reporting/migrations
-cp -v $SRC_DIR/workflow_reporting.yml _root/etc/palette-insight-server
-cp -v $SRC_DIR/workflow_reporting_delta.yml _root/etc/palette-insight-server
+cp $SRC_DIR/gpadmin-install-data-model.sh _root/opt/palette-insight-reporting/
+cp $SRC_DIR/insight-datamodel-install.sh _root/opt/palette-insight-reporting/
+cp -R $SRC_DIR/full-installs/v* _root/opt/palette-insight-reporting/full-installs
+cp -R $SRC_DIR/migrations/v* _root/opt/palette-insight-reporting/migrations
+cp $SRC_DIR/workflow_reporting.yml _root/etc/palette-insight-server
+cp $SRC_DIR/workflow_reporting_delta.yml _root/etc/palette-insight-server
 
 # NOTE: Full installs are not required now. We are going to do them manully, in case we need a new one.
 # # Clean the destination for the current version
