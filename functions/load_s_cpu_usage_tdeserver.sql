@@ -240,7 +240,7 @@ begin
                                         and process_name like ''tdeserver%''
                                         and ts_rounded_15_secs >= date''#v_load_date_txt#''
                                         and ts_rounded_15_secs <= date''#v_load_date_txt#'' + interval''2 hours''
-                                    ) already_in on (already_in.p_threadinfo_id = threadinfo_id)
+                                    ) already_in on (already_in.p_threadinfo_id = p_id)
 						where
                             1 = 1
 				            and ts_rounded_15_secs >= date''#v_load_date_txt#''
