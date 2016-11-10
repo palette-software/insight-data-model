@@ -47,16 +47,15 @@ Palette Insight Reporting SQL Jobs
 %clean
 # noop
 
-
-
-
 %files
-%defattr(-,root,root,-)
+%defattr(-,insight,insight,-)
 
 # Reject config files already listed or parent directories, then prefix files
 # with "/", then make sure paths with spaces are quoted.
 /opt/palette-insight-reporting
 /etc/palette-insight-server
 
-%changelog
+%post
+su -c "/opt/palette-insight-reporting/gpadmin-install-data-model.sh" gpadmin
 
+%changelog
