@@ -57,6 +57,8 @@ script:
   # As dirs +1 returns paths with a tilde in them, we need to expand it
   - export SRC_DIR=$(eval echo `dirs +1`)
 
+  - cp -v $SRC_DIR/gpadmin-install-data-model.sh _root/opt/palette-insight-reporting/
+  - cp -v $SRC_DIR/insight-datamodel-install.sh _root/opt/palette-insight-reporting/
   - cp -Rv $SRC_DIR/full-installs/v* _root/opt/palette-insight-reporting/full-installs
   - cp -Rv $SRC_DIR/migrations/v* _root/opt/palette-insight-reporting/migrations
   - cp -v $SRC_DIR/workflow_reporting.yml _root/etc/palette-insight-server
