@@ -1,6 +1,24 @@
+#!/bin/bash
+
 # Build the RPM file
-export VERSION=$(echo $TRAVIS_TAG | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\(\.[0-9][0-9]\)*')
-export VERSION=${VERSION:-$LATEST_MIGRATION_VERSION} # When build is not tagged
+VERSION_FROM_TRAVIS=$(echo $TRAVIS_TAG | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\(\.[0-9][0-9]\)*')
+VERSION=${VERSION:-$VERSION_FROM_TRAVIS}
+VERSION=${VERSION:-$LATEST_MIGRATION_VERSION} # When build is not tagged
+export VERSION
+
+PACKAGEVERSION=${PACKAGEVERSION:-$TRAVIS_BUILD_NUMBER}
+export PACKAGEVERSION
+
+if [ -z "$VERSION" ]; then
+    echo "VERSION is missing"
+    exit 1
+fi
+
+if [ -z "$PACKAGEVERSION" ]; then
+    echo "PACKAGEVERSION is missing"
+    exit 1
+fi
+
 echo "Building RPM version $VERSION"
 pushd rpm-build
 
@@ -36,7 +54,7 @@ cp $SRC_DIR/workflow_reporting_delta.yml _root/etc/palette-insight-server
 # - unzip $SRC_DIR/$FULL_INSTALL_ZIP -d $CURRENT_VERSION_FULL_INSTALL_DIR
 
 # Pack the rpm archvie
-rpmbuild -bb --buildroot "$(pwd)/_root" --define "_rpmdir $(pwd)/_build" --define "version $VERSION" --define "buildrelease $TRAVIS_BUILD_NUMBER" ${SPEC_FILE}
+rpmbuild -bb --buildroot "$(pwd)/_root" --define "_rpmdir $(pwd)/_build" --define "version $VERSION" --define "buildrelease $PACKAGEVERSION" ${SPEC_FILE}
 
 # Pack it as a zip also
 zip -r $SRC_DIR/$PACKED_ZIP _root/opt/palette-insight-reporting
