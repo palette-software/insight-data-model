@@ -111,7 +111,7 @@ begin
 				where
                     1 = 1
 					and process_name = ''dataserver''
-                    and ts >= date''#v_load_date_txt#'' - interval''60 minutes''
+                    and ts >= date''#v_load_date_txt#''
                     and ts <= date''#v_load_date_txt#'' + interval''26 hours''
 				 ) slogs
 		) a
