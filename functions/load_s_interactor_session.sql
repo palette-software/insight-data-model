@@ -85,7 +85,7 @@ CREATE OR REPLACE FUNCTION load_s_interactor_session(p_schema_name text, p_load_
  	SELECT  
          cpu_usage_parent_vizql_session AS vizql_session,
          cpu_usage_process_name AS process_name,
-         MIN(cpu_usage_host_name) AS host_name,
+         cpu_usage_host_name AS host_name,
          SUM(cpu_usage_cpu_time_consumption_seconds) AS cpu_time_consumption_seconds,
          MIN(session_start_ts) AS session_start_ts,
          MIN(session_end_ts) AS session_end_ts,
@@ -208,9 +208,10 @@ CREATE OR REPLACE FUNCTION load_s_interactor_session(p_schema_name text, p_load_
          and cpu_usage_ts_rounded_15_secs < date''#v_load_date_txt#'' + interval''26 hours''
          and cpu_usage_parent_vizql_session IS NOT NULL
          and cpu_usage_parent_vizql_session not in (''default'', ''-'')
- 	GROUP BY 
+ 	GROUP BY
          cpu_usage_parent_vizql_session,
-         cpu_usage_process_name;
+         cpu_usage_process_name,
+         cpu_usage_host_name;
  	';
  		
  	v_sql := replace(v_sql, '#v_load_date_txt#', v_load_date_txt);   

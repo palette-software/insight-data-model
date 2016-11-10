@@ -242,7 +242,7 @@ begin
 				left outer join t_req_wb h on (h.vizql_session = s.parent_vizql_session)
                 where 1 = 1
                     and s.ts >= date''#v_load_date_txt#''
-	                and s.ts < date''#v_load_date_txt#'' + interval ''26 hours''
+	                and s.ts <= date''#v_load_date_txt#'' + interval ''26 hours''
 				) a
 			';
             	
