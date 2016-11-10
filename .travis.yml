@@ -25,7 +25,7 @@ env:
 
 script:
   # Determine version number
-  - VERSION_FROM_TRAVIS=$(echo "${TRAVIS_TAG}" | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\(\.[0-9][0-9]\)*')
+  - VERSION_FROM_TRAVIS=$(echo "${TRAVIS_TAG}" | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\(\.[0-9][0-9]\)*' || true)
   - LATEST_MIGRATION_VERSION=$(./maxversion.sh)
   - VERSION=${VERSION:-$VERSION_FROM_TRAVIS}
   - VERSION=${VERSION:-$LATEST_MIGRATION_VERSION} # When build is not tagged
