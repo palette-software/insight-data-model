@@ -25,6 +25,7 @@ env:
 
 script:
   - _scripts/build.sh
+  - _scripts/rpm.sh
 
 before_deploy:
   # Upload the RPM to the RPM repository
