@@ -7,6 +7,9 @@ declare
 	c refcursor;
 	rec record;	
 begin	
+        
+        execute 'set local search_path = ' || p_schema_name;
+        
 		v_sql_cur := 'select distinct 
 							#column_host_name# as host_name,
 							#column_ts_date# as ts_date,
