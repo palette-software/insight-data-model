@@ -1,11 +1,6 @@
 #!/bin/bash
 
 # Build the RPM file
-VERSION_FROM_TRAVIS=$(echo $TRAVIS_TAG | grep -o '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\(\.[0-9][0-9]\)*')
-VERSION=${VERSION:-$VERSION_FROM_TRAVIS}
-VERSION=${VERSION:-$LATEST_MIGRATION_VERSION} # When build is not tagged
-export VERSION
-
 PACKAGEVERSION=${PACKAGEVERSION:-$TRAVIS_BUILD_NUMBER}
 export PACKAGEVERSION
 
