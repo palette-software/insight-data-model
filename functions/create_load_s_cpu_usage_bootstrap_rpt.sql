@@ -119,6 +119,7 @@ begin
     																	
     								where
                                         1 = 1
+                                        and cpu_usage_host_name = ''''#host_name#''''
                                         and already_in.cpu_usage_p_id is null
     									and cpu.cpu_usage_ts_rounded_15_secs >= date''''#v_load_date_txt#''''
     									and cpu.cpu_usage_ts_rounded_15_secs <= date''''#v_load_date_txt#'''' + interval''''26 hours''''
