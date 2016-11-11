@@ -123,8 +123,8 @@
       name: p_cpu_usage - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_cpu_usage')
     -
-      name: p_cpu_usage - load_from_stage_to_dwh
-      query: select load_from_stage_to_dwh('{{Schema}}', 'p_cpu_usage')
+      name: p_cpu_usage - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_cpu_usage')
 -
   name: Load p_cpu_usage_report
   transaction: False
@@ -139,8 +139,8 @@
       name: p_cpu_usage_report - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_cpu_usage_report')
     -
-      name: p_cpu_usage_report - load_from_stage_to_dwh
-      query: select load_from_stage_to_dwh('{{Schema}}', 'p_cpu_usage_report')
+      name: p_cpu_usage_report - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_cpu_usage_report')
 -
   name: Load p_cpu_usage_agg_report
   transaction: False
@@ -155,8 +155,8 @@
       name: p_cpu_usage_agg_report - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_cpu_usage_agg_report')
     -
-      name: p_cpu_usage_agg_report - load_from_stage_to_dwh
-      query: select load_from_stage_to_dwh('{{Schema}}', 'p_cpu_usage_agg_report')
+      name: p_cpu_usage_agg_report - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_cpu_usage_agg_report')
 -
   name: Load p_interactor_session
   transaction: False
@@ -171,8 +171,8 @@
       name: p_interactor_session - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_interactor_session')
     -
-      name: p_interactor_session - load_from_stage_to_dwh
-      query: select load_from_stage_to_dwh('{{Schema}}', 'p_interactor_session')
+      name: p_interactor_session - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_interactor_session')
 -
   name: Load p_serverlogs_bootstrap_rpt
   transaction: False
@@ -187,8 +187,8 @@
       name: p_serverlogs_bootstrap_rpt - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_serverlogs_bootstrap_rpt')
     -
-      name: p_serverlogs_bootstrap_rpt - load_from_stage_to_dwh
-      query: select load_from_stage_to_dwh('{{Schema}}', 'p_serverlogs_bootstrap_rpt')
+      name: p_serverlogs_bootstrap_rpt - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_serverlogs_bootstrap_rpt')
 -
   name: Load p_cpu_usage_bootstrap_rpt
   transaction: False
@@ -203,5 +203,5 @@
       name: p_cpu_usage_bootstrap_rpt - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_cpu_usage_bootstrap_rpt')
     -
-      name: p_cpu_usage_bootstrap_rpt - load_from_stage_to_dwh
-      query: select load_from_stage_to_dwh('{{Schema}}', 'p_cpu_usage_bootstrap_rpt')
+      name: p_cpu_usage_bootstrap_rpt - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_cpu_usage_bootstrap_rpt')
