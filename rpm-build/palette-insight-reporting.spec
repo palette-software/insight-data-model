@@ -1,3 +1,6 @@
+# Do not clean the install folder
+%define __spec_install_pre true
+
 # Use md5 file digest method.
 # The first macro is the one used in RPM v4.9.1.1
 %define _binary_filedigest_algorithm 1
