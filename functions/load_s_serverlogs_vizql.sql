@@ -74,7 +74,7 @@ begin
 			serverlogs sl
 	where
 		substr(sl.filename, 1, 11) = ''vizqlserver'' and
-		sl.ts >= date''#v_load_date_txt#'' and
+		sl.ts >= date''#v_load_date_txt#'' - interval''2 hours'' and
 		sl.ts <= date''#v_load_date_txt#'' + interval''26 hours''
 	'	
 	;

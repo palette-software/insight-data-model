@@ -223,7 +223,7 @@ begin
 														 s_tabproto.ts >= s_spawner.start_ts)						
 			where
 				substr(s_tabproto.filename, 1, 11) = ''tabprotosrv'' and
-				s_tabproto.ts >= date''#v_load_date_txt#'' and 
+				s_tabproto.ts >= date''#v_load_date_txt#'' - interval''2 hours'' and 
 				s_tabproto.ts <= date''#v_load_date_txt#'' + interval''26 hours''
 			) a
 		where 

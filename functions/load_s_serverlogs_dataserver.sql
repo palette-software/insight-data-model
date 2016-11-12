@@ -114,7 +114,7 @@ begin
 			left outer join t_s_spawner s_spawner on (s_spawner.spawned_session = substr(s_dataserver.sess, 1, 32))
 		where
 			substr(s_dataserver.filename, 1, 10) = ''dataserver'' and
-			s_dataserver.ts >= date''#v_load_date_txt#'' and
+			s_dataserver.ts >= date''#v_load_date_txt#'' - interval''2 hours'' and
 			s_dataserver.ts <= date''#v_load_date_txt#'' + interval''26 hours''
 		';
 	

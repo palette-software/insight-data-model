@@ -278,7 +278,7 @@ begin
 		  
     	  where
 		  		pl0.filename like ''tdeserver%'' and
-				pl0.ts >= date''#v_load_date_txt#'' and
+				pl0.ts >= date''#v_load_date_txt#'' - interval''2 hours'' and
 				pl0.ts <= date''#v_load_date_txt#'' + interval''26 hours''
  		) pl
 		left join s_plainlogs_session_map sm on pl.file_prefix_to_join = sm.file_prefix_to_join

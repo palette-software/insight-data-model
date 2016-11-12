@@ -115,7 +115,7 @@ begin
 				where
                     1 = 1
 					and process_name = ''tabprotosrv''
-                    and ts >= date''#v_load_date_txt#''
+                    and ts >= date''#v_load_date_txt#'' - interval''2 hours''
                     and ts <= date''#v_load_date_txt#'' + interval''26 hours''
 				 ) slogs
 		) a
