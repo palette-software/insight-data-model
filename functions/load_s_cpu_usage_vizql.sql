@@ -240,7 +240,9 @@ begin
 					    				tri.process_id = slogs.process_id AND 
 					    				tri.thread_id = slogs.thread_id AND
 										slogs.session_start_ts between tri.start_ts and tri.ts + interval ''15 sec'' AND
-										tri.ts <= coalesce(slogs.ts_destroy_sess, tri.ts)
+										tri.ts <= coalesce(slogs.ts_destroy_sess, tri.ts) AND
+                                        -- try to avoid associations to long running threads'' entries                                        
+                                        abs(extract(''epoch'' from (tri.ts - slogs.session_start_ts))) <= 2 * 60 * 60
 					  				)
 						left outer join h_sites sites on (sites.name = slogs.site and slogs.session_start_ts between sites.p_valid_from and sites.p_valid_to)
 				   ) thread_with_sess
