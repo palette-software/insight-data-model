@@ -24,6 +24,8 @@ begin
         s_serverlogs
     where
         1 = 1
+        and ts >= p_load_date
+        and ts <= p_load_date + interval'26 hours'
         and parent_vizql_session is not null
         and parent_vizql_session not in ('-', 'default')
     group by         
@@ -40,6 +42,8 @@ begin
         s_serverlogs
     where
         1 = 1
+        and ts >= p_load_date
+        and ts <= p_load_date + interval'26 hours'
         and parent_vizql_session is null        
         and parent_dataserver_session is not null
         and parent_dataserver_session not in ('-', 'default')
