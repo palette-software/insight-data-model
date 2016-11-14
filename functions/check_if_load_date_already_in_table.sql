@@ -14,6 +14,10 @@ begin
 	v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
     execute v_sql_cur into v_max_ts;
     
+    if v_max_ts = date'1001-01-01' then
+        return 0;
+    end if;
+    
     if p_allow_next_day_overflow then
         v_load_date := p_load_date + v_day_overflow;
     end if;
