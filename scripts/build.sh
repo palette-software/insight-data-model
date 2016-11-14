@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Stop on first error
+set -e
+
 # Create the full installer
 sed -i "s/#version_number#/$TRAVIS_TAG/g" ./full_install.sql
 cat full_install.sql

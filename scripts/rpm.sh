@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Stop on first error
+set -e
+
 # Build the RPM file
 PACKAGEVERSION=${PACKAGEVERSION:-$TRAVIS_BUILD_NUMBER}
 export PACKAGEVERSION
@@ -49,8 +52,8 @@ cp $SRC_DIR/workflow_reporting_delta.yml _root/etc/palette-insight-server
 # - unzip $SRC_DIR/$FULL_INSTALL_ZIP -d $CURRENT_VERSION_FULL_INSTALL_DIR
 
 # Pack the rpm archvie
-rpmbuild --quiet -bb --buildroot "$(pwd)/_root" --define "_rpmdir $(pwd)/_build" --define "version $VERSION" --define "buildrelease $PACKAGEVERSION" ${SPEC_FILE} || exit 2
+rpmbuild --quiet -bb --buildroot "$(pwd)/_root" --define "_rpmdir $(pwd)/_build" --define "version $VERSION" --define "buildrelease $PACKAGEVERSION" ${SPEC_FILE}
 
 # Pack it as a zip also
-zip -qr $SRC_DIR/$PACKED_ZIP _root/opt/palette-insight-reporting || exit 2
+zip -qr $SRC_DIR/$PACKED_ZIP _root/opt/palette-insight-reporting
 popd
