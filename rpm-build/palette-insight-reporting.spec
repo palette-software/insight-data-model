@@ -1,3 +1,6 @@
+# Do not clean the install folder
+%define __spec_install_pre true
+
 # Use md5 file digest method.
 # The first macro is the one used in RPM v4.9.1.1
 %define _binary_filedigest_algorithm 1
@@ -47,16 +50,15 @@ Palette Insight Reporting SQL Jobs
 %clean
 # noop
 
-
-
-
 %files
-%defattr(-,root,root,-)
+%defattr(-,insight,insight,-)
 
 # Reject config files already listed or parent directories, then prefix files
 # with "/", then make sure paths with spaces are quoted.
 /opt/palette-insight-reporting
 /etc/palette-insight-server
 
-%changelog
+%post
+su -c "/opt/palette-insight-reporting/gpadmin-install-data-model.sh" gpadmin
 
+%changelog
