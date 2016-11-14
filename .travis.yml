@@ -31,8 +31,8 @@ script:
   - VERSION=${VERSION:-$LATEST_MIGRATION_VERSION} # When build is not tagged
   - export VERSION
 
-  - _scripts/build.sh
-  - _scripts/rpm.sh
+  - scripts/build.sh
+  - scripts/rpm.sh
 
 before_deploy:
   # Upload the RPM to the RPM repository
