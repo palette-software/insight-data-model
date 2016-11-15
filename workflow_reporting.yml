@@ -2,7 +2,7 @@
   name: Set environment
   queries:
     -
-      name: Palette Insight - Reporting Version={{Version}}
+      name: Palette Insight - Reporting Version={{Version}}, load_date={{LoadDate}}
       query: set application_name = 'Palette Insight - Reporting Version={{Version}}'
     -
       name: Set search_path to {{Schema}}
@@ -10,16 +10,6 @@
     -
       name: Log Data Model Version
       query: select first_value(version_number) over (order by id desc) as model_version from db_version_meta v limit 1
--
-  name: Load p_threadinfo
-  transaction: False
-  queries:
-    -
-      name: p_threadinfo - manage_partitions
-      query: select manage_partitions('{{Schema}}', 'p_threadinfo')
-    -
-      name: load_p_threadinfo
-      query: select load_p_threadinfo('{{Schema}}', 'DELTA')
 -
   name: Load s_serverlogs
   transaction: False
@@ -29,32 +19,36 @@
       query: truncate table s_serverlogs
     -
       name: load_s_serverlogs_rest
-      query: select load_s_serverlogs_rest('{{Schema}}')
+      query: select load_s_serverlogs_rest('{{Schema}}', date'{{LoadDate}}')
     -
       name: load_s_serverlogs_vizql
-      query: select load_s_serverlogs_vizql('{{Schema}}')
+      query: select load_s_serverlogs_vizql('{{Schema}}', date'{{LoadDate}}')
     -
       name: load_s_serverlogs_dataserver
-      query: select load_s_serverlogs_dataserver('{{Schema}}')
+      query: select load_s_serverlogs_dataserver('{{Schema}}', date'{{LoadDate}}')
     -
       name: load_s_serverlogs_tabproto
-      query: select load_s_serverlogs_tabproto('{{Schema}}')
+      query: select load_s_serverlogs_tabproto('{{Schema}}', date'{{LoadDate}}')
     -
       name: load_s_serverlogs_tdeserver
-      query: select load_s_serverlogs_tdeserver('{{Schema}}')
+      query: select load_s_serverlogs_tdeserver('{{Schema}}', date'{{LoadDate}}')
     -
       name: p_serverlogs - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_serverlogs')
 -
-  name: Load p_serverlogs
-  transaction: True
-  queries:        
+  name: Load s_serverlogs_plus_2_hours
+  transaction: False
+  queries:
     -
-      name: delete_recent_records_from_p_serverlogs
-      query: select delete_recent_records_from_p_serverlogs('{{Schema}}')
+      name: load_s_serverlogs_plus_2_hours
+      query: select load_s_serverlogs_plus_2_hours('{{Schema}}', date'{{LoadDate}}')
+-
+  name: Load p_serverlogs
+  transaction: False
+  queries:
     -
       name: insert_p_serverlogs_from_s_serverlogs
-      query: select insert_p_serverlogs_from_s_serverlogs('{{Schema}}')
+      query: select insert_p_serverlogs_from_s_serverlogs('{{Schema}}', date'{{LoadDate}}')
 -
   name: Load p_http_requests
   transaction: True
@@ -97,13 +91,13 @@
       query: truncate table s_serverlogs_compressed
     -
       name: load_s_serverlogs_vizql_compressed
-      query: select load_s_serverlogs_vizql_compressed('{{Schema}}')
+      query: select load_s_serverlogs_vizql_compressed('{{Schema}}', date'{{LoadDate}}')
     -
       name: load_s_serverlogs_tabproto_compressed
-      query: select load_s_serverlogs_tabproto_compressed('{{Schema}}')
+      query: select load_s_serverlogs_tabproto_compressed('{{Schema}}', date'{{LoadDate}}')
     -
       name: load_s_serverlogs_dataserver_compressed
-      query: select load_s_serverlogs_dataserver_compressed('{{Schema}}')
+      query: select load_s_serverlogs_dataserver_compressed('{{Schema}}', date'{{LoadDate}}')
     -
       name: analyze s_serverlogs_compressed
       query: analyze s_serverlogs_compressed
@@ -112,25 +106,25 @@
       query: truncate table s_cpu_usage
     -
       name: load_s_cpu_usage_vizql
-      query: select load_s_cpu_usage_vizql('{{Schema}}')
+      query: select load_s_cpu_usage_vizql('{{Schema}}', date'{{LoadDate}}')
     -
       name: load_s_cpu_usage_dataserver
-      query: select load_s_cpu_usage_dataserver('{{Schema}}')
+      query: select load_s_cpu_usage_dataserver('{{Schema}}', date'{{LoadDate}}')
     -
       name: load_s_cpu_usage_tabproto
-      query: select load_s_cpu_usage_tabproto('{{Schema}}')
+      query: select load_s_cpu_usage_tabproto('{{Schema}}', date'{{LoadDate}}')
     -
       name: load_s_cpu_usage_rest
-      query: select load_s_cpu_usage_rest('{{Schema}}')
+      query: select load_s_cpu_usage_rest('{{Schema}}', date'{{LoadDate}}')
     -
       name: load_s_cpu_usage_tdeserver
-      query: select load_s_cpu_usage_tdeserver('{{Schema}}')
+      query: select load_s_cpu_usage_tdeserver('{{Schema}}', date'{{LoadDate}}')
     -
       name: p_cpu_usage - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_cpu_usage')
     -
-      name: p_cpu_usage - load_from_stage_to_dwh
-      query: select load_from_stage_to_dwh('{{Schema}}', 'p_cpu_usage')
+      name: p_cpu_usage - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_cpu_usage')
 -
   name: Load p_cpu_usage_report
   transaction: False
@@ -140,13 +134,13 @@
       query: truncate table s_cpu_usage_report
     -
       name: load_s_cpu_usage_report
-      query: select load_s_cpu_usage_report('{{Schema}}' )
+      query: select load_s_cpu_usage_report('{{Schema}}', date'{{LoadDate}}')
     -
       name: p_cpu_usage_report - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_cpu_usage_report')
     -
-      name: p_cpu_usage_report - load_from_stage_to_dwh
-      query: select load_from_stage_to_dwh('{{Schema}}', 'p_cpu_usage_report')
+      name: p_cpu_usage_report - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_cpu_usage_report')
 -
   name: Load p_cpu_usage_agg_report
   transaction: False
@@ -156,13 +150,13 @@
       query: truncate table s_cpu_usage_agg_report
     -
       name: load_s_cpu_usage_agg_report
-      query: select load_s_cpu_usage_agg_report('{{Schema}}')
+      query: select load_s_cpu_usage_agg_report('{{Schema}}', date'{{LoadDate}}')
     -
       name: p_cpu_usage_agg_report - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_cpu_usage_agg_report')
     -
-      name: p_cpu_usage_agg_report - load_from_stage_to_dwh
-      query: select load_from_stage_to_dwh('{{Schema}}', 'p_cpu_usage_agg_report')
+      name: p_cpu_usage_agg_report - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_cpu_usage_agg_report')
 -
   name: Load p_interactor_session
   transaction: False
@@ -172,16 +166,13 @@
       query: truncate table s_interactor_session
     -
       name: load_s_interactor_session
-      query: select load_s_interactor_session('{{Schema}}')
+      query: select load_s_interactor_session('{{Schema}}', date'{{LoadDate}}')
     -
       name: p_interactor_session - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_interactor_session')
     -
-      name: p_interactor_session - load_from_stage_to_dwh
-      query: select load_from_stage_to_dwh('{{Schema}}', 'p_interactor_session')
-    -
-      name: handle_utc_midnight_interactor_sess
-      query: select handle_utc_midnight_interactor_sess('{{Schema}}')
+      name: p_interactor_session - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_interactor_session')
 -
   name: Load p_serverlogs_bootstrap_rpt
   transaction: False
@@ -191,13 +182,13 @@
       query: truncate table s_serverlogs_bootstrap_rpt
     -
       name: load_s_serverlogs_bootstrap_rpt
-      query: select load_s_serverlogs_bootstrap_rpt('{{Schema}}')
+      query: select load_s_serverlogs_bootstrap_rpt('{{Schema}}', date'{{LoadDate}}')
     -
       name: p_serverlogs_bootstrap_rpt - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_serverlogs_bootstrap_rpt')
     -
-      name: p_serverlogs_bootstrap_rpt - load_from_stage_to_dwh
-      query: select load_from_stage_to_dwh('{{Schema}}', 'p_serverlogs_bootstrap_rpt')
+      name: p_serverlogs_bootstrap_rpt - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_serverlogs_bootstrap_rpt')
 -
   name: Load p_cpu_usage_bootstrap_rpt
   transaction: False
@@ -207,10 +198,10 @@
       query: truncate table s_cpu_usage_bootstrap_rpt
     -
       name: load_s_cpu_usage_bootstrap_rpt
-      query: select load_s_cpu_usage_bootstrap_rpt('{{Schema}}')
+      query: select load_s_cpu_usage_bootstrap_rpt('{{Schema}}', date'{{LoadDate}}')
     -
       name: p_cpu_usage_bootstrap_rpt - manage_partitions
       query: select manage_partitions('{{Schema}}', 'p_cpu_usage_bootstrap_rpt')
     -
-      name: p_cpu_usage_bootstrap_rpt - load_from_stage_to_dwh
-      query: select load_from_stage_to_dwh('{{Schema}}', 'p_cpu_usage_bootstrap_rpt')
+      name: p_cpu_usage_bootstrap_rpt - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_cpu_usage_bootstrap_rpt')
