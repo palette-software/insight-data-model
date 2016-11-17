@@ -59,6 +59,6 @@ Palette Insight Reporting SQL Jobs
 /etc/palette-insight-server
 
 %post
-su -c "/opt/palette-insight-reporting/gpadmin-install-data-model.sh" gpadmin
+su -c "/opt/palette-insight-reporting/gpadmin-install-data-model.sh" gpadmin 2>&1 > /var/log/palette-insight-reporting/install-data-model.log
 
 %changelog
