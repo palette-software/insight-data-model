@@ -76,7 +76,8 @@ begin
 					parent_dataserver_session,
 					spawned_by_parent_ts,
 					parent_vizql_destroy_sess_ts,
-					parent_process_type
+					parent_process_type,
+                    user_type
 				)
 				with t_slogs as
 				(
@@ -176,7 +177,8 @@ begin
 				  thread_with_sess.parent_dataserver_session as parent_dataserver_session,
 				  spawned_by_parent_ts as spawned_by_parent_ts,
 				  parent_vizql_destroy_sess_ts as parent_vizql_destroy_sess_ts,
-				  parent_process_type as parent_process_type
+				  parent_process_type as parent_process_type,
+                  http_req_wb.user_type
 				FROM 
 					(select
 							tri.p_id
