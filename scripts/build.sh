@@ -3,7 +3,7 @@
 # Stop on first error
 set -e
 
-mkdir -p var/log/palette-insight-reporting
+mkdir -p rpm_build/var/log/palette-insight-reporting
 
 # Create the full installer
 sed -i "s/#version_number#/$TRAVIS_TAG/g" ./full_install.sql
