@@ -32,6 +32,7 @@ export SPEC_FILE=palette-insight-reporting.spec
 mkdir -p _root/opt/palette-insight-reporting/full-installs
 mkdir -p _root/opt/palette-insight-reporting/migrations
 mkdir -p _root/etc/palette-insight-server
+mkdir -p _root/var/log/palette-insight-reporting
 mkdir -p _build
 
 # As dirs +1 returns paths with a tilde in them, we need to expand it

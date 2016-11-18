@@ -57,8 +57,9 @@ Palette Insight Reporting SQL Jobs
 # with "/", then make sure paths with spaces are quoted.
 /opt/palette-insight-reporting
 /etc/palette-insight-server
+%dir /var/log/palette-insight-reporting
 
 %post
-su -c "/opt/palette-insight-reporting/gpadmin-install-data-model.sh" gpadmin 2>&1 > /var/log/palette-insight-reporting/install-data-model.log
+su -c "/opt/palette-insight-reporting/gpadmin-install-data-model.sh" gpadmin &> /var/log/palette-insight-reporting/install-data-model.log
 
 %changelog
