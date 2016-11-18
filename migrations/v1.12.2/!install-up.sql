@@ -215,17 +215,17 @@ ALTER TABLE p_cpu_usage_report ALTER workbook_view_count SET STATISTICS 0;
 
 
 
-ALTER TABLE p_serverlogs ALTER k SET STATISTICS -1;
-ALTER TABLE p_serverlogs ALTER p_cre_date SET STATISTICS -1;
-ALTER TABLE p_serverlogs ALTER p_filepath SET STATISTICS -1;
-ALTER TABLE p_serverlogs ALTER v SET STATISTICS -1;
-ALTER TABLE p_serverlogs ALTER v_truncated SET STATISTICS -1;
+ALTER TABLE p_serverlogs ALTER k SET STATISTICS 0;
+ALTER TABLE p_serverlogs ALTER p_cre_date SET STATISTICS 0;
+ALTER TABLE p_serverlogs ALTER p_filepath SET STATISTICS 0;
+ALTER TABLE p_serverlogs ALTER v SET STATISTICS 0;
+ALTER TABLE p_serverlogs ALTER v_truncated SET STATISTICS 0;
 
 
-ALTER TABLE serverlogs ALTER k SET STATISTICS -1;
-ALTER TABLE serverlogs ALTER p_cre_date SET STATISTICS -1;
-ALTER TABLE serverlogs ALTER p_filepath SET STATISTICS -1;
-ALTER TABLE serverlogs ALTER v SET STATISTICS -1;
+ALTER TABLE serverlogs ALTER k SET STATISTICS 0;
+ALTER TABLE serverlogs ALTER p_cre_date SET STATISTICS 0;
+ALTER TABLE serverlogs ALTER p_filepath SET STATISTICS 0;
+ALTER TABLE serverlogs ALTER v SET STATISTICS 0;
     
 
 insert into db_version_meta(version_number) values ('v1.12.2');
