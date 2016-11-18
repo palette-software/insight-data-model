@@ -228,6 +228,6 @@ ALTER TABLE serverlogs ALTER p_filepath SET STATISTICS -1;
 ALTER TABLE serverlogs ALTER v SET STATISTICS -1;
     
 
-insert into db_version_meta(version_number) values ('v1.12.1');
+insert into db_version_meta(version_number) values ('v1.12.2');
 
 COMMIT;
