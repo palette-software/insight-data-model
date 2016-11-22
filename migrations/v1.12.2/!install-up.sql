@@ -4,6 +4,8 @@ set role palette_palette_updater;
 
 BEGIN;
 
+grant select on p_threadinfo_delta to palette_palette_looker;
+
 ALTER TABLE p_cpu_usage_report ALTER cpu_usage_cpu_core_consumption SET STATISTICS 0;
 ALTER TABLE p_cpu_usage_report ALTER cpu_usage_cpu_time_consumption_hours SET STATISTICS 0;
 ALTER TABLE p_cpu_usage_report ALTER cpu_usage_cpu_time_consumption_minutes SET STATISTICS 0;
