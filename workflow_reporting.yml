@@ -74,11 +74,11 @@
       query: analyze s_http_requests_with_workbooks
 -
   name: Load p_background_jobs
-  transaction: True
+  transaction: False
   queries:
     -
-      name: delete from p_background_jobs
-      query: delete from p_background_jobs
+      name:p_background_jobs - manage_partitions
+      query: select manage_partitions('{{Schema}}', 'p_background_jobs')
     -
       name: select load_p_background_jobs
       query: select load_p_background_jobs('{{Schema}}')

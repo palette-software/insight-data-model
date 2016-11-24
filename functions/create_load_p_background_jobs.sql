@@ -56,14 +56,21 @@ begin
 				declare
 					v_sql text;
 					v_num_inserted bigint;
-					
+					v_sql_cur text;
+                    v_max_date date;
 				begin	
+                        execute ''set local search_path = '' || p_schema_name;
+                        
+                        v_sql_cur := ''select get_max_ts(''''#schema_name#'''', ''''p_background_jobs'''')'';
+                        v_sql_cur := replace(v_sql_cur, ''#schema_name#'', p_schema_name);
+                        execute v_sql_cur into v_max_date;
+                            
 						v_sql := 
 								''								
 				';
 					
 					
-		v_sql := v_sql || 'insert into #schema_name#.p_background_jobs(background_jobs_id,';
+		v_sql := v_sql || 'insert into p_background_jobs(background_jobs_p_id, background_jobs_id,';
 		
 		v_sql := v_sql || v_insert_part;
 		v_sql := v_sql || '
@@ -84,7 +91,7 @@ begin
 		
 		
 		
-		v_sql := v_sql || ' select distinct bj.id,';		
+		v_sql := v_sql || ' select distinct bj.p_id, bj.id,';
 		v_sql := v_sql || v_select_part;
 		
 		v_sql := v_sql || '				
@@ -106,7 +113,7 @@ begin
 		
 		v_sql := v_sql || 
 		' FROM  
-				  #schema_name#.background_jobs bj
+				  background_jobs bj
 				  LEFT JOIN 
 				  (
 				    SELECT DISTINCT
@@ -139,7 +146,7 @@ begin
 				          h_workbooks.p_valid_from,
 				          h_workbooks.p_valid_to,
 				          h_workbooks.p_id
-				        FROM #schema_name#.h_workbooks 
+				        FROM h_workbooks 
 				        UNION ALL
 				        SELECT
 				          ''''Datasource'''' wd_type,
@@ -150,7 +157,7 @@ begin
 				          h_datasources.p_valid_from,
 				          h_datasources.p_valid_to,
 				          h_datasources.p_id
-				        FROM #schema_name#.h_datasources 
+				        FROM h_datasources 
 				      ) workbooks_datasources,
 				      (
 				        SELECT 
@@ -159,7 +166,7 @@ begin
 				          p_valid_from,
 				          p_valid_to,
 				          p_id
-				        FROM #schema_name#.h_users 
+				        FROM h_users 
 				      ) users,
 				      (
 				        SELECT 
@@ -169,7 +176,7 @@ begin
 				          p_valid_from,
 				          p_valid_to,
 				          p_id
-				        FROM #schema_name#.h_system_users 
+				        FROM h_system_users 
 				      ) system_users,
 				      (
 				        SELECT 
@@ -178,7 +185,7 @@ begin
 				          p_valid_from,
 				          p_valid_to,
 				          p_id
-				        FROM #schema_name#.h_projects 
+				        FROM h_projects 
 				      ) projects
 				    WHERE
 				      workbooks_datasources.owner_id=users.id AND 
@@ -203,10 +210,17 @@ begin
 				      p_valid_from,
 				      p_valid_to,
 				      p_id
-				    FROM #schema_name#.h_sites 
+				    FROM h_sites 
 				  ) sites 
 				  ON sites.id = bj.site_id
-				  AND bj.updated_at BETWEEN sites.p_valid_from AND sites.p_valid_to				
+				  AND bj.updated_at BETWEEN sites.p_valid_from AND sites.p_valid_to
+         where 1 = 1
+            and bj.p_id > (select coalesce(max(background_jobs_p_id), 0)
+                                 from
+                                    p_background_jobs
+                                 where
+                                    created_at >= date''''#v_max_date#''''
+                                  )
 				'';
 		
 		
@@ -214,7 +228,7 @@ begin
 		
 		v_sql := v_sql || '		
 											
-				v_sql := replace(v_sql, ''#schema_name#'', p_schema_name);				
+				v_sql := replace(v_sql, ''#v_max_date#'', to_char(v_max_date, ''yyyy-mm-dd''));
 				
 				raise notice ''I: %'', v_sql;
 				execute v_sql;		
