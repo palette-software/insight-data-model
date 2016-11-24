@@ -7,6 +7,7 @@ begin
 
 		v_sql := 'create table ' || p_schema_name || '.p_http_requests ( 
 					p_id bigserial,
+                    http_requests_p_id bigint,
 					http_requests_id bigint,
 		';
 								
@@ -53,7 +54,13 @@ begin
 				
 		v_sql := v_sql || ')
 		WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
-		DISTRIBUTED BY (p_id)';
+		DISTRIBUTED BY (p_id)
+        PARTITION BY RANGE (created_at)
+        (PARTITION "100101"
+        	START (date ''1001-01-01'') INCLUSIVE
+        	END (date ''1001-02-01'') EXCLUSIVE
+        WITH (appendonly=true, orientation=column, compresstype=quicklz)
+        )';
 				
 		raise notice 'I: %', v_sql;
 		execute v_sql;

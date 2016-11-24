@@ -4,7 +4,7 @@ CREATE OR REPLACE FUNCTION load_s_interactor_session(p_schema_name text, p_load_
  declare
  	v_sql text;
  	v_num_inserted bigint := 0;
-     v_load_date_txt text := to_char(p_load_date, 'yyyy-mm-dd');
+    v_load_date_txt text := to_char(p_load_date, 'yyyy-mm-dd');
  BEGIN	
  
  	execute 'set local search_path = ' || p_schema_name;
@@ -76,10 +76,11 @@ CREATE OR REPLACE FUNCTION load_s_interactor_session(p_schema_name text, p_load_
  					http_user_agent,
                      view_id
  				FROM p_http_requests
+                WHERE 1 = 1
+                    and created_at >= date''#v_load_date_txt#'' - interval ''1 day''
+ 			        and created_at <= date''#v_load_date_txt#'' + interval ''26 hours''
  			) rowno	
- 		WHERE
- 			created_at >= date''#v_load_date_txt#'' - interval ''1 day'' and
- 			created_at < date''#v_load_date_txt#'' + interval ''2 day'' and
+ 		WHERE 			
  			action in (''show'', ''bootstrapSession'')
  		)
  	SELECT  

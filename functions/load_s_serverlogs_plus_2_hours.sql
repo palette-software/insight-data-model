@@ -141,6 +141,7 @@ begin
 						p_http_requests r					
 					WHERE
                       created_at >= date''#v_load_date_txt#'' - interval''1 day'' AND
+                      created_at <= date''#v_load_date_txt#'' + interval''26 hours'' AND
 					  coalesce(r.currentsheet, '''') <> '''' AND 
 					  r.vizql_session IS NOT NULL AND 
 					  r.vizql_session <> ''-'' AND 

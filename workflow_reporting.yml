@@ -51,11 +51,11 @@
       query: select insert_p_serverlogs_from_s_serverlogs('{{Schema}}', date'{{LoadDate}}')
 -
   name: Load p_http_requests
-  transaction: True
+  transaction: False
   queries:
     -
-      name: delete from p_http_requests
-      query: delete from p_http_requests
+      name: p_http_requests - manage_partitions
+      query: select manage_partitions('{{Schema}}', 'p_http_requests')
     -
       name: load_p_http_requests
       query: select load_p_http_requests('{{Schema}}')
@@ -68,7 +68,7 @@
       query: truncate table s_http_requests_with_workbooks
     -
       name: load_s_http_requests_with_workbooks
-      query: select load_s_http_requests_with_workbooks('{{Schema}}')
+      query: select load_s_http_requests_with_workbooks('{{Schema}}', date'{{LoadDate}}')
     -
       name: analyze s_http_requests_with_workbooks
       query: analyze s_http_requests_with_workbooks

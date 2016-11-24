@@ -66,14 +66,22 @@ begin
 				declare
 					v_sql text;
 					v_num_inserted bigint;
-					
-				begin	                        
+					v_sql_cur text;
+                    v_max_date date;
+				begin
+                
+                            execute ''set local search_path = '' || p_schema_name;
+                            
+                            v_sql_cur := ''select get_max_ts(''''#schema_name#'''', ''''p_threadinfo_delta'''')'';
+                        	v_sql_cur := replace(v_sql_cur, ''#schema_name#'', p_schema_name);
+                        	execute v_sql_cur into v_max_date;
+                            
 							v_sql := 
 								''								
 				';
 					
 					
-		v_sql := v_sql || 'insert into #schema_name#.p_http_requests(http_requests_id,';	
+		v_sql := v_sql || 'insert into p_http_requests(http_requests_p_id, http_requests_id,';	
 		
 		v_sql := v_sql || v_insert_part;
 		v_sql := v_sql || '
@@ -107,9 +115,19 @@ begin
 						SPLIT_PART(t.currentsheet,''''/'''',1) workbook_url,
                         (string_to_array(t.currentsheet, ''''/'''')) [1] || ''''/sheets/'''' || (string_to_array(t.currentsheet, ''''/'''')) [2] as view_rep_url
 				from 
-					#schema_name#.http_requests t)
+					http_requests t
+                where 1 = 1
+                    and t.p_id > (select coalesce(max(http_requests_p_id), 0)
+                                 from
+                                    p_http_requests
+                                 where
+                                    created_at >= date''''#v_max_date#''''
+                                  )
+                    
+                )
 					
 				SELECT
+                    r.p_id,
 					r.id,
   		';
 		
@@ -145,25 +163,25 @@ begin
 		v_sql := v_sql || 
 		' FROM  
 				    t_requests r
-				    left outer join #schema_name#.h_users u on (u.id  = r.user_id and
+				    left outer join h_users u on (u.id  = r.user_id and
 																u.site_id = r.site_id and
 															    r.created_at between u.p_valid_from and u.p_valid_to)
-				    left outer join #schema_name#.h_system_users su on (su.id = u.system_user_id and
+				    left outer join h_system_users su on (su.id = u.system_user_id and
 																			r.created_at between su.p_valid_from and su.p_valid_to)															  															  
-					left outer join #schema_name#.h_workbooks wb on (wb.site_id = r.site_id and
+					left outer join h_workbooks wb on (wb.site_id = r.site_id and
 																	wb.repository_url = r.workbook_url and 
 													  				r.created_at between wb.p_valid_from and wb.p_valid_to)
-					left outer join #schema_name#.h_projects p on (p.site_id = r.site_id and
+					left outer join h_projects p on (p.site_id = r.site_id and
 																	   p.id = wb.project_id and
 																	   r.created_at between p.p_valid_from and p.p_valid_to)
-				    left outer join #schema_name#.h_users wb_u on (wb_u.id  = wb.owner_id and
+				    left outer join h_users wb_u on (wb_u.id  = wb.owner_id and
 																   wb_u.site_id = wb.site_id and
 																	  r.created_at between wb_u.p_valid_from and wb_u.p_valid_to)
-				    left outer join #schema_name#.h_system_users wb_su on (wb_su.id = wb_u.system_user_id and
+				    left outer join h_system_users wb_su on (wb_su.id = wb_u.system_user_id and
 																			  r.created_at between wb_su.p_valid_from and wb_su.p_valid_to)
-				 	left outer join #schema_name#.h_sites s on (s.id = r.site_id and
+				 	left outer join h_sites s on (s.id = r.site_id and
 				  						  							r.created_at between s.p_valid_from and s.p_valid_to)
-                    left outer join #schema_name#.h_views v on (v.site_id = r.site_id and
+                    left outer join h_views v on (v.site_id = r.site_id and
                                                                 v.repository_url = r.view_rep_url and
 				  						  						r.created_at between v.p_valid_from and v.p_valid_to)
 			'';				
@@ -173,7 +191,7 @@ begin
 		
 		v_sql := v_sql || '		
 											
-				v_sql := replace(v_sql, ''#schema_name#'', p_schema_name);				
+				v_sql := replace(v_sql, ''#v_max_date#'', to_char(v_max_date, ''yyyy-mm-dd''));
 				
 				raise notice ''I: %'', v_sql;
 				execute v_sql;		
