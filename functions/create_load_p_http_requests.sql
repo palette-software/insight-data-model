@@ -72,7 +72,7 @@ begin
                 
                             execute ''set local search_path = '' || p_schema_name;
                             
-                            v_sql_cur := ''select get_max_ts(''''#schema_name#'''', ''''p_threadinfo_delta'''')'';
+                            v_sql_cur := ''select get_max_ts(''''#schema_name#'''', ''''p_http_requests'''')'';
                         	v_sql_cur := replace(v_sql_cur, ''#schema_name#'', p_schema_name);
                         	execute v_sql_cur into v_max_date;
                             
