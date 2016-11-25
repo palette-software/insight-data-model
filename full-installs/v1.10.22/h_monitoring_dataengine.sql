@@ -1,10 +1,14 @@
-CREATE TABLE h_subscriptions_customized_views
+CREATE TABLE h_monitoring_dataengine
 (
 	p_id bigserial,
 	p_filepath text,
-	id integer,
-	subscription_id integer,
-	customized_view_id integer,
+	primary_ip character varying(255),
+	secondary_ip character varying(255),
+	updated_at timestamp without time zone,
+	primary_port integer,
+	secondary_port integer,
+	updated_by character varying(255),
+	pk integer,
 	p_cre_date timestamp without time zone default now(),
 	p_active_flag CHARACTER VARYING(1),
 	p_valid_from timestamp without time zone,

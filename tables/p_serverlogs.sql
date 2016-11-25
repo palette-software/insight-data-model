@@ -1,14 +1,14 @@
 CREATE TABLE p_serverlogs
 (
 	p_id bigserial,
-	serverlogs_id bigint,	
+	serverlogs_id bigint,
 	p_filepath CHARACTER VARYING(500),
 	filename TEXT,
 	process_name TEXT,
 	host_name TEXT,
 	ts timestamp without time zone,
 	process_id bigint,
-	thread_id bigint,	
+	thread_id bigint,
 	sev TEXT,
 	req TEXT,
 	sess TEXT, 
@@ -25,7 +25,7 @@ CREATE TABLE p_serverlogs
 	parent_vizql_site text,
 	parent_vizql_username text,
 	parent_dataserver_site text,
-	parent_dataserver_username text,	
+	parent_dataserver_username text,
 	p_cre_date timestamp without time zone default now(),
 	thread_name text,
 	elapsed_ms bigint,
@@ -34,9 +34,9 @@ CREATE TABLE p_serverlogs
     session_end_ts_utc timestamp without time zone,
     site_id int,
    	site_name_id text,
-    project_id int
+    project_id int,
     project_name_id text,
-    workbook_id int
+    workbook_id int,
     workbook_name_id text,
     workbook_rev text,
     publisher_id int,

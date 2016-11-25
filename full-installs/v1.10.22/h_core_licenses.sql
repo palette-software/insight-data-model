@@ -1,10 +1,11 @@
-CREATE TABLE h_subscriptions_customized_views
+CREATE TABLE h_core_licenses
 (
 	p_id bigserial,
 	p_filepath text,
-	id integer,
-	subscription_id integer,
-	customized_view_id integer,
+	machine_ip character varying(255),
+	machine_cores integer,
+	allocated_cores integer,
+	update_ts timestamp without time zone,
 	p_cre_date timestamp without time zone default now(),
 	p_active_flag CHARACTER VARYING(1),
 	p_valid_from timestamp without time zone,

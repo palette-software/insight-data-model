@@ -1,10 +1,13 @@
-CREATE TABLE h_subscriptions_customized_views
+CREATE TABLE h_extracts
 (
 	p_id bigserial,
 	p_filepath text,
 	id integer,
-	subscription_id integer,
-	customized_view_id integer,
+	workbook_id integer,
+	descriptor character varying(255),
+	created_at timestamp without time zone,
+	updated_at timestamp without time zone,
+	datasource_id integer,
 	p_cre_date timestamp without time zone default now(),
 	p_active_flag CHARACTER VARYING(1),
 	p_valid_from timestamp without time zone,

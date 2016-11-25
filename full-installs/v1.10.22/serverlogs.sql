@@ -11,7 +11,7 @@ CREATE TABLE serverlogs
 	req TEXT,
 	sess TEXT,
 	site TEXT,
-	user TEXT,
+	"user" TEXT,
 	k TEXT,
 	v TEXT,
 	elapsed_ms INTEGER,
