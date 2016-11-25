@@ -56,7 +56,9 @@ begin
 		site_id,
 	  	vizql_session,
 	  	split_part(currentsheet,''/'', 1)';
-		
+
+    v_sql := replace(v_sql, '#v_load_date_txt#', v_load_date_txt);
+    raise notice 'I: %', v_sql;
 	execute v_sql;
 		
 	GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
