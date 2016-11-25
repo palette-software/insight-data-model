@@ -43,7 +43,6 @@ CREATE TABLE h_workbooks
 	p_valid_from timestamp without time zone,
 	p_valid_to timestamp without time zone
 )
-	WITH (appendonly=true, orientation=row, compresstype=quicklz)
 DISTRIBUTED BY (p_id);
 
 

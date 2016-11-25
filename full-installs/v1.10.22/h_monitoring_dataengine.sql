@@ -14,7 +14,6 @@ CREATE TABLE h_monitoring_dataengine
 	p_valid_from timestamp without time zone,
 	p_valid_to timestamp without time zone
 )
-	WITH (appendonly=true, orientation=row, compresstype=quicklz)
 DISTRIBUTED BY (p_id);
 
 
