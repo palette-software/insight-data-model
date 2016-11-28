@@ -58,7 +58,7 @@
       query: select manage_partitions('{{Schema}}', 'p_http_requests')
     -
       name: load_p_http_requests
-      query: select load_p_http_requests('{{Schema}}')
+      query: select load_p_http_requests('{{Schema}}', date'{{LoadDate}}')
 -
   name: Load s_http_requests_with_workbooks
   transaction: False
