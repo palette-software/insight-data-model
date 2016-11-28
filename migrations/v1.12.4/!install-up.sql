@@ -13,7 +13,7 @@ drop function load_p_background_jobs(text);
 select create_load_p_background_jobs('#schema_name#');
 
 delete from p_background_jobs
-where updated_at >= (select max(updated_at)::date from p_background_jobs)
+where updated_at >= (select max(updated_at)::date from p_background_jobs);
 
 insert into db_version_meta(version_number) values ('v1.12.4');
 
