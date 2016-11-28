@@ -81,7 +81,7 @@
       query: select manage_partitions('{{Schema}}', 'p_background_jobs')
     -
       name: select load_p_background_jobs
-      query: select load_p_background_jobs('{{Schema}}')
+      query: select load_p_background_jobs('{{Schema}}', date'{{LoadDate}}')
 -
   name: Load p_cpu_usage
   transaction: False
