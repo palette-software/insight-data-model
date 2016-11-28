@@ -31,8 +31,10 @@ begin
 				'"date_hour" timestamp without time zone,
 				"workbooks_datasources_id" Bigint,
 				"workbooks_datasources_name" Character varying(255),
+                "publisher_id" int,
 				"publisher_name" Character varying(255),
 				"publisher_friendlyname" Character varying(255),
+                "project_id" int,
 				"project_name" Character varying(255),
 				"site_name" Character varying(255),
 				"wd_type" Character varying(255),
@@ -40,7 +42,8 @@ begin
 				"h_workbooks_datasources_p_id" Bigint,
 				"h_system_users_p_id" Bigint,
 				"h_users_p_id" Bigint,
-				"h_sites_p_id" Bigint';
+				"h_sites_p_id" Bigint,
+                "p_cre_date timestamp default now()';
 				
 		v_sql := v_sql || ')
 		WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)

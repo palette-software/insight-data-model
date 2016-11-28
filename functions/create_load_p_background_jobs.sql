@@ -4,7 +4,7 @@ declare
 	rec record;
 	v_insert_part text;
 	v_select_part text;
-	v_sql text;
+	v_sql text;    
 begin							
 	
 	   	v_insert_part := '';
@@ -29,8 +29,10 @@ begin
 										column_name not in ('date_hour',
 															'workbooks_datasources_id',
 															'workbooks_datasources_name',
+                                                            'publisher_id',
 															'publisher_name',
 															'publisher_friendlyname',
+                                                            'project_id',
 															'project_name',
 															'site_name',
 															'wd_type',
@@ -51,20 +53,20 @@ begin
 					
 					
 		v_sql := 		
-				'CREATE or replace function #function_schema_name#.load_p_background_jobs(p_schema_name text) returns bigint
+				'CREATE or replace function #function_schema_name#.load_p_background_jobs(p_schema_name text, p_load_date date) returns bigint
 				AS \$\$
 				declare
 					v_sql text;
 					v_num_inserted bigint;
-					v_sql_cur text;
-                    v_max_date date;
+					v_sql_cur text;                    
+                    v_load_date_txt text := to_char(p_load_date, ''yyyy-mm-dd'');
 				begin	
                         execute ''set local search_path = '' || p_schema_name;
                         
-                        v_sql_cur := ''select get_max_ts(''''#schema_name#'''', ''''p_background_jobs'''')'';
-                        v_sql_cur := replace(v_sql_cur, ''#schema_name#'', p_schema_name);
-                        execute v_sql_cur into v_max_date;
-                            
+                        perform check_if_load_date_already_in_table(p_schema_name, ''p_background_jobs'', p_load_date, false);
+    
+
+                        
 						v_sql := 
 								''								
 				';
@@ -77,8 +79,10 @@ begin
 				"date_hour",
 				"workbooks_datasources_id",
 				"workbooks_datasources_name",
+                "publisher_id",
 				"publisher_name",
 				"publisher_friendlyname",
+                "project_id",
 				"project_name",
 				"site_name",
 				"wd_type",
@@ -89,146 +93,92 @@ begin
 				"h_sites_p_id")
 		';
 		
-		
+		v_sql := v_sql || ' with t_workbooks_datasources as
+                            (
+                            SELECT
+                              ''''Workbook'''' wd_type,
+                              h_workbooks.id workbooks_datasources_id,
+                              h_workbooks.site_id,
+                              h_workbooks.name,
+                              h_workbooks.owner_id,
+                              h_workbooks.project_id,
+                              h_workbooks.p_valid_from,
+                              h_workbooks.p_valid_to,
+                              h_workbooks.p_id
+                            FROM h_workbooks
+                            UNION ALL
+                            SELECT
+                              ''''Datasource'''' wd_type,
+                              h_datasources.id workbooks_datasources_id,
+                              h_datasources.site_id,
+                              h_datasources.name,
+                              h_datasources.owner_id,
+                              h_datasources.project_id,
+                              h_datasources.p_valid_from,
+                              h_datasources.p_valid_to,
+                              h_datasources.p_id
+                            FROM h_datasources 
+                            ) ';
 		
 		v_sql := v_sql || ' select distinct bj.p_id, bj.id,';
 		v_sql := v_sql || v_select_part;
 		
 		v_sql := v_sql || '				
-				 DATE_TRUNC(''''hour'''',bj.started_at) date_hour,
-				 workbooks_datasources.workbooks_datasources_id,
-				 workbooks_datasources.workbooks_datasources_name,
-				 workbooks_datasources.publisher_name,
-				 workbooks_datasources.publisher_friendlyname,
-				 workbooks_datasources.project_name,
-				 sites.name site_name,
-				 workbooks_datasources.wd_type,
-				 projects_p_id,
-				 workbooks_datasources_p_id,
-				 system_users_p_id,
-				 users_p_id,
-				 sites.p_id sites_p_id
+                 DATE_TRUNC(''''hour'''',bj.started_at) date_hour,
+        		 wd.workbooks_datasources_id,
+        		 wd.name,
+                 su.id as publisher_id,
+        		 su.name as publisher_name,
+        		 su.friendly_name as publisher_friendlyname,
+                 wd.project_id,
+        		 p.name as project_name,
+        		 s.name site_name,
+        		 wd.wd_type,
+        		 p.p_id project_p_id,
+        		 wd.p_id wd_p_id,
+        		 su.p_id as system_user_p_id,
+        		 u.p_id as user_p_id,
+        		 s.p_id site_p_id
 		';
 		
 		
 		v_sql := v_sql || 
-		' FROM  
-				  background_jobs bj
-				  LEFT JOIN 
-				  (
-				    SELECT DISTINCT
-				      workbooks_datasources.wd_type,
-				      workbooks_datasources.workbooks_datasources_id,
-				      workbooks_datasources.name workbooks_datasources_name,
-				      system_users.name publisher_name,
-				      system_users.friendly_name publisher_friendlyname,
-				      projects.name project_name,
-				      projects.p_valid_from AS projects_p_valid_from,
-				      projects.p_valid_to AS projects_p_valid_to,
-				      projects.p_id AS projects_p_id,
-				      workbooks_datasources.p_valid_from AS workbooks_datasources_p_valid_from,
-				      workbooks_datasources.p_valid_to AS workbooks_datasources_p_valid_to,
-				      workbooks_datasources.p_id AS workbooks_datasources_p_id,
-				      system_users.p_valid_from AS system_users_p_valid_from,
-				      system_users.p_valid_to AS system_users_p_valid_to,
-				      system_users.p_id AS system_users_p_id,
-				      users.p_valid_from AS users_p_valid_from,
-				      users.p_valid_to AS users_p_valid_to,
-				      users.p_id AS users_p_id
-				    FROM
-				      (
-				        SELECT
-				          ''''Workbook'''' wd_type,
-				          h_workbooks.id workbooks_datasources_id,
-				          h_workbooks.name,
-				          h_workbooks.owner_id,
-				          h_workbooks.project_id,
-				          h_workbooks.p_valid_from,
-				          h_workbooks.p_valid_to,
-				          h_workbooks.p_id
-				        FROM h_workbooks 
-				        UNION ALL
-				        SELECT
-				          ''''Datasource'''' wd_type,
-				          h_datasources.id workbooks_datasources_id,
-				          h_datasources.name,
-				          h_datasources.owner_id,
-				          h_datasources.project_id,
-				          h_datasources.p_valid_from,
-				          h_datasources.p_valid_to,
-				          h_datasources.p_id
-				        FROM h_datasources 
-				      ) workbooks_datasources,
-				      (
-				        SELECT 
-				          id, 
-				          system_user_id,
-				          p_valid_from,
-				          p_valid_to,
-				          p_id
-				        FROM h_users 
-				      ) users,
-				      (
-				        SELECT 
-				          id, 
-				          name, 
-				          friendly_name,
-				          p_valid_from,
-				          p_valid_to,
-				          p_id
-				        FROM h_system_users 
-				      ) system_users,
-				      (
-				        SELECT 
-				          id, 
-				          name,
-				          p_valid_from,
-				          p_valid_to,
-				          p_id
-				        FROM h_projects 
-				      ) projects
-				    WHERE
-				      workbooks_datasources.owner_id=users.id AND 
-				      users.system_user_id=system_users.id AND 
-				      workbooks_datasources.project_id=projects.id AND
-					  greatest(workbooks_datasources.p_valid_from, users.p_valid_from, system_users.p_valid_from, projects.p_valid_from) 
-					  	<= 
-						least(workbooks_datasources.p_valid_to, users.p_valid_to, system_users.p_valid_to, projects.p_valid_to)
-				  ) workbooks_datasources 
-				  ON 
-				    bj.title = workbooks_datasources.workbooks_datasources_name AND 
-				    bj.subtitle = workbooks_datasources.wd_type
-				    AND bj.updated_at BETWEEN projects_p_valid_from AND projects_p_valid_to
-				    AND bj.updated_at BETWEEN workbooks_datasources_p_valid_from AND workbooks_datasources_p_valid_to
-				    AND bj.updated_at BETWEEN system_users_p_valid_from AND system_users_p_valid_to
-				    AND bj.updated_at BETWEEN users_p_valid_from AND users_p_valid_to
-				  LEFT JOIN 
-				  (
-				    SELECT 
-				      id, 
-				      name,
-				      p_valid_from,
-				      p_valid_to,
-				      p_id
-				    FROM h_sites 
-				  ) sites 
-				  ON sites.id = bj.site_id
-				  AND bj.updated_at BETWEEN sites.p_valid_from AND sites.p_valid_to
-         where 1 = 1
-            and bj.p_id > (select coalesce(max(background_jobs_p_id), 0)
-                                 from
-                                    p_background_jobs
-                                 where
-                                    created_at >= date''''#v_max_date#''''
-                                  )
-				'';
+		' FROM
+            background_jobs bj            
+            left outer join t_workbooks_datasources wd on (1 = 1 
+                                                        and wd.site_id = bj.site_id
+                                                        and wd.name = bj.title
+                                                        and wd.wd_type = bj.subtitle
+                                                        and bj.updated_at BETWEEN wd.p_valid_from AND wd.p_valid_to)
+                                                        
+            left outer join h_users u on (1 = 1 
+                                        and u.site_id = bj.site_id
+                                        and u.id = wd.owner_id
+                                        and bj.updated_at BETWEEN u.p_valid_from AND u.p_valid_to)
+                                        
+            left outer join h_system_users su on (1 = 1
+                                                and su.id = u.system_user_id
+                                                and bj.updated_at BETWEEN su.p_valid_from AND su.p_valid_to)
+                                                
+            left outer join h_projects p on (1 = 1
+                                            and p.id = wd.project_id
+                                            and p.site_id = wd.site_id
+                                            and bj.updated_at BETWEEN p.p_valid_from AND p.p_valid_to)
+                  
+            left outer join h_sites s on (1 = 1
+                                        and s.id = bj.site_id
+                                        and bj.updated_at BETWEEN s.p_valid_from AND s.p_valid_to)
+         where 1 = 1            
+            and bj.updated_at >= date''''#v_load_date_txt#''''
+            and bj.updated_at < date''''#v_load_date_txt#'''' + interval ''''1 day''''
+		'';
 		
 		
 		';			
 		
 		v_sql := v_sql || '		
 											
-				v_sql := replace(v_sql, ''#v_max_date#'', to_char(v_max_date, ''yyyy-mm-dd''));
+				v_sql := replace(v_sql, ''#v_load_date_txt#'', v_load_date_txt);
 				
 				raise notice ''I: %'', v_sql;
 				execute v_sql;		
