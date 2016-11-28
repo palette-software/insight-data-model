@@ -4,7 +4,7 @@ declare
 	rec record;
 	v_insert_part text;
 	v_select_part text;
-	v_sql text;
+	v_sql text;    
 begin							
 	
 	   	v_insert_part := '';
@@ -53,20 +53,20 @@ begin
 					
 					
 		v_sql := 		
-				'CREATE or replace function #function_schema_name#.load_p_background_jobs(p_schema_name text) returns bigint
+				'CREATE or replace function #function_schema_name#.load_p_background_jobs(p_schema_name text, p_load_date date) returns bigint
 				AS \$\$
 				declare
 					v_sql text;
 					v_num_inserted bigint;
-					v_sql_cur text;
-                    v_max_date date;
+					v_sql_cur text;                    
+                    v_load_date_txt text := to_char(p_load_date, ''yyyy-mm-dd'');
 				begin	
                         execute ''set local search_path = '' || p_schema_name;
                         
-                        v_sql_cur := ''select get_max_ts(''''#schema_name#'''', ''''p_background_jobs'''')'';
-                        v_sql_cur := replace(v_sql_cur, ''#schema_name#'', p_schema_name);
-                        execute v_sql_cur into v_max_date;
-                            
+                        perform check_if_load_date_already_in_table(p_schema_name, ''p_background_jobs'', p_load_date, false);
+    
+
+                        
 						v_sql := 
 								''								
 				';
@@ -144,7 +144,7 @@ begin
 		
 		v_sql := v_sql || 
 		' FROM
-            background_jobs bj
+            background_jobs bj            
             left outer join t_workbooks_datasources wd on (1 = 1 
                                                         and wd.site_id = bj.site_id
                                                         and wd.name = bj.title
@@ -168,21 +168,17 @@ begin
             left outer join h_sites s on (1 = 1
                                         and s.id = bj.site_id
                                         and bj.updated_at BETWEEN s.p_valid_from AND s.p_valid_to)
-         where 1 = 1
-            and bj.p_id > (select coalesce(max(background_jobs_p_id), 0)
-                                 from
-                                    p_background_jobs
-                                 where
-                                    created_at >= date''''#v_max_date#''''
-                                  )
-				'';
+         where 1 = 1            
+            and bj.updated_at >= date''''#v_load_date_txt#''''
+            and bj.updated_at < date''''#v_load_date_txt#'''' + interval ''''1 day''''
+		'';
 		
 		
 		';			
 		
 		v_sql := v_sql || '		
 											
-				v_sql := replace(v_sql, ''#v_max_date#'', to_char(v_max_date, ''yyyy-mm-dd''));
+				v_sql := replace(v_sql, ''#v_load_date_txt#'', v_load_date_txt);
 				
 				raise notice ''I: %'', v_sql;
 				execute v_sql;		
