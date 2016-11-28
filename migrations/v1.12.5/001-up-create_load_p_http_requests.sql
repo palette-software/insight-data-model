@@ -132,7 +132,7 @@ begin
                     
                     or
                     
-                    (t.created_at >= date''''#v_load_date_txt#''''
+                    (t.created_at >= date''''#v_load_date_txt#''''  + interval ''''24 hours''''
                     and t.created_at <= date''''#v_load_date_txt#'''' + interval ''''26 hours''''
                     and t.vizql_session in (select distinct session from cross_utc_midnight_sessions where parent_process_name = ''''vizqlserver''''))
                     

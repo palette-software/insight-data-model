@@ -141,8 +141,8 @@ begin
      -- Load only the cross utc sessions
     v_sql_exec := replace(v_sql, '#filters#',
                             ' where 1 = 1
-                                    and s.ts >= date''#v_load_date_txt#''
-                                    and s.ts < date''#v_load_date_txt#'' + interval ''26 hours''
+                                    and s.ts >= date''#v_load_date_txt#'' + interval ''24 hours''
+                                    and s.ts <= date''#v_load_date_txt#'' + interval ''26 hours''
                                     and (s.parent_vizql_session in (select distinct session from cross_utc_midnight_sessions where parent_process_name = ''vizqlserver'')
                                         or
                                         s.parent_dataserver_session in (select distinct session from cross_utc_midnight_sessions where parent_process_name = ''dataserver''))
