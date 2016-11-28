@@ -50,7 +50,8 @@ begin
 				 "h_workbooks_p_id" Bigint,
 				 "interactor_h_users_p_id" Bigint,
 				 "interactor_h_system_users_p_id" Bigint,
-                 "view_id" int';
+                 "view_id" int,
+                 "p_cre_date" timestamp default now()';
 				
 		v_sql := v_sql || ')
 		WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
