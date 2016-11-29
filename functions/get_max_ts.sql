@@ -11,7 +11,7 @@ begin
 		v_column_name := case 	when p_table_name in ('p_cpu_usage_report', 'p_cpu_usage_bootstrap_rpt') then 'cpu_usage_ts_rounded_15_secs'
 						when p_table_name in ('p_threadinfo', 'p_threadinfo_delta', 'p_process_class_agg_report', 'p_cpu_usage') then 'ts_rounded_15_secs'
 						when p_table_name = 'p_cpu_usage_agg_report' then 'timestamp_utc'
-						when p_table_name = 'p_interactor_session' then 'session_start_ts'
+						when p_table_name in ('p_interactor_session', 'p_desktop_session') then 'session_start_ts'
                         when p_table_name in ('p_http_requests', 'p_background_jobs', 'p_async_jobs') then 'created_at'
 						else 'ts'
 					end;		
