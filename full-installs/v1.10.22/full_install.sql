@@ -57,6 +57,7 @@ set role = palette_#schema_name#_updater;
 \i h_datasources.sql
 \i h_core_licenses.sql
 \i h_data_connections.sql
+\i h_customized_views.sql
 \i h_capabilities.sql
 \i h_capability_roles.sql
 \i async_jobs.sql
