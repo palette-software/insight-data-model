@@ -21,7 +21,7 @@ BEGIN
 		
 		if v_table_name in ('p_cpu_usage_agg_report') then --year
 			v_sql_cur := 'select distinct timestamp_utc::date d from ' || 's' || ltrim(v_table_name, 'p');
-		elseif v_table_name in ('p_interactor_session') then --year
+		elseif v_table_name in ('p_interactor_session', 'p_desktop_session') then --year
 			v_sql_cur := 'select distinct session_start_ts::date d from ' || 's' || ltrim(v_table_name, 'p');
 		elseif v_table_name in ('p_process_class_agg_report') then --month
 			v_sql_cur := 'select distinct ts_rounded_15_secs::date d from '|| 's' || ltrim(v_table_name, 'p');
@@ -46,7 +46,7 @@ BEGIN
 
 				  v_sql := replace(v_sql, '#schema_name#', p_schema_name);
 				  v_sql := replace(v_sql, '#table_name#', v_table_name);
-				if v_table_name in ('p_cpu_usage_agg_report', 'p_interactor_session') then --year
+				if v_table_name in ('p_cpu_usage_agg_report', 'p_interactor_session', 'p_desktop_session') then --year
 					v_sql := replace(v_sql, '#partition_name#', to_char(rec.d, 'yyyy'));
 					v_sql := replace(v_sql, '#start_date#', to_char(rec.d, 'yyyy') || '-01-01');
 					v_sql := replace(v_sql, '#end_date#', to_char(rec.d + interval'1 year', 'yyyy') || '-01-01');
@@ -61,7 +61,7 @@ BEGIN
 				end if;
 				
 				begin
-					if v_table_name in ('p_cpu_usage_agg_report', 'p_interactor_session') then --year
+					if v_table_name in ('p_cpu_usage_agg_report', 'p_interactor_session', 'p_desktop_session') then --year
 						if (not does_part_exist(p_schema_name, v_table_name, to_char(rec.d, 'yyyy'))) then
 					  		execute v_sql;
 						end if;
