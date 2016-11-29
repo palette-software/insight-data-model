@@ -8,7 +8,7 @@ begin
 
 	execute 'set local search_path = ' || p_schema_name;
     
-    perform check_if_load_date_already_in_table(p_schema_name, 'p_serverlogs', p_load_date, true);
+    perform check_if_load_date_already_in_table(p_schema_name, 'p_cpu_usage', p_load_date, true);
     
 	v_sql := 'truncate table #schema_name#.s_tde_filename_pids';
 	v_sql := replace(v_sql, '#schema_name#', p_schema_name);
