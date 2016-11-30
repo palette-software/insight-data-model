@@ -12,6 +12,57 @@ set role = palette_#schema_name#_updater;
 -- Create tables
 
 \i db_version_meta.sql
+\i serverlogs.sql
+\i threadinfo.sql
+\i plainlogs.sql
+\i historical_events.sql
+\i http_requests.sql
+\i historical_event_types.sql
+\i historical_disk_usage.sql
+\i hist_views.sql
+\i hist_workbooks.sql
+\i hist_users.sql
+\i hist_tags.sql
+\i hist_tasks.sql
+\i hist_sites.sql
+\i hist_schedules.sql
+\i hist_licensing_roles.sql
+\i hist_projects.sql
+\i hist_groups.sql
+\i hist_datasources.sql
+\i hist_configs.sql
+\i hist_data_connections.sql
+\i hist_comments.sql
+\i h_workbooks.sql
+\i hist_capabilities.sql
+\i h_views.sql
+\i h_user_default_customized_views.sql
+\i h_users.sql
+\i h_tasks.sql
+\i h_subscriptions_workbooks.sql
+\i h_system_users.sql
+\i h_subscriptions_customized_views.sql
+\i h_subscriptions_views.sql
+\i h_subscriptions.sql
+\i h_sites.sql
+\i h_projects.sql
+\i h_schedules.sql
+\i h_permission_reasons.sql
+\i h_next_gen_permissions.sql
+\i h_monitoring_dataengine.sql
+\i h_monitoring_postgresql.sql
+\i h_groups.sql
+\i h_group_users.sql
+\i h_extracts.sql
+\i h_datasources.sql
+\i h_core_licenses.sql
+\i h_data_connections.sql
+\i h_customized_views.sql
+\i h_capabilities.sql
+\i h_capability_roles.sql
+\i async_jobs.sql
+\i background_jobs.sql
+\i countersamples.sql
 \i genFromDBModel.sql
 \i p_serverlogs.sql
 \i s_serverlogs.sql
@@ -45,6 +96,8 @@ select create_p_serverlogs_bootstrap_rpt('#schema_name#');
 \i s_tde_filename_pids.sql
 \i p_process_classification.sql
 
+\i create_s_tables.sql
+select create_s_tables('#schema_name#');
 
 -- Create view scripts
 \i p_interactor_session_normal.sql
@@ -63,62 +116,6 @@ select create_p_serverlogs_bootstrap_rpt('#schema_name#');
 select create_tableau_repo_views('#schema_name#');
 select create_view_p_datasources('#schema_name#');
 select create_view_p_workbooks('#schema_name#');
-
-
--- Recreate agent tables
-alter table threadinfo rename to threadinfo_old;
-
-CREATE TABLE threadinfo
-(LIKE threadinfo_old INCLUDING DEFAULTS)
-WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
-DISTRIBUTED BY (p_id)
-PARTITION BY RANGE (ts)
-SUBPARTITION BY LIST (host_name)
-SUBPARTITION TEMPLATE (SUBPARTITION init VALUES ('init')
-WITH (appendonly=true, orientation=column, compresstype=quicklz))
-(PARTITION "10010101" START (date '1001-01-01') INCLUSIVE
-        END (date '1001-01-02') EXCLUSIVE
-WITH (appendonly=true, orientation=column, compresstype=quicklz)
-);
-
-alter sequence threadinfo_p_id_seq owned by threadinfo.p_id;
-drop table threadinfo_old;
-
-
-alter table serverlogs rename to serverlogs_old;
-
-CREATE TABLE serverlogs
-(LIKE serverlogs_old INCLUDING DEFAULTS)
-WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
-DISTRIBUTED BY (p_id)
-PARTITION BY RANGE (ts)
-SUBPARTITION BY LIST (host_name)
-SUBPARTITION TEMPLATE (SUBPARTITION init VALUES ('init')
-WITH (appendonly=true, orientation=column, compresstype=quicklz))
-(PARTITION "10010101" START (date '1001-01-01') INCLUSIVE
-        END (date '1001-01-02') EXCLUSIVE
-WITH (appendonly=true, orientation=column, compresstype=quicklz)
-);
-
-alter sequence serverlogs_p_id_seq owned by serverlogs.p_id;
-drop table serverlogs_old;
-
-
-alter table plainlogs rename to plainlogs_old;
-
-CREATE TABLE plainlogs (LIKE plainlogs_old INCLUDING DEFAULTS)
-WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
-DISTRIBUTED BY (p_id)
-PARTITION BY RANGE (ts)
-(PARTITION "10010101"
-    START (date '1001-01-01') INCLUSIVE
-        END (date '1001-01-02') EXCLUSIVE
-WITH (appendonly=true, orientation=column, compresstype=quicklz)
-);
-
-alter sequence plainlogs_p_id_seq owned by plainlogs.p_id;
-drop table plainlogs_old;
-
 
 -- Create pgplsql load proc
 \i ins_stage_to_dwh.sql
@@ -148,20 +145,17 @@ drop table plainlogs_old;
 \i insert_p_serverlogs_from_s_serverlogs.sql
 \i handle_utc_midnight_interactor_sess.sql
 
-
 -- Create creator pgplsql load proc
 \i create_load_p_background_jobs.sql
 \i create_load_p_http_requests.sql
 \i create_load_s_cpu_usage_bootstrap_rpt.sql
 \i create_load_s_cpu_usage_report.sql
 
-
 -- Execute create creator pgplsql load proc
 select create_load_p_background_jobs('#schema_name#');
 select create_load_p_http_requests('#schema_name#');
 select create_load_s_cpu_usage_bootstrap_rpt('#schema_name#');
 select create_load_s_cpu_usage_report('#schema_name#');
-
 
 -- Rest of the plsql proc
 \i get_max_ts.sql
@@ -179,6 +173,6 @@ CREATE INDEX p_serverlogs_bootstrap_rpt_parent_vizql_session_idx ON p_serverlogs
 
 select handle_privileges('#schema_name#');
 
-insert into db_version_meta(version_number) values ('1.10.22');
+insert into db_version_meta(version_number) values ('v1.10.22');
 
 COMMIT;
