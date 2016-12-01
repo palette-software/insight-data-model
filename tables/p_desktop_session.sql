@@ -18,7 +18,9 @@ CREATE TABLE p_desktop_session
 	num_fatals INTEGER,
 	num_errors INTEGER,
 	num_warnings INTEGER,
-	user_type TEXT	
+	user_type TEXT,    
+    datasource_id int,
+    p_cre_date timestamp default now()
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (dataserver_session)

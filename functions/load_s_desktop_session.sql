@@ -1,13 +1,7 @@
-select * from h_projects;select * from s_desktop_session;
-select * from p_desktop_session;
-
-select load_s_desktop_session('palette', date'2016-11-27');
-
-select max(session_start_ts) from p_desktop_session;
-
+drop FUNCTION load_s_desktop_session(text, date);
 
 CREATE OR REPLACE FUNCTION load_s_desktop_session(p_schema_name text, p_load_date date)
-RETURNS bigint AS
+RETURNS text AS
 $BODY$
 declare
 	v_sql text;
@@ -38,71 +32,107 @@ BEGIN
 			num_fatals,
 			num_errors,
 			num_warnings,
-			user_type
+			user_type,
+            datasource_id
 		)
+        with t_base as 
+        (select     
+            parent_dataserver_session
+        FROM        		       
+            p_cpu_usage            		       
+        WHERE 1 = 1
+            and ts_rounded_15_secs >= date''#v_load_date_txt#''
+            and ts_rounded_15_secs <= date''#v_load_date_txt#'' + interval''26 hours''
+            and parent_dataserver_session IS NOT NULL
+            and parent_dataserver_session not in (''default'', ''-'')
+        GROUP BY                
+            parent_dataserver_session
+        HAVING max(parent_vizql_session) is null
+        )
+
         select
             datasrv_sess.dataserver_session,
             datasrv_sess.process_name,
             datasrv_sess.host_name,
             datasrv_sess.cpu_time_consumption_seconds,
-            min(case when datasrv_sess.process_name = ''dataserver'' then slogs.session_start_ts end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as session_start_ts,
-            min(case when datasrv_sess.process_name = ''dataserver'' then slogs.session_end_ts end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as session_end_ts,
-            min(case when datasrv_sess.process_name = ''dataserver'' then extract(''epoch'' from (slogs.session_end_ts - slogs.session_start_ts)) end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as session_duration,
+            slogs.session_start_ts,
+            slogs.session_end_ts,
+            extract(''epoch'' from (slogs.session_end_ts - slogs.session_start_ts)) as session_duration,
             min(case when datasrv_sess.process_name = ''dataserver'' then su.id end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as interactor_id,
-        	min(case when datasrv_sess.process_name = ''dataserver'' then su.friendly_name || '' ('' || su.id || '')'' end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as interactor_friendly_name_id, 
+            min(case when datasrv_sess.process_name = ''dataserver'' then su.friendly_name || '' ('' || su.id || '')'' end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as interactor_friendly_name_id, 
             min(case when datasrv_sess.process_name = ''dataserver'' then slogs.username  || '' ('' || coalesce(su.id, -1) || '')'' end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as interactor_user_name_id,
             min(case when datasrv_sess.process_name = ''dataserver'' then sites.id end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as site_id,
-            min(case when datasrv_sess.process_name = ''dataserver'' then slogs.sitename || '' ('' || coalesce(sites.id, -1) || '')'' end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) AS site_name_id,            
+            min(case when datasrv_sess.process_name = ''dataserver'' then slogs.sitename || '' ('' || coalesce(sites.id, -1) || '')'' end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) AS site_name_id,
             min(case when datasrv_sess.process_name = ''dataserver'' then p.id end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as project_id,
-            min(case when datasrv_sess.process_name = ''dataserver'' then p.name || '' ('' || coalesce(p.id, -1) || '')'' end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) AS project_name_id,            
-            slogs.num_fatal,
+            min(case when datasrv_sess.process_name = ''dataserver'' then p.name || '' ('' || coalesce(p.id, -1) || '')'' end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) AS project_name_id,
+            slogs.num_fatal,            
             slogs.num_error,
             slogs.num_warn,
-            ''Desktop'' as user_type
-        from (
-    		SELECT  
-    		    host_name as host_name,
-                parent_dataserver_session AS dataserver_session,
-                process_name AS process_name,            
-                SUM(cpu_time_consumption_seconds) AS cpu_time_consumption_seconds
-    		FROM        		       
-                p_cpu_usage            		       
-    		WHERE 
-                session_start_ts >= date''#v_load_date_txt#'' and
-                session_start_ts < date''#v_load_date_txt#'' + interval''1 day'' and
-                ts_rounded_15_secs >= date''#v_load_date_txt#'' and
-                ts_rounded_15_secs <= date''#v_load_date_txt#'' + interval''26 hours'' and
-                parent_vizql_session IS NULL and
-                parent_dataserver_session IS NOT NULL and
-                parent_dataserver_session not in (''default'', ''-'')
-    		GROUP BY
-                host_name,
-                parent_dataserver_session, 
-                process_name
-            ) datasrv_sess
+            ''Desktop'' as user_type,
+            ds.id--,
+            --slogs.data_connection_name,
+            --slogs.dbname,
+            --slogs.server_viewerid,
+            --slogs.tdc_class
+                        
+        from        
+            t_base b
+            inner join   
+                    (SELECT  
+                	    host_name as host_name,
+                        parent_dataserver_session AS dataserver_session,
+                        process_name AS process_name,            
+                        SUM(cpu_time_consumption_seconds) AS cpu_time_consumption_seconds
+                	FROM        		       
+                        p_cpu_usage            		       
+                	WHERE 
+                        ts_rounded_15_secs >= date''#v_load_date_txt#'' and
+                        ts_rounded_15_secs <= date''#v_load_date_txt#'' + interval''26 hours''
+                	GROUP BY
+                        host_name,  
+                        parent_dataserver_session, 
+                        process_name
+                    ) datasrv_sess on (b.parent_dataserver_session = datasrv_sess.dataserver_session)
             left outer join (
-    		                SELECT  
-                                parent_dataserver_session AS dataserver_session,
-                                process_name, 
-                                SUM(CASE WHEN sev = ''fatal'' THEN 1 ELSE 0 END) num_fatal,
-                                SUM(CASE WHEN sev = ''error'' THEN 1 ELSE 0 END) num_error,
-                                SUM(CASE WHEN sev = ''warn'' THEN 1 ELSE 0 END) num_warn,
-                                min(ts) as session_start_ts,
-                                max(ts) as session_end_ts,
-                                max(username) as username,
-                                max(site) as sitename,
-                                min(substring(v FROM ''.*named-connection name=''''(.*?)''''.*'')) AS data_connection_name
-    		                FROM 
-    		                    p_serverlogs
-    		                WHERE 
+        	                SELECT  
+                                t.parent_dataserver_session AS dataserver_session,
+                                t.process_name, 
+                                SUM(CASE WHEN t.sev = ''fatal'' THEN 1 ELSE 0 END) num_fatal,
+                                SUM(CASE WHEN t.sev = ''error'' THEN 1 ELSE 0 END) num_error,
+                                SUM(CASE WHEN t.sev = ''warn'' THEN 1 ELSE 0 END) num_warn,
+                                min(f.session_start_ts) as session_start_ts,
+                                min(f.session_end_ts) as session_end_ts,
+                                max(t.username) as username,
+                                max(t.site) as sitename,
+                                min(substring(t.v FROM ''.*named-connection name=''''(.*?)''''.*'')) AS data_connection_name,
+                                max(f.server_viewerid) as server_viewerid,
+                                replace(translate(min(dbname), ''-'' , ''_''), '' '' , '''') as dbname,
+                                min(tdc_class) as tdc_class
+        	                FROM 
+        	                    p_serverlogs t
+                                inner join (select parent_dataserver_session,
+                                                   min(ts) as session_start_ts,
+                                                   max(ts) as session_end_ts,
+                                                   max(case when k = ''msg'' then substring(v from ''Found matching TDC.*class=''''(.*?)'''', vendor'') end) as tdc_class,
+                                                   max(case when k = ''construct-protocol'' then substring(v from ''"server-viewerid":"(.*?)","'') end) as server_viewerid,
+                                                   max(case when k = ''ds-connect-data-connection'' then substring(v from E''dbname.*\\\\\\\\(.*?)\.tde'') end) as dbname 
+                                            from
+                                                p_serverlogs
+                                             where  1 = 1
+                                                and ts >= date''#v_load_date_txt#''
+        						                and ts <= date''#v_load_date_txt#'' + interval''26 hours''
+                                            group by
+                                                    parent_dataserver_session 
+                                            ) f on (t.parent_dataserver_session = f.parent_dataserver_session)
+        	                WHERE 
                                 1 = 1
-                                and parent_vizql_session is null
-    							and ts >= date''#v_load_date_txt#'' - interval''2 hours''
-    							and ts <= date''#v_load_date_txt#'' + interval''26 hours''
-    		                GROUP BY 
-                                    parent_dataserver_session, 
-                                    process_name
-    		        ) slogs ON (datasrv_sess.dataserver_session = slogs.dataserver_session
+                                and t.parent_vizql_session is null
+        						and t.ts >= date''#v_load_date_txt#''
+        						and t.ts <= date''#v_load_date_txt#'' + interval''26 hours''
+        	                GROUP BY 
+                                    t.parent_dataserver_session, 
+                                    t.process_name
+        	        ) slogs ON (datasrv_sess.dataserver_session = slogs.dataserver_session
                                 AND datasrv_sess.process_name = slogs.process_name)
             left outer join h_sites sites on (sites.name = slogs.sitename 
                                             and slogs.session_start_ts between sites.p_valid_from and sites.p_valid_to)
@@ -110,20 +140,28 @@ BEGIN
             left outer join h_system_users su on (su.name = slogs.username
         						                 and slogs.session_start_ts between su.p_valid_from and su.p_valid_to
         						  				 )
-            left outer join h_data_connections dc on (1 = 1
-                                                    and dc.owner_type = ''Datasource''
-                                                    and dc.name = slogs.data_connection_name
-                                                    and slogs.session_start_ts between dc.p_valid_from and dc.p_valid_to)
+        --    --left outer join h_data_connections dc on (1 = 1
+        --      --                                      and dc.owner_type = ''Datasource''
+        --        --                                    and dc.name = slogs.data_connection_name
+        --          --                                  and slogs.session_start_ts between dc.p_valid_from and dc.p_valid_to)
             left outer join h_datasources ds on (1 = 1
-                                                 and ds.id = dc.datasource_id                                            
-                                                 and slogs.session_start_ts between ds.p_valid_from and ds.p_valid_to)
+                                                and ds.db_class = coalesce(slogs.tdc_class, ''dataengine'')
+                                                and ds.site_id = sites.id
+                                                --and ds.id = dc.datasource_id
+                                                and translate(ds.repository_url, ''-'', ''_'') = slogs.dbname
+                                                and slogs.session_start_ts between ds.p_valid_from and ds.p_valid_to)
             left outer join h_projects p on (1 = 1
+                                            and p.site_id = sites.id
                                             and p.id = ds.project_id
-                                            and slogs.session_start_ts between p.p_valid_from and p.p_valid_to)                                                 
+                                            and slogs.session_start_ts between p.p_valid_from and p.p_valid_to)
+        where 1 = 1
+            and slogs.session_start_ts >= date''#v_load_date_txt#''
+            and slogs.session_start_ts < date''#v_load_date_txt#'' + interval''1 day''
+            and coalesce(slogs.server_viewerid, '''') = ''''
 		';
 			
-		v_sql := replace(v_sql, '#v_load_date_txt#', v_load_date_txt);		
-		
+		v_sql := replace(v_sql, '#v_load_date_txt#', v_load_date_txt);
+        
 		raise notice 'I: %', v_sql;
 		execute v_sql;
 		

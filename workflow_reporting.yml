@@ -142,6 +142,22 @@
       name: p_cpu_usage_report - ins_stage_to_dwh
       query: select ins_stage_to_dwh('{{Schema}}', 'p_cpu_usage_report')
 -
+  name: Load p_desktop_session
+  transaction: False
+  queries:
+    -
+      name: truncate table s_desktop_session
+      query: truncate table s_desktop_session
+    -
+      name: load_s_desktop_session
+      query: select load_s_desktop_session('{{Schema}}', date'{{LoadDate}}')
+    -
+      name: p_desktop_session - manage_partitions
+      query: select manage_partitions('{{Schema}}', 'p_desktop_session')
+    -
+      name: p_desktop_session - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_desktop_session')
+-
   name: Load p_interactor_session
   transaction: False
   queries:
