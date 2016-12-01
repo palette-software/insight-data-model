@@ -1,7 +1,7 @@
 drop FUNCTION load_s_desktop_session(text, date);
 
 CREATE OR REPLACE FUNCTION load_s_desktop_session(p_schema_name text, p_load_date date)
-RETURNS text AS
+RETURNS bigint AS
 $BODY$
 declare
 	v_sql text;
@@ -69,7 +69,7 @@ BEGIN
             slogs.num_error,
             slogs.num_warn,
             ''Desktop'' as user_type,
-            ds.id--,
+            coalesce(ds.id, dc.datasource_id) as datasource_id
             --slogs.data_connection_name,
             --slogs.dbname,
             --slogs.server_viewerid,
@@ -104,15 +104,16 @@ BEGIN
                                 min(f.session_end_ts) as session_end_ts,
                                 max(t.username) as username,
                                 max(t.site) as sitename,
-                                min(substring(t.v FROM ''.*named-connection name=''''(.*?)''''.*'')) AS data_connection_name,
+                                min(data_connection_name) AS data_connection_name,
                                 max(f.server_viewerid) as server_viewerid,
-                                replace(translate(min(dbname), ''-'' , ''_''), '' '' , '''') as dbname,
+                                replace(min(dbname), '' '' , '''') as dbname,
                                 min(tdc_class) as tdc_class
         	                FROM 
         	                    p_serverlogs t
                                 inner join (select parent_dataserver_session,
                                                    min(ts) as session_start_ts,
                                                    max(ts) as session_end_ts,
+                                                   max(case when k = ''ds-connect-data-connection'' then substring(v FROM ''.*named-connection name=''''(.*?)''''.*'') end) AS data_connection_name,
                                                    max(case when k = ''msg'' then substring(v from ''Found matching TDC.*class=''''(.*?)'''', vendor'') end) as tdc_class,
                                                    max(case when k = ''construct-protocol'' then substring(v from ''"server-viewerid":"(.*?)","'') end) as server_viewerid,
                                                    max(case when k = ''ds-connect-data-connection'' then substring(v from E''dbname.*\\\\\\\\(.*?)\.tde'') end) as dbname 
@@ -140,19 +141,22 @@ BEGIN
             left outer join h_system_users su on (su.name = slogs.username
         						                 and slogs.session_start_ts between su.p_valid_from and su.p_valid_to
         						  				 )
-        --    --left outer join h_data_connections dc on (1 = 1
-        --      --                                      and dc.owner_type = ''Datasource''
-        --        --                                    and dc.name = slogs.data_connection_name
-        --          --                                  and slogs.session_start_ts between dc.p_valid_from and dc.p_valid_to)
+            left outer join h_data_connections dc on (1 = 1    
+                                                and dc.owner_type = ''Datasource''
+                                                and dc.name = slogs.data_connection_name
+                                                and slogs.session_start_ts between dc.p_valid_from and dc.p_valid_to)
             left outer join h_datasources ds on (1 = 1
-                                                and ds.db_class = coalesce(slogs.tdc_class, ''dataengine'')
-                                                and ds.site_id = sites.id
-                                                --and ds.id = dc.datasource_id
-                                                and translate(ds.repository_url, ''-'', ''_'') = slogs.dbname
+                                                --and ds.db_class = coalesce(slogs.tdc_class, ''dataengine'')
+                                                and ds.site_id = sites.id                                                
+                                                and ds.repository_url = slogs.dbname
                                                 and slogs.session_start_ts between ds.p_valid_from and ds.p_valid_to)
+            left outer join h_datasources dc_ds on (1 = 1
+                                            and ds.site_id = sites.id
+                                            and ds.id = dc.datasource_id                                                                                
+                                            and slogs.session_start_ts between ds.p_valid_from and ds.p_valid_to)                                                
             left outer join h_projects p on (1 = 1
                                             and p.site_id = sites.id
-                                            and p.id = ds.project_id
+                                            and p.id = coalesce(ds.project_id, dc_ds.project_id)
                                             and slogs.session_start_ts between p.p_valid_from and p.p_valid_to)
         where 1 = 1
             and slogs.session_start_ts >= date''#v_load_date_txt#''
