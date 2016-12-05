@@ -1,5 +1,3 @@
-drop FUNCTION load_s_desktop_session(text, date);
-
 CREATE OR REPLACE FUNCTION load_s_desktop_session(p_schema_name text, p_load_date date)
 RETURNS bigint AS
 $BODY$
@@ -39,12 +37,21 @@ BEGIN
         (select     
             parent_dataserver_session
         FROM        		       
-            p_cpu_usage            		       
+            p_cpu_usage t
+            left outer join (select distinct
+                                dataserver_session
+                            from
+                                p_desktop_session
+                            where 1 = 1
+                                and session_start_ts >= date''#v_load_date_txt#'' - interval''1 day''
+                                and session_start_ts < date''#v_load_date_txt#''
+                            ) ds on (ds.dataserver_session = t.parent_dataserver_session)
         WHERE 1 = 1
             and ts_rounded_15_secs >= date''#v_load_date_txt#''
             and ts_rounded_15_secs <= date''#v_load_date_txt#'' + interval''26 hours''
             and parent_dataserver_session IS NOT NULL
             and parent_dataserver_session not in (''default'', ''-'')
+            and ds.dataserver_session is null
         GROUP BY                
             parent_dataserver_session
         HAVING max(parent_vizql_session) is null
@@ -69,12 +76,7 @@ BEGIN
             slogs.num_error,
             slogs.num_warn,
             ''Desktop'' as user_type,
-            coalesce(ds.id, dc.datasource_id) as datasource_id
-            --slogs.data_connection_name,
-            --slogs.dbname,
-            --slogs.server_viewerid,
-            --slogs.tdc_class
-                        
+            coalesce(e.id, dc.datasource_id) as datasource_id                        
         from        
             t_base b
             inner join   
@@ -106,17 +108,15 @@ BEGIN
                                 max(t.site) as sitename,
                                 min(data_connection_name) AS data_connection_name,
                                 max(f.server_viewerid) as server_viewerid,
-                                replace(min(dbname), '' '' , '''') as dbname,
-                                min(tdc_class) as tdc_class
+                                min(f.descriptor) as descriptor
         	                FROM 
         	                    p_serverlogs t
                                 inner join (select parent_dataserver_session,
                                                    min(ts) as session_start_ts,
                                                    max(ts) as session_end_ts,
                                                    max(case when k = ''ds-connect-data-connection'' then substring(v FROM ''.*named-connection name=''''(.*?)''''.*'') end) AS data_connection_name,
-                                                   max(case when k = ''msg'' then substring(v from ''Found matching TDC.*class=''''(.*?)'''', vendor'') end) as tdc_class,
                                                    max(case when k = ''construct-protocol'' then substring(v from ''"server-viewerid":"(.*?)","'') end) as server_viewerid,
-                                                   max(case when k = ''ds-connect-data-connection'' then substring(v from E''dbname.*\\\\\\\\(.*?)\.tde'') end) as dbname 
+                                                   max(case when k = ''ds-connect-data-connection'' then substring(v from E''dbname.*\\\\\\\\\\\\\\\\(.*?)\\\\\\\\\\\\\\\\.*?\.tde'') end) as descriptor
                                             from
                                                 p_serverlogs
                                              where  1 = 1
@@ -141,19 +141,22 @@ BEGIN
             left outer join h_system_users su on (su.name = slogs.username
         						                 and slogs.session_start_ts between su.p_valid_from and su.p_valid_to
         						  				 )
+            left outer join h_extracts e on (1 = 1
+                                            and e.descriptor = slogs.descriptor
+                                            and slogs.session_start_ts between e.p_valid_from and e.p_valid_to
+                                            )
+            left outer join h_datasources ds on (1 = 1
+                                        and ds.site_id = sites.id
+                                        and ds.id = e.datasource_id
+                                        and slogs.session_start_ts between ds.p_valid_from and ds.p_valid_to)                                            
             left outer join h_data_connections dc on (1 = 1    
                                                 and dc.owner_type = ''Datasource''
                                                 and dc.name = slogs.data_connection_name
-                                                and slogs.session_start_ts between dc.p_valid_from and dc.p_valid_to)
-            left outer join h_datasources ds on (1 = 1
-                                                --and ds.db_class = coalesce(slogs.tdc_class, ''dataengine'')
-                                                and ds.site_id = sites.id                                                
-                                                and ds.repository_url = slogs.dbname
-                                                and slogs.session_start_ts between ds.p_valid_from and ds.p_valid_to)
+                                                and slogs.session_start_ts between dc.p_valid_from and dc.p_valid_to)            
             left outer join h_datasources dc_ds on (1 = 1
-                                            and ds.site_id = sites.id
-                                            and ds.id = dc.datasource_id                                                                                
-                                            and slogs.session_start_ts between ds.p_valid_from and ds.p_valid_to)                                                
+                                            and dc_ds.site_id = sites.id
+                                            and dc_ds.id = dc.datasource_id                                                                                
+                                            and slogs.session_start_ts between dc_ds.p_valid_from and dc_ds.p_valid_to)                                                
             left outer join h_projects p on (1 = 1
                                             and p.site_id = sites.id
                                             and p.id = coalesce(ds.project_id, dc_ds.project_id)
