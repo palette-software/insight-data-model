@@ -13,7 +13,6 @@ begin
 						when p_table_name = 'p_cpu_usage_agg_report' then 'timestamp_utc'
 						when p_table_name in ('p_interactor_session', 'p_desktop_session') then 'session_start_ts'
                         when p_table_name in ('p_http_requests', 'p_background_jobs', 'p_async_jobs') then 'created_at'
-                        when p_table_name in ('t_tde_filename_pids') then 'ts_from'
 						when p_table_name = 'p_load_dates' then 'load_date'
 						else 'ts'
 					end;		
