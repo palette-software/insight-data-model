@@ -32,7 +32,7 @@ insert into t_tde_filename_pids
 	    substr(line, 5) AS pid,
 	    ts
 	  FROM
-	    palette.plainlogs
+        plainlogs
 	  WHERE
 	    line LIKE 'pid=%'
 	  GROUP BY 
