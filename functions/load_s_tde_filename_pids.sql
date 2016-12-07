@@ -1,14 +1,3 @@
-select * from palette.s_tde_filename_pids
-where 1 = 1
---ts_from >= date'2016-12-04'
-and file_prefix = 'tdeserver_vizqlserver_2'
-and host_name = 'tabpwrk106d';
-
---delete from palette.s_tde_filename_pids where ts_from >= date'2016-12-05';
-select load_s_tde_filename_pids('palette', date'2016-12-05');
-select load_s_tde_filename_pids('palette', date'2016-12-06');
-
-
 CREATE or replace function load_s_tde_filename_pids(p_schema_name text, p_load_date date) returns bigint
 AS $$
 declare	
@@ -73,7 +62,7 @@ begin
             file_prefix,
             row_number() over (partition by host_name, file_prefix order by ts_from) as rn
         from
-            s_tde_filename_pids                    
+            s_tde_filename_pids
         where 1 = 1
             and ts_from >= date''#v_load_date_txt#'' + interval''2 hours''
             and ts_from < date''#v_load_date_txt#'' + interval''26 hours''
@@ -92,6 +81,10 @@ begin
     
 	GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
     v_num_inserted_all := v_num_inserted_all + v_num_inserted;
+    
+    delete from s_tde_filename_pids
+    where 1 = 1
+        and ts_to <= p_load_date - interval'30 days';
     
     vacuum analyze s_tde_filename_pids;
     
