@@ -229,7 +229,7 @@ begin
 				substr(line, 1, greatest(position('':'' in line) - 1, 1)) as session_uid
           from 
 		  		plainlogs pl0
-     	  		left outer join s_tde_filename_pids p on (pl0.host_name = p.host_name and
+     	  		left outer join t_tde_filename_pids p on (pl0.host_name = p.host_name and
 														substring(pl0.filename from ''^[a-z_]+[0-9]+'') = p.file_prefix and
 		  										  		pl0.ts >= p.ts_from and 
 														pl0.ts < p.ts_to

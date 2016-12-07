@@ -30,8 +30,8 @@
       name: load_s_serverlogs_tabproto
       query: select load_s_serverlogs_tabproto('{{Schema}}', date'{{LoadDate}}')
     -
-      name: load_s_tde_filename_pids
-      query: select load_s_tde_filename_pids('{{Schema}}', date'{{LoadDate}}')      
+      name: load_t_tde_filename_pids
+      query: select load_t_tde_filename_pids('{{Schema}}', date'{{LoadDate}}')      
     -
       name: load_s_serverlogs_tdeserver
       query: select load_s_serverlogs_tdeserver('{{Schema}}', date'{{LoadDate}}')

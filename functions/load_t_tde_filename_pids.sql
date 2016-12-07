@@ -1,4 +1,4 @@
-CREATE or replace function load_s_tde_filename_pids(p_schema_name text, p_load_date date) returns bigint
+CREATE or replace function load_t_tde_filename_pids(p_schema_name text, p_load_date date) returns bigint
 AS $$
 declare	
 	v_sql text;
@@ -9,10 +9,10 @@ begin
 
 	execute 'set local search_path = ' || p_schema_name;
     
-    perform check_if_load_date_already_in_table(p_schema_name, 's_tde_filename_pids', p_load_date, true);
+    perform check_if_load_date_already_in_table(p_schema_name, 't_tde_filename_pids', p_load_date, true);
        
 	v_sql := '
-	insert into s_tde_filename_pids 
+	insert into t_tde_filename_pids 
 		(host_name,
 		file_prefix,
 		pid,
@@ -52,7 +52,7 @@ begin
     v_num_inserted_all := v_num_inserted_all + v_num_inserted;
     
     v_sql := '
-    update s_tde_filename_pids as t
+    update t_tde_filename_pids as t
     set
         ts_to = s.ts_from
     from         
@@ -62,7 +62,7 @@ begin
             file_prefix,
             row_number() over (partition by host_name, file_prefix order by ts_from) as rn
         from
-            s_tde_filename_pids
+            t_tde_filename_pids
         where 1 = 1
             and ts_from >= date''#v_load_date_txt#'' + interval''2 hours''
             and ts_from < date''#v_load_date_txt#'' + interval''26 hours''
@@ -82,11 +82,11 @@ begin
 	GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
     v_num_inserted_all := v_num_inserted_all + v_num_inserted;
     
-    delete from s_tde_filename_pids
+    delete from t_tde_filename_pids
     where 1 = 1
         and ts_to <= p_load_date - interval'30 days';
     
-    vacuum analyze s_tde_filename_pids;
+    vacuum analyze t_tde_filename_pids;
     
 	return v_num_inserted_all;
 

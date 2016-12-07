@@ -1,4 +1,4 @@
-CREATE TABLE s_tde_filename_pids (
+CREATE TABLE t_tde_filename_pids (
     p_id bigserial,
     host_name text,
 	file_prefix text,
