@@ -74,7 +74,7 @@ BEGIN
             min(case when datasrv_sess.process_name = ''dataserver'' then slogs.username  || '' ('' || coalesce(su.id, -1) || '')'' end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as interactor_user_name_id,                        
             min(case when datasrv_sess.process_name = ''dataserver'' then su_pub.id end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as publisher_id,
             min(case when datasrv_sess.process_name = ''dataserver'' then su_pub.friendly_name || '' ('' || su_pub.id || '')'' end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as publisher_friendly_name_id,
-            min(case when datasrv_sess.process_name = ''dataserver'' then su_pub.name  || '' ('' || coalesce(su_pub.id, -1) || '')'' end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as publisher_user_name_id,                       
+            min(case when datasrv_sess.process_name = ''dataserver'' then su_pub.name  || '' ('' || su_pub.id || '')'' end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as publisher_user_name_id,
             min(case when datasrv_sess.process_name = ''dataserver'' then sites.id end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as site_id,
             min(case when datasrv_sess.process_name = ''dataserver'' then slogs.sitename || '' ('' || coalesce(sites.id, -1) || '')'' end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) AS site_name_id,
             min(case when datasrv_sess.process_name = ''dataserver'' then p.id end) over (partition by datasrv_sess.host_name, datasrv_sess.dataserver_session) as project_id,
