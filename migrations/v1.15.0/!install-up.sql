@@ -4,13 +4,10 @@ set role palette_palette_updater;
 
 BEGIN;
 
-alter table s_tde_filename_pids rename to t_tde_filename_pids;
+drop table s_tde_filename_pids;
 
-truncate table t_tde_filename_pids;
+\i 000-up-t_tde_filename_pids.sql
 
-alter table t_tde_filename_pids add column p_id bigserial;
-alter table t_tde_filename_pids add column p_cre_date timestamp default now();
-alter table t_tde_filename_pids set distributed by (host_name, file_prefix, ts_from);
 
 insert into t_tde_filename_pids 
 		(host_name,

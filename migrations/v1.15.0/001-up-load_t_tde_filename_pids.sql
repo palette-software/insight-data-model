@@ -85,9 +85,7 @@ begin
     -- We could delete only interval - 1 day but lets keep 30 days history    
     delete from t_tde_filename_pids
     where 1 = 1
-        and ts_to <= p_load_date - interval'30 days';
-    
-    vacuum analyze t_tde_filename_pids;
+        and ts_to <= p_load_date - interval'30 days';       
     
 	return v_num_inserted_all;
 
