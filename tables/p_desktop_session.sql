@@ -8,9 +8,12 @@ CREATE TABLE p_desktop_session
 	session_start_ts TIMESTAMP WITHOUT TIME ZONE,
 	session_end_ts TIMESTAMP WITHOUT TIME ZONE,
 	session_duration DOUBLE PRECISION,
-    interactor_id BIGINT,
+    interactor_id BIGINT,    
 	interactor_friendly_name_id TEXT,
-	interactor_user_name_id TEXT,
+	interactor_user_name_id TEXT,    
+    publisher_id BIGINT,    
+	publisher_friendly_name_id TEXT,
+	publisher_user_name_id TEXT,
     site_id BIGINT,
 	site_name_id TEXT,
     project_id BIGINT,
@@ -20,6 +23,7 @@ CREATE TABLE p_desktop_session
 	num_warnings INTEGER,
 	user_type TEXT,    
     datasource_id int,
+    datasource_name TEXT,    
     p_cre_date timestamp default now()
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
