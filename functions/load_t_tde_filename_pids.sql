@@ -87,8 +87,6 @@ begin
     where 1 = 1
         and ts_to <= p_load_date - interval'30 days';
     
-    vacuum analyze t_tde_filename_pids;
-    
 	return v_num_inserted_all;
 
 END;
