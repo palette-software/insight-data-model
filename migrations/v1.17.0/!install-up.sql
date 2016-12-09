@@ -16,6 +16,6 @@ alter table s_desktop_session add column publisher_user_name_id TEXT default nul
 
 \i 001-up-load_s_desktop_session.sql
 
-insert into db_version_meta(version_number) values ('v1.16.0');
+insert into db_version_meta(version_number) values ('v1.17.0');
 
 COMMIT;
