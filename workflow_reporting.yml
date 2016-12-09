@@ -212,18 +212,9 @@
       name: p_cpu_usage_bootstrap_rpt - ins_stage_to_dwh
       query: select ins_stage_to_dwh('{{Schema}}', 'p_cpu_usage_bootstrap_rpt')
 -
-  name: Load p_cpu_usage_agg_report
+  name: Insert new load date
   transaction: False
   queries:
     -
-      name: truncate table s_cpu_usage_agg_report
-      query: truncate table s_cpu_usage_agg_report
-    -
-      name: load_s_cpu_usage_agg_report
-      query: select load_s_cpu_usage_agg_report('{{Schema}}', date'{{LoadDate}}')
-    -
-      name: p_cpu_usage_agg_report - manage_partitions
-      query: select manage_partitions('{{Schema}}', 'p_cpu_usage_agg_report')
-    -
-      name: p_cpu_usage_agg_report - ins_stage_to_dwh
-      query: select ins_stage_to_dwh('{{Schema}}', 'p_cpu_usage_agg_report')
+      name: insert new load date
+      query: select insert_new_load_date('{{Schema}}', date'{{LoadDate}}')
