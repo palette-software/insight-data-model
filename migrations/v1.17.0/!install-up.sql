@@ -8,6 +8,7 @@ BEGIN;
 grant select on p_load_dates to palette_palette_looker;
 insert into p_load_dates (load_date) (select max(timestamp_utc) from p_cpu_usage_agg_report);
 drop table p_cpu_usage_agg_report;
+drop table s_cpu_usage_agg_report;
 drop function load_s_cpu_usage_agg_report(p_schema_name text, p_load_date date);
 \i 002-up-insert_new_load_date.sql
 drop function manage_partitions(p_schema_name text, p_table_name text);
