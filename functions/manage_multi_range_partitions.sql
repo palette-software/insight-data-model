@@ -10,6 +10,7 @@ declare
 	v_subpart_cols text;
     v_table_name text;
     v_max_ts_date_p_threadinfo_delta text;
+    v_last_partition date;
 BEGIN
 
 		v_subpart_cols := '';
@@ -127,30 +128,51 @@ BEGIN
 		v_sql_cur := replace(v_sql_cur, '#table_name#',  v_table_name);		
 		
 		open c for execute (v_sql_cur);
-			loop
-				  fetch c into rec;
-				  exit when not found;
-				  
-				  v_sql := 'ALTER TABLE #schema_name#.#table_name# 
-				  		         ADD PARTITION "#partition_name#" START (date''#start_date#'') INCLUSIVE END (date''#end_date#'') EXCLUSIVE WITH (appendonly=true, orientation=column, compresstype=quicklz)';
-						
-				  v_sql := replace(v_sql, '#schema_name#', p_schema_name);
-				  v_sql := replace(v_sql, '#table_name#', v_table_name);		
-				  v_sql := replace(v_sql, '#partition_name#', to_char(rec.d, 'yyyymmdd'));
-				  v_sql := replace(v_sql, '#start_date#', to_char(rec.d, 'yyyy-mm-dd'));
-				  v_sql := replace(v_sql, '#end_date#', to_char(rec.d + 1, 'yyyy-mm-dd'));				  			  			  				  
-				  
-				begin
-					if (not does_part_exist(p_schema_name, v_table_name, to_char(rec.d, 'yyyymmdd'))) then
-				  		execute v_sql;
-					end if;
-				exception when duplicate_object
-						then null;
-				end;
-				  				  
-				 raise notice 'I: %', v_sql;
-			end loop;
-			close c;
+		loop
+			fetch c into rec;
+			exit when not found;
+            
+            -- In rare cases there is no data for an entire day from a specfic host
+            -- We need to make sure that there is no hole between the days since 
+            -- it can cause "no partition key error" if another host does have data for this day
+            select 
+                to_date(max(partitionname), 'yyyymmdd') as last_partition into v_last_partition
+            from 
+                pg_partitions
+            where 1 = 1
+                and schemaname = p_schema_name
+                and tablename = p_table_name
+                and partitionlevel = 0;
+
+            if v_last_partition = date'1001-01-01' then
+                v_last_partition := rec.d - 1;
+            end if;
+            
+            for i in 1 .. (rec.d - v_last_partition)
+            loop
+            
+                v_sql := 'ALTER TABLE #schema_name#.#table_name# 
+    			         ADD PARTITION "#partition_name#" START (date''#start_date#'') INCLUSIVE END (date''#end_date#'') EXCLUSIVE WITH (appendonly=true, orientation=column, compresstype=quicklz)';
+    					
+    			v_sql := replace(v_sql, '#schema_name#', p_schema_name);
+    			v_sql := replace(v_sql, '#table_name#', v_table_name);		
+    			v_sql := replace(v_sql, '#partition_name#', to_char(v_last_partition + i, 'yyyymmdd'));
+    			v_sql := replace(v_sql, '#start_date#', to_char(v_last_partition + i, 'yyyy-mm-dd'));
+    			v_sql := replace(v_sql, '#end_date#', to_char(v_last_partition + i + 1, 'yyyy-mm-dd'));
+    			  
+    			begin
+    				if (not does_part_exist(p_schema_name, v_table_name, to_char(v_last_partition + i, 'yyyymmdd'))) then
+    			  		execute v_sql;
+    				end if;
+    			exception when duplicate_object
+    					then null;
+    			end;
+    			  				  
+    			raise notice 'I: %', v_sql;
+            end loop;
+			  			
+		end loop;
+		close c;
 	
 	return 0;
 
