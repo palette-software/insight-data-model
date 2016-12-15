@@ -10,51 +10,6 @@ begin
 	execute 'set local search_path = ' || p_schema_name;
 
     perform check_if_load_date_already_in_table(p_schema_name, 'p_cpu_usage', p_load_date, true);
-
-    -- Determine "cross utc midnight" sessions
-    truncate table cross_utc_midnight_sessions;
-    
-    insert into cross_utc_midnight_sessions(
-                                            parent_process_name,
-                                            session
-                                            )
-        
-    select 
-        'vizqlserver' as parent_process_name,
-        parent_vizql_session as session
-    from 
-        s_serverlogs
-    where
-        1 = 1
-        and ts >= p_load_date
-        and ts <= p_load_date + interval'26 hours'
-        and parent_vizql_session is not null
-        and parent_vizql_session not in ('-', 'default')
-    group by         
-        parent_vizql_session
-    having 
-        min(ts::date) <> max(ts::date)
-        
-    union all    
-    
-    select 
-        'dataserver' as parent_process_name,
-        parent_dataserver_session
-    from 
-        s_serverlogs
-    where
-        1 = 1
-        and ts >= p_load_date
-        and ts <= p_load_date + interval'26 hours'
-        and parent_vizql_session is null        
-        and parent_dataserver_session is not null
-        and parent_dataserver_session not in ('-', 'default')
-    group by         
-        parent_dataserver_session
-    having 
-        min(ts::date) <> max(ts::date);
-        
-    analyze cross_utc_midnight_sessions;
                         
     truncate table s_serverlogs_plus_2_hours;
        
