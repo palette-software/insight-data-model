@@ -144,11 +144,15 @@ begin
 		
 		v_sql := v_sql || 
 		' FROM
-            background_jobs bj            
+            (select t.*,
+                    split_part(replace(args, ''''---'''', ''''''''), ''''\\n- '''', 2) as wd_type,
+                    split_part(replace(args, ''''---'''', ''''''''), ''''\\n- '''', 3) as wd_id
+            from
+                background_jobs t) bj
             left outer join t_workbooks_datasources wd on (1 = 1 
                                                         and wd.site_id = bj.site_id
-                                                        and wd.name = bj.title
-                                                        and wd.wd_type = bj.subtitle
+                                                        and wd.wd_type = bj.wd_type
+                                                        and wd.workbooks_datasources_id = bj.wd_id
                                                         and bj.updated_at BETWEEN wd.p_valid_from AND wd.p_valid_to)
                                                         
             left outer join h_users u on (1 = 1 
