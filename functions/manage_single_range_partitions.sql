@@ -47,12 +47,13 @@ BEGIN
             -- This has to be applied only for plainlogs
             
             select 
-                to_date(max(partitionname), 'yyyymmdd') as last_partition into v_last_partition
+                coalesce(to_date(max(partitionname), 'yyyymmdd'), date'1001-01-01') as last_partition into v_last_partition
             from 
                 pg_partitions
             where 1 = 1
                 and schemaname = p_schema_name
                 and tablename = 'plainlogs'
+                and tablename = p_table_name
                 and partitionlevel = 0;
 
             if v_last_partition = date'1001-01-01' then
@@ -61,7 +62,7 @@ BEGIN
             
             for i in 1 .. (rec.d - v_last_partition)
             loop
-            
+                
     			v_sql := 'ALTER TABLE #schema_name#.#table_name# 
     			             ADD PARTITION "#partition_name#" START (date''#start_date#'') INCLUSIVE END (date''#end_date#'') EXCLUSIVE WITH (appendonly=true, orientation=column, compresstype=quicklz)';
 
@@ -76,7 +77,7 @@ BEGIN
     				v_sql := replace(v_sql, '#partition_name#', to_char(rec.d, 'yyyymm'));
     				v_sql := replace(v_sql, '#start_date#', to_char(rec.d, 'yyyy-mm') || '-01');
     				v_sql := replace(v_sql, '#end_date#', to_char(rec.d + interval'1 month', 'yyyy-mm') || '-01');
-    			elseif v_table_name in ('p_serverlogs_bootstrap_rpt', 'plainlogs') then --day
+    			elseif v_table_name in ('plainlogs', 'p_serverlogs_bootstrap_rpt') then --day
     				v_sql := replace(v_sql, '#partition_name#', to_char(v_last_partition + i, 'yyyymmdd'));
     				v_sql := replace(v_sql, '#start_date#', to_char(v_last_partition + i, 'yyyy-mm-dd'));
     				v_sql := replace(v_sql, '#end_date#', to_char(v_last_partition + i + 1, 'yyyy-mm-dd'));
@@ -104,11 +105,7 @@ BEGIN
     				end if;
     			end;
     			
-    			raise notice 'I: %', v_sql;
-                
-                if v_table_name <> 'plainlogs' then
-                    exit;
-                end if;
+    			raise notice 'I: %', v_sql;                                
                 
             end loop;                
 		end loop;
