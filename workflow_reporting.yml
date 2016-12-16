@@ -39,13 +39,15 @@
       name: load_s_serverlogs_tdeserver
       query: select load_s_serverlogs_tdeserver('{{Schema}}', date'{{LoadDate}}')
 -
+  # Requires s_serverlogs
   name: Load cross_utc_midnight_sessions
   transaction: False
-  queries: 
+  queries:
     -
       name: load_cross_utc_midnight_sessions
       query: select load_cross_utc_midnight_sessions('{{Schema}}', date'{{LoadDate}}')
 -
+  # Requires cross_utc_midnight_sessions
   name: Load p_http_requests
   transaction: False
   queries:
@@ -79,6 +81,7 @@
       name: select load_p_background_jobs
       query: select load_p_background_jobs('{{Schema}}', date'{{LoadDate}}')
 -
+  # Requires s_serverlogs, p_http_requests
   name: Load s_serverlogs_plus_2_hours
   transaction: False
   queries:
