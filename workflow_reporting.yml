@@ -38,23 +38,13 @@
     -
       name: load_s_serverlogs_tdeserver
       query: select load_s_serverlogs_tdeserver('{{Schema}}', date'{{LoadDate}}')
-    -
-      name: p_serverlogs - manage_partitions
-      query: select manage_partitions('{{Schema}}', 'p_serverlogs')
 -
-  name: Load s_serverlogs_plus_2_hours
+  name: Load cross_utc_midnight_sessions
   transaction: False
-  queries:
+  queries: 
     -
-      name: load_s_serverlogs_plus_2_hours
-      query: select load_s_serverlogs_plus_2_hours('{{Schema}}', date'{{LoadDate}}')
--
-  name: Load p_serverlogs
-  transaction: False
-  queries:
-    -
-      name: insert_p_serverlogs_from_s_serverlogs
-      query: select insert_p_serverlogs_from_s_serverlogs('{{Schema}}', date'{{LoadDate}}')
+      name: load_cross_utc_midnight_sessions
+      query: select load_cross_utc_midnight_sessions('{{Schema}}', date'{{LoadDate}}')
 -
   name: Load p_http_requests
   transaction: False
@@ -88,6 +78,23 @@
     -
       name: select load_p_background_jobs
       query: select load_p_background_jobs('{{Schema}}', date'{{LoadDate}}')
+-
+  name: Load s_serverlogs_plus_2_hours
+  transaction: False
+  queries:
+    -
+      name: load_s_serverlogs_plus_2_hours
+      query: select load_s_serverlogs_plus_2_hours('{{Schema}}', date'{{LoadDate}}')
+-
+  name: Load p_serverlogs
+  transaction: False
+  queries:
+    -
+      name: p_serverlogs - manage_partitions
+      query: select manage_partitions('{{Schema}}', 'p_serverlogs')
+    -
+      name: insert_p_serverlogs_from_s_serverlogs
+      query: select insert_p_serverlogs_from_s_serverlogs('{{Schema}}', date'{{LoadDate}}')
 -
   name: Load p_cpu_usage
   transaction: False
