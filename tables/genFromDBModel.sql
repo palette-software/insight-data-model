@@ -281,7 +281,8 @@ CREATE TABLE "p_threadinfo"(
  "cpu_core_consumption" Double precision,
  "memory_usage_bytes" Bigint,
  "memory_usage_delta_bytes" Bigint,
- "is_thread_level" Character varying(1)
+ "is_thread_level" Character varying(1),
+ "p_cre_date" timestamp without time zone default now()
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (host_name, process_id, thread_id)

@@ -11,15 +11,15 @@
       name: Log Data Model Version
       query: select first_value(version_number) over (order by id desc) as model_version from db_version_meta v limit 1
 -
-  name: Load p_threadinfo_delta
+  name: Load p_threadinfo
   transaction: False
   queries:
     -
-      name: p_threadinfo_delta - manage_partitions
-      query: select manage_partitions('{{Schema}}', 'p_threadinfo_delta')
+      name: p_threadinfo - manage_partitions
+      query: select manage_partitions('{{Schema}}', 'p_threadinfo')
     -
-      name: load_p_threadinfo_delta
-      query: select load_p_threadinfo_delta('{{Schema}}')
+      name: load_p_threadinfo
+      query: select load_p_threadinfo('{{Schema}}')
 -
   name: Load p_process_class_agg_report
   transaction: False
