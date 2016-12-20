@@ -18,6 +18,7 @@ alter function load_p_threadinfo_delta(p_schema_name text) rename to load_p_thre
 \i 008-up-load_s_serverlogs_tabproto.sql
 \i 009-up-manage_multi_range_partitions.sql
 \i 010-up-manage_partitions.sql
+drop view p_processinfo;
 
 insert into db_version_meta(version_number) values ('v1.19.0');
 
