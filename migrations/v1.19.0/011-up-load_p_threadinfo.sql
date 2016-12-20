@@ -1,4 +1,4 @@
-CREATE or replace function load_p_threadinfo_delta(p_schema_name text) returns bigint
+CREATE or replace function load_p_threadinfo(p_schema_name text) returns bigint
 AS $$
 declare
 	v_sql text;
@@ -13,7 +13,7 @@ BEGIN
 			
 	execute 'set local search_path = ' || p_schema_name;
 
-	v_sql_cur := 'select get_max_ts(''#schema_name#'', ''p_threadinfo_delta'')';
+	v_sql_cur := 'select get_max_ts(''#schema_name#'', ''p_threadinfo'')';
 	v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);	
 	execute v_sql_cur into v_max_ts_p_threadinfo;
 		
@@ -29,7 +29,7 @@ BEGIN
                         )   
     loop
         
-        v_sql_cur := 'select get_max_ts_by_host(''#schema_name#'', ''p_threadinfo_delta'', ''#host_name#'', ''ts_rounded_15_secs'')';
+        v_sql_cur := 'select get_max_ts_by_host(''#schema_name#'', ''p_threadinfo'', ''#host_name#'', ''ts_rounded_15_secs'')';
     	v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
         v_sql_cur := replace(v_sql_cur, '#host_name#', rec.host_name);
     	execute v_sql_cur into v_max_ts_p_threadinfo_host;
@@ -43,7 +43,7 @@ BEGIN
 	    end if;
         
     	v_sql := 
-    	'insert into p_threadinfo_delta
+    	'insert into p_threadinfo
     	(	
     		threadinfo_id,
     		host_name,
@@ -191,7 +191,7 @@ BEGIN
 						and p_id > coalesce((select
 											    max(a.threadinfo_id)
     										from 
-    											p_threadinfo_delta a
+    											p_threadinfo a
     										where
                                                 host_name = ''#host_name#''
     											and ts_rounded_15_secs >= date''#max_ts_p_threadinfo_host#''
@@ -220,7 +220,7 @@ BEGIN
     					select last_ti.*,
     						   row_number() over (PARTITION BY host_name,process_id,process_name,thread_id,start_ts ORDER BY ts DESC) rn
     					from
-    						p_threadinfo_delta last_ti
+    						p_threadinfo last_ti
     					where
                             host_name = ''#host_name#''
     						and last_ti.ts_rounded_15_secs >= date''#max_ts_p_threadinfo_host#'' - interval''1 hour''

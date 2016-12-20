@@ -1,23 +1,22 @@
-CREATE or replace function load_p_threadinfo(p_schema_name text, p_load_type text) returns bigint
+CREATE or replace function load_p_threadinfo(p_schema_name text) returns bigint
 AS $$
 declare
 	v_sql text;
-	v_num_inserted bigint := 0;
-    v_num_inserted_host bigint := 0;
-	v_max_ts_date_p_threadinfo text;
+    v_num_inserted bigint := 0;
+    v_num_inserted_host bigint := 0;	
 	v_sql_cur text;
 	v_max_ts_p_threadinfo timestamp;
-	v_max_ts_p_cpu_usage_report timestamp;	
-	v_min_ts_threadinfo text;
+    v_max_ts_p_threadinfo_host timestamp;
+	v_min_ts_threadinfo_host timestamp;
     rec record;
-BEGIN	    
-	
-    execute 'set local search_path = ' || p_schema_name;												
+BEGIN	
+			
+	execute 'set local search_path = ' || p_schema_name;
 
-    v_sql_cur := 'select get_max_ts_date(''#schema_name#'', ''p_threadinfo'')';
-  	v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
-    execute v_sql_cur into v_max_ts_p_threadinfo;
-    
+	v_sql_cur := 'select get_max_ts(''#schema_name#'', ''p_threadinfo'')';
+	v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);	
+	execute v_sql_cur into v_max_ts_p_threadinfo;
+		
     -- Get host_names for threadinfo
     -- If one host is always lag behind more than 1 day for some reason
     -- we will loose data
@@ -30,35 +29,19 @@ BEGIN
                         )   
     loop
         
-    	v_sql_cur := 'select get_max_ts_by_host(''#schema_name#'', ''p_threadinfo'', ''#host_name#'', ''ts_rounded_15_secs'')';
+        v_sql_cur := 'select get_max_ts_by_host(''#schema_name#'', ''p_threadinfo'', ''#host_name#'', ''ts_rounded_15_secs'')';
     	v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
         v_sql_cur := replace(v_sql_cur, '#host_name#', rec.host_name);
-    	execute v_sql_cur into v_max_ts_p_threadinfo;
-    	
-    	v_sql_cur := 'select get_max_ts_by_host(''#schema_name#'', ''p_cpu_usage_report'', ''#host_name#'', ''cpu_usage_ts_rounded_15_secs'')';
-    	v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);	
-        v_sql_cur := replace(v_sql_cur, '#host_name#', rec.host_name);
-    	execute v_sql_cur into v_max_ts_p_cpu_usage_report;																					
-    				
-    	if  v_max_ts_p_threadinfo > v_max_ts_p_cpu_usage_report + interval '20 minutes' then
-    		/*No p_threadinfo load since it is already ahead.
-    		Probably some problem occured during the load after loading p_threadinfo*/
-    		raise notice 'I: %', 'Skip p_threadinfo load since it is already ahead.';
-    		continue;
-    	end if;						
-    				
-    	v_max_ts_date_p_threadinfo := 'date''' || to_char(v_max_ts_p_threadinfo, 'yyyy-mm-dd') || '''';
-
-    	v_sql_cur := 'select to_char(min(ts), ''yyyy-mm-dd hh24:mi:ss.ms'') from threadinfo where host_name = ''#host_name#'' and ts > timestamp''' || to_char(v_max_ts_p_threadinfo, 'yyyy-mm-dd hh24:mi:ss.ms') || ''' + interval ''30 seconds''';
-    	v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);
-        v_sql_cur := replace(v_sql_cur, '#host_name#', rec.host_name);
-    	execute v_sql_cur into v_min_ts_threadinfo;
-    	v_min_ts_threadinfo := 'timestamp''' || v_min_ts_threadinfo || '''';
-    	
-    	if v_min_ts_threadinfo is null then
-    		continue;
-    	end if;
-    	
+    	execute v_sql_cur into v_max_ts_p_threadinfo_host;
+    							
+    	v_sql_cur := 'select min(ts) from threadinfo where host_name = ''#host_name#'' and ts > timestamp''' || to_char(v_max_ts_p_threadinfo_host, 'yyyy-mm-dd hh24:mi:ss.ms') || ''' + interval ''30 seconds''';
+        v_sql_cur := replace(v_sql_cur, '#host_name#', rec.host_name);	
+    	execute v_sql_cur into v_min_ts_threadinfo_host;
+                
+        if v_min_ts_threadinfo_host is null then
+		    continue;
+	    end if;
+        
     	v_sql := 
     	'insert into p_threadinfo
     	(	
@@ -203,66 +186,65 @@ BEGIN
     				       , p_cre_date						       
     		  		from
     		  				threadinfo curr_ti
-                    where 								
-    						host_name = ''#host_name#''
-                            and p_id > coalesce((select
-        											max(a.threadinfo_id)
-        										from 
-        											p_threadinfo a
-        										where
-                                                    host_name = ''#host_name#''
-        											and ts_rounded_15_secs >= #max_ts_date_p_threadinfo#
-        										), 0)
-    						and ts >= #max_ts_date_p_threadinfo#
-    						and ts < #min_ts_threadinfo# + interval''24 hours''
-    						
-    					union all
-    					
-    					SELECT  null as p_id
-    					       , null as p_filepath
-    					       , host_name
-    					       , process_name
-    					       , ts
-    					       , process_id
-    					       , thread_id
-    					       , cpu_time_ticks
-    					       , null as poll_cycle_ts
-    					       , start_ts
-    					       , null as thread_count
-    					       , memory_usage_bytes
-    					       , case when is_thread_level = ''Y'' then true else false end as is_thread_level
-    					       , null as p_cre_date			 
+                    where
+                        host_name = ''#host_name#''
+						and p_id > coalesce((select
+											    max(a.threadinfo_id)
+    										from 
+    											p_threadinfo a
+    										where
+                                                host_name = ''#host_name#''
+    											and ts_rounded_15_secs >= date''#max_ts_p_threadinfo_host#''
+    										), 0)
+						and ts >= date''#max_ts_p_threadinfo_host#''
+					    and ts < (timestamp''#min_ts_threadinfo_host#'' + interval''24 hours'')::date
+					
+    				union all
+    				
+    				SELECT  null as p_id
+    				       , null as p_filepath
+    				       , host_name
+    				       , process_name
+    				       , ts
+    				       , process_id
+    				       , thread_id
+    				       , cpu_time_ticks
+    				       , null as poll_cycle_ts
+    				       , start_ts
+    				       , null as thread_count
+    				       , memory_usage_bytes
+    				       , case when is_thread_level = ''Y'' then true else false end as is_thread_level
+    				       , null as p_cre_date			 
+    				from
+    					(
+    					select last_ti.*,
+    						   row_number() over (PARTITION BY host_name,process_id,process_name,thread_id,start_ts ORDER BY ts DESC) rn
     					from
-    						(
-    						select last_ti.*,
-    							   row_number() over (PARTITION BY host_name,process_id,process_name,thread_id,start_ts ORDER BY ts DESC) rn
-    						from
-    							p_threadinfo last_ti
-    						where
-                                host_name = ''#host_name#''
-    							and last_ti.ts_rounded_15_secs >= #max_ts_date_p_threadinfo# - interval''1 hour''
-    						) a 
-    					where rn = 1
-    				) ti	  
+    						p_threadinfo last_ti
+    					where
+                            host_name = ''#host_name#''
+    						and last_ti.ts_rounded_15_secs >= date''#max_ts_p_threadinfo_host#'' - interval''1 hour''
+
+    					) a 
+    				where rn = 1
+    				) ti
     	      ) threadinfo
     		  where
     		  	p_id is not null
-    	) ext_threadinfo';
+    	) ext_threadinfo';			
 
-        
-        v_sql := replace(v_sql, '#schema_name#', p_schema_name);
         v_sql := replace(v_sql, '#host_name#', rec.host_name);
-    	v_sql := replace(v_sql, '#max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);
-    	v_sql := replace(v_sql, '#min_ts_threadinfo#', v_min_ts_threadinfo);
-        
+    	v_sql := replace(v_sql, '#max_ts_p_threadinfo_host#', to_char(v_max_ts_p_threadinfo_host, 'yyyy-mm-dd'));
+    	v_sql := replace(v_sql, '#min_ts_threadinfo_host#', to_char(v_min_ts_threadinfo_host, 'yyyy-mm-dd hh24:mi:ss.ms'));
+
         raise notice 'I: %', v_sql;
     	execute v_sql;
-    	
-    	GET DIAGNOSTICS v_num_inserted_host = ROW_COUNT;
+
+        GET DIAGNOSTICS v_num_inserted_host = ROW_COUNT;
         v_num_inserted := v_num_inserted + v_num_inserted_host;
-    
+
     end loop;
     
-    return v_num_inserted;
+	return v_num_inserted;
 END;
 $$ LANGUAGE plpgsql;
