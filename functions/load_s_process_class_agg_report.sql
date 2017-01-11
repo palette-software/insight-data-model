@@ -1,11 +1,11 @@
 CREATE OR REPLACE FUNCTION load_s_process_class_agg_report(p_schema_name text) returns bigint
 AS $$
 declare
-	v_sql text;
-	v_num_inserted bigint := 0;
+    v_sql text;
+    v_num_inserted bigint := 0;
     v_num_inserted_host bigint := 0;
-	v_from_for_host text;
-	v_sql_cur text;    
+    v_from_for_host text;
+    v_sql_cur text;    
     rec record;
     v_max_tho_p_id bigint;
 BEGIN
@@ -35,7 +35,7 @@ BEGIN
 
         v_sql := 
         'insert into s_process_class_agg_report
-    	    (   max_tho_p_id,
+            (   max_tho_p_id,
                 ts_rounded_15_secs,
                 process_name,
                 host_name,
@@ -43,7 +43,7 @@ BEGIN
                 cpu_usage_cpu_time_consumption_seconds,
                 cpu_usage_memory_usage_bytes,
                 tableau_process
-    		)
+            )
         select
             max_tho_p_id,
             ts_rounded_15_secs,
@@ -74,8 +74,8 @@ BEGIN
                 p_threadinfo_delta tho
                 left outer join p_process_classification pc on (pc.process_name = tho.process_name)
             where
-            	tho.thread_id = -1
-            	and tho.ts_rounded_15_secs >= date''#v_from_for_host#''
+                tho.thread_id = -1
+                and tho.ts_rounded_15_secs >= date''#v_from_for_host#''
                 -- The last 15 seconds could have new records with the new p_threadinfo load so
                 -- we always skip the very recent 15 seconds in order to avoid "merge"
                 -- This way the max(tho.p_id) always be the same for the group by
@@ -112,7 +112,7 @@ BEGIN
         v_num_inserted := v_num_inserted + v_num_inserted_host;
             
     end loop;
-	
-	return v_num_inserted;
+    
+    return v_num_inserted;
 END;
 $$ LANGUAGE plpgsql;

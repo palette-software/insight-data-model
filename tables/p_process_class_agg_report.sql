@@ -14,6 +14,6 @@ WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (p_id)
 PARTITION BY RANGE (ts_rounded_15_secs)
 (PARTITION "100101" START (date '1001-01-01') INCLUSIVE
-	END (date '1001-02-01') EXCLUSIVE
-WITH (appendonly=true, orientation=column, compresstype=quicklz)	
+    END (date '1001-02-01') EXCLUSIVE
+WITH (appendonly=true, orientation=column, compresstype=quicklz)    
 );

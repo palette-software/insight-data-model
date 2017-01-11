@@ -18,13 +18,13 @@ SELECT vizql_session
        , num_fatals
        , num_errors
        , num_warnings
-       , case when	   				
-					min(case when init_show_bootstrap_normal then 1 end) over (partition by vizql_session) = 1
-				then
-					true
-				else 
-					false
-	   	end as init_show_bootstrap_normal
+       , case when                       
+                    min(case when init_show_bootstrap_normal then 1 end) over (partition by vizql_session) = 1
+                then
+                    true
+                else 
+                    false
+           end as init_show_bootstrap_normal
        , min(show_count) over (partition by vizql_session) as show_count
        , min(bootstrap_count) over (partition by vizql_session) as bootstrap_count
        , show_elapsed_secs
@@ -32,14 +32,14 @@ SELECT vizql_session
        , show_bootstrap_delay_secs
        , user_type
        , p_id
-	   , currentsheet	   
-	   , http_referer
-	   , http_request_uri
-	   , remote_ip
-	   , user_ip
-	   , user_cookie
-	   , status
-	   , first_show_created_at
+       , currentsheet       
+       , http_referer
+       , http_request_uri
+       , remote_ip
+       , user_ip
+       , user_cookie
+       , status
+       , first_show_created_at
        , publisher_id
        , interactor_id
        , site_id

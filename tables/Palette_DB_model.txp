@@ -114,57 +114,57 @@ ETL:
 
 CASE 
 WHEN (lag_ts_int IS NULL OR start_ts_int &gt; lag_ts_int) and tid &lt;&gt; -1 
-	then cpu_time
+    then cpu_time
 WHEN cpu_time-lag_cpu_time&gt;=0
   THEN cpu_time-lag_cpu_time       
-ELSE NULL -- looks like a new thread	</Comments><DataTypeParam1></DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>0</KeepForeignKey><DefaultValue></DefaultValue><NotNull>0</NotNull><Migrated>0</Migrated><Caption>cpu_time_delta_ticks</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><DictType/><Domain/><DataType><Id>{833A0657-262F-4513-BC1B-87A6D0CE5AA5}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{9029CCC7-FDE5-45E6-8163-412A9C2F6D45}</Id><Name>ts_interval_ticks</Name><Ordinal>13</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments>
+ELSE NULL -- looks like a new thread    </Comments><DataTypeParam1></DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>0</KeepForeignKey><DefaultValue></DefaultValue><NotNull>0</NotNull><Migrated>0</Migrated><Caption>cpu_time_delta_ticks</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><DictType/><Domain/><DataType><Id>{833A0657-262F-4513-BC1B-87A6D0CE5AA5}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{9029CCC7-FDE5-45E6-8163-412A9C2F6D45}</Id><Name>ts_interval_ticks</Name><Ordinal>13</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments>
 ETL:
   CASE 
-	WHEN (lag_ts_int IS NULL OR start_ts_int &gt; lag_ts_int) and tid &lt;&gt; -1 and (ts_int - start_ts_int) &lt;= 160000000
-		 -- new thread 
-		 -- if lag_ts_int is null then we never see this pid and tid combination during the execution
-		 -- if thread start ts is more recent than the previous records timestamp then it is also a new record
-		 --
-		 -- as a sanity check we make sure that this new interval is smaller than a standard 15secs
-		 -- sampling interval
-		 -- If it is ok, then simply take current measurement timestamp minus thread start timestamp
-		THEN ts_int - start_ts_int			 
-	WHEN (lag_ts_int IS NULL OR (ts_int - lag_ts_int) &gt; 160000000)
-	   -- Thread / process with issues (most probably caused by agent restart or failure)
-	   -- Simply omit the record and analyze later, exclude from reporting
-	   THEN NULL
-	   
-	   
-	WHEN cpu_time-lag_cpu_time&gt;0 AND (ts_int-lag_ts_int) &lt; (cpu_time-lag_cpu_time) AND tid &lt;&gt; -1
-	  THEN NULL -- we have previous value but it''s bigger than the interval (like 20 secs consumption in 15 secs)
-				-- NULL means we omit this record -- we should have some automation to catch them   		   
-	WHEN cpu_time-lag_cpu_time&gt;=0 AND ts_int-lag_ts_int &gt; 0
-	   -- this looks a normal record
-	   THEN ts_int-lag_ts_int 
-	WHEN cpu_time-lag_cpu_time&gt;=0 AND ts_int-lag_ts_int = 0
-	   -- ts interval cannot be null, this might be some data duplication error
-	   THEN NULL
+    WHEN (lag_ts_int IS NULL OR start_ts_int &gt; lag_ts_int) and tid &lt;&gt; -1 and (ts_int - start_ts_int) &lt;= 160000000
+         -- new thread 
+         -- if lag_ts_int is null then we never see this pid and tid combination during the execution
+         -- if thread start ts is more recent than the previous records timestamp then it is also a new record
+         --
+         -- as a sanity check we make sure that this new interval is smaller than a standard 15secs
+         -- sampling interval
+         -- If it is ok, then simply take current measurement timestamp minus thread start timestamp
+        THEN ts_int - start_ts_int             
+    WHEN (lag_ts_int IS NULL OR (ts_int - lag_ts_int) &gt; 160000000)
+       -- Thread / process with issues (most probably caused by agent restart or failure)
+       -- Simply omit the record and analyze later, exclude from reporting
+       THEN NULL
+       
+       
+    WHEN cpu_time-lag_cpu_time&gt;0 AND (ts_int-lag_ts_int) &lt; (cpu_time-lag_cpu_time) AND tid &lt;&gt; -1
+      THEN NULL -- we have previous value but it''s bigger than the interval (like 20 secs consumption in 15 secs)
+                -- NULL means we omit this record -- we should have some automation to catch them              
+    WHEN cpu_time-lag_cpu_time&gt;=0 AND ts_int-lag_ts_int &gt; 0
+       -- this looks a normal record
+       THEN ts_int-lag_ts_int 
+    WHEN cpu_time-lag_cpu_time&gt;=0 AND ts_int-lag_ts_int = 0
+       -- ts interval cannot be null, this might be some data duplication error
+       THEN NULL
    ELSE NULL -- what else? I don''t know, but lets mark it as bad.</Comments><DataTypeParam1></DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>0</KeepForeignKey><DefaultValue></DefaultValue><NotNull>0</NotNull><Migrated>0</Migrated><Caption>ts_interval_ticks</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><DictType/><Domain/><DataType><Id>{833A0657-262F-4513-BC1B-87A6D0CE5AA5}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{7EC7204B-2380-4E26-8EB1-B1275BC78DE4}</Id><Name>cpu_core_consumption</Name><Ordinal>14</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments>
 
 ETL:
 
 cpu_time_delta_ticks::float / ts_interval_ticks::float </Comments><DataTypeParam1></DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>0</KeepForeignKey><DefaultValue></DefaultValue><NotNull>0</NotNull><Migrated>0</Migrated><Caption>cpu_core_consumption</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><DictType/><Domain/><DataType><Id>{49DA2756-280C-472D-AA7D-84A24A463774}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{9517F80C-4581-49BE-B0CC-615154887FB1}</Id><Name>memory_usage_bytes</Name><Ordinal>15</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments>ETL: threadinfo.working_set</Comments><DataTypeParam1></DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>0</KeepForeignKey><DefaultValue></DefaultValue><NotNull>0</NotNull><Migrated>0</Migrated><Caption>memory_usage_bytes</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><DictType/><Domain/><DataType><Id>{833A0657-262F-4513-BC1B-87A6D0CE5AA5}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{5586C814-24ED-4774-9FB9-FD903EBC8454}</Id><Name>memory_usage_delta_bytes</Name><Ordinal>16</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments>ETL:
   case WHEN lag_working_set IS NULL 
-	  	then working_set
-	  else
-	  	working_set - lag_working_set 
-	  end</Comments><DataTypeParam1></DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>0</KeepForeignKey><DefaultValue></DefaultValue><NotNull>0</NotNull><Migrated>0</Migrated><Caption>memory_usage_delta_bytes</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><DictType/><Domain/><DataType><Id>{833A0657-262F-4513-BC1B-87A6D0CE5AA5}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{A022E270-E067-43A3-A420-885E7A55F163}</Id><Name>is_thread_level</Name><Ordinal>17</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments>ETL:
+          then working_set
+      else
+          working_set - lag_working_set 
+      end</Comments><DataTypeParam1></DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>0</KeepForeignKey><DefaultValue></DefaultValue><NotNull>0</NotNull><Migrated>0</Migrated><Caption>memory_usage_delta_bytes</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><DictType/><Domain/><DataType><Id>{833A0657-262F-4513-BC1B-87A6D0CE5AA5}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{A022E270-E067-43A3-A420-885E7A55F163}</Id><Name>is_thread_level</Name><Ordinal>17</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments>ETL:
 case when thread_level 
-	  	then 'Y' 
-	  else
-	  		'N'
-	  end</Comments><DataTypeParam1>1</DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>0</KeepForeignKey><DefaultValue></DefaultValue><NotNull>0</NotNull><Migrated>0</Migrated><Caption>is_thread_level</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><DictType/><Domain/><DataType><Id>{4709D274-60A2-44C8-848F-EFC22D380200}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42></Attributes><Keys><PERKeyConstraintGP42 ObjectType="2010" CSAOName="PERKeyConstraintGP42" CSAOCaption="Key"><Id>{48509AD3-D359-4139-BEF3-C758B0206E5C}</Id><Name>p_threadinfo_pk</Name><Ordinal>0</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>1</RNOffset><RNLength>15</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>4</VerifyState><GenerateCode>0</GenerateCode><Notes></Notes><Comments></Comments><Caption>p_threadinfo_pk</Caption><InVisible>0</InVisible><KeyItems><PERKeyConstraintItemGP42 ObjectType="2011" CSAOName="PERKeyConstraintItemGP42" CSAOCaption="Key Item"><Id>{A63B83CF-15B9-4635-BB86-A96537CE1D8E}</Id><Name>p_id</Name><Ordinal>0</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><VerifyState>1</VerifyState><SortDescending>0</SortDescending><Attribute><Id>{157F620B-5462-4D27-A97F-B92C0B99B725}</Id></Attribute><ForeignKeys><Id>{2EEEDCB5-1F8C-441E-826A-262E566812BA}</Id></ForeignKeys></PERKeyConstraintItemGP42></KeyItems><Relations><Id>{2B09F80F-151A-438D-B249-5BE2A8552AD6}</Id></Relations><Attribute/><Tablespace/><FillFactor></FillFactor></PERKeyConstraintGP42></Keys><PK><Id>{48509AD3-D359-4139-BEF3-C758B0206E5C}</Id></PK><Category/><DbOwner/><Schema/><WithOids>0</WithOids><Inherited></Inherited><TempTable>0</TempTable><Tablespace/><FillFactor></FillFactor><CompressLevel></CompressLevel><CompressType>QUICKLZ</CompressType><Orientation>COLUMN</Orientation><AppendOnly>1</AppendOnly><DistributedAttrList></DistributedAttrList><DistributedType>0</DistributedType><TablePartitions>DISTRIBUTED BY (host_name, process_id, thread_id)
+          then 'Y' 
+      else
+              'N'
+      end</Comments><DataTypeParam1>1</DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>0</KeepForeignKey><DefaultValue></DefaultValue><NotNull>0</NotNull><Migrated>0</Migrated><Caption>is_thread_level</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><DictType/><Domain/><DataType><Id>{4709D274-60A2-44C8-848F-EFC22D380200}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42></Attributes><Keys><PERKeyConstraintGP42 ObjectType="2010" CSAOName="PERKeyConstraintGP42" CSAOCaption="Key"><Id>{48509AD3-D359-4139-BEF3-C758B0206E5C}</Id><Name>p_threadinfo_pk</Name><Ordinal>0</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>1</RNOffset><RNLength>15</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>4</VerifyState><GenerateCode>0</GenerateCode><Notes></Notes><Comments></Comments><Caption>p_threadinfo_pk</Caption><InVisible>0</InVisible><KeyItems><PERKeyConstraintItemGP42 ObjectType="2011" CSAOName="PERKeyConstraintItemGP42" CSAOCaption="Key Item"><Id>{A63B83CF-15B9-4635-BB86-A96537CE1D8E}</Id><Name>p_id</Name><Ordinal>0</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><VerifyState>1</VerifyState><SortDescending>0</SortDescending><Attribute><Id>{157F620B-5462-4D27-A97F-B92C0B99B725}</Id></Attribute><ForeignKeys><Id>{2EEEDCB5-1F8C-441E-826A-262E566812BA}</Id></ForeignKeys></PERKeyConstraintItemGP42></KeyItems><Relations><Id>{2B09F80F-151A-438D-B249-5BE2A8552AD6}</Id></Relations><Attribute/><Tablespace/><FillFactor></FillFactor></PERKeyConstraintGP42></Keys><PK><Id>{48509AD3-D359-4139-BEF3-C758B0206E5C}</Id></PK><Category/><DbOwner/><Schema/><WithOids>0</WithOids><Inherited></Inherited><TempTable>0</TempTable><Tablespace/><FillFactor></FillFactor><CompressLevel></CompressLevel><CompressType>QUICKLZ</CompressType><Orientation>COLUMN</Orientation><AppendOnly>1</AppendOnly><DistributedAttrList></DistributedAttrList><DistributedType>0</DistributedType><TablePartitions>DISTRIBUTED BY (host_name, process_id, thread_id)
 PARTITION BY RANGE (ts_rounded_15_secs)
 SUBPARTITION BY LIST (host_name)
 SUBPARTITION TEMPLATE (SUBPARTITION init VALUES ('init')
 WITH (appendonly=true, orientation=column, compresstype=quicklz))
 (PARTITION "10010101" START (date '1001-01-01') INCLUSIVE
-	END (date '1001-01-02') EXCLUSIVE 
+    END (date '1001-01-02') EXCLUSIVE 
 WITH (appendonly=true, orientation=column, compresstype=quicklz)
 )
 </TablePartitions><BlockSize></BlockSize></PEREntityGP42><PEREntityGP42 ObjectType="2002" CSAOName="PEREntityGP42" CSAOCaption="Entity"><Id>{DF6114FE-8627-434B-8B62-704541F92819}</Id><Name>p_http_requests</Name><Ordinal>0</Ordinal><GlobalOrder>7</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>2</VerifyState><GenerateCode>0</GenerateCode><BeforeScript></BeforeScript><AfterScript></AfterScript><Notes></Notes><Comments>Used for getting workbook information for the vizsql sessions.</Comments><Caption>p_http_requests</Caption><Size>0</Size><DataWarehouseType>0</DataWarehouseType><Relations><Id>{F002B524-AFB0-4ECF-9FEE-7D6464D3BA0F}</Id><Id>{017F1C5F-98EE-498C-A051-2FF078928263}</Id><Id>{46727BCD-E5AE-4F30-8CFC-07B4E9296F8E}</Id><Id>{B03E1845-E9BB-4D18-9CCE-D8ED352812C6}</Id><Id>{50ADA908-9324-4591-80DB-17FA222B8C65}</Id><Id>{E56E5F11-884B-450B-BF95-93AF3D1AA7BD}</Id><Id>{4C043C34-59B6-47C2-ACE0-F9378C6F5B81}</Id></Relations><Attributes><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{3D8CE4FA-A14A-4F6F-B2CE-26BCF9C660C7}</Id><Name>p_id</Name><Ordinal>1</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments></Comments><DataTypeParam1></DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>1</KeepForeignKey><DefaultValue></DefaultValue><NotNull>1</NotNull><Migrated>1</Migrated><Caption>p_id</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><KeyConstraintItems><Id>{CE38E959-9749-4ED2-8D57-030F54B58524}</Id></KeyConstraintItems><DictType/><Domain/><DataType><Id>{7B281AAA-2405-44B9-957B-79BE34E0B944}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{52DCA032-AE5A-4785-BE3F-A69098E5A0B5}</Id><Name>http_requests_id</Name><Ordinal>2</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments>
@@ -342,37 +342,37 @@ ETL: p_threadinfo.cpu_core_consumption</Comments><DataTypeParam1></DataTypeParam
 ETL: p_threadinfo.memory_usage_bytes</Comments><DataTypeParam1></DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>0</KeepForeignKey><DefaultValue></DefaultValue><NotNull>0</NotNull><Migrated>0</Migrated><Caption>memory_usage_bytes</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><DictType/><Domain/><DataType><Id>{833A0657-262F-4513-BC1B-87A6D0CE5AA5}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{5ECB4EE9-38D8-478B-87F6-19072D0A64D9}</Id><Name>process_name</Name><Ordinal>18</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments>
 
 ETL: p_threadinfo.process_name</Comments><DataTypeParam1></DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>0</KeepForeignKey><DefaultValue></DefaultValue><NotNull>0</NotNull><Migrated>0</Migrated><Caption>process_name</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><DictType/><Domain/><DataType><Id>{41076C36-2C4A-47C7-8F4E-7C0A2A070C51}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{754646F0-6B83-467C-B4D7-19D8799292BF}</Id><Name>process_owner</Name><Ordinal>19</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments>  case when process_name in ('backgrounder',
-							'clustercontroller',
-							'dataserver',
-							'filestore',
-							'httpd',
-							'postgres',
-							'searchserver',
-							'tabadminservice',
-							'tableau',
-							'tabprotosrv',
-							'tabrepo',
-							'tabsvc',
-							'tabsystray',
-							'tdeserver',
-							'vizportal',
-							'vizqlserver',
-							'wgserver',
-							'zookeeper') then 
-			'Tableau'
+                            'clustercontroller',
+                            'dataserver',
+                            'filestore',
+                            'httpd',
+                            'postgres',
+                            'searchserver',
+                            'tabadminservice',
+                            'tableau',
+                            'tabprotosrv',
+                            'tabrepo',
+                            'tabsvc',
+                            'tabsystray',
+                            'tdeserver',
+                            'vizportal',
+                            'vizqlserver',
+                            'wgserver',
+                            'zookeeper') then 
+            'Tableau'
   else 
-  			'Non-Tableau'
+              'Non-Tableau'
   end</Comments><DataTypeParam1></DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>0</KeepForeignKey><DefaultValue></DefaultValue><NotNull>0</NotNull><Migrated>0</Migrated><Caption>process_owner</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><DictType/><Domain/><DataType><Id>{41076C36-2C4A-47C7-8F4E-7C0A2A070C51}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{0EDF2646-C9BB-4362-BBE3-E1CFABF12449}</Id><Name>is_allocatable</Name><Ordinal>20</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments>
 ETL:
- case when process_name in ('dataserver',							
-							  'tabprotosrv',
-							  'tdeserver')
-			then 'Y'
-			
-		when  process_name = 'vizqlserver' and tst.session is not null
-			then 'Y'
+ case when process_name in ('dataserver',                            
+                              'tabprotosrv',
+                              'tdeserver')
+            then 'Y'
+            
+        when  process_name = 'vizqlserver' and tst.session is not null
+            then 'Y'
   else 
-  	'N'
+      'N'
   end</Comments><DataTypeParam1>1</DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>0</KeepForeignKey><DefaultValue></DefaultValue><NotNull>0</NotNull><Migrated>0</Migrated><Caption>is_allocatable</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><DictType/><Domain/><DataType><Id>{4709D274-60A2-44C8-848F-EFC22D380200}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{D11FA3DE-5A1A-4612-AB7E-E2D8054E3CA5}</Id><Name>process_level</Name><Ordinal>21</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments>Can be process or thread level. If the tid is not -1 then it is a thread level (we have thread information) otherwise it is a process level.
 
 ETL: case when thread_id = -1 then ''Process Level'' else ''Thread Level''
@@ -409,8 +409,8 @@ SUBPARTITION BY LIST (host_name)
 SUBPARTITION TEMPLATE (SUBPARTITION init VALUES ('init')
 WITH (appendonly=true, orientation=column, compresstype=quicklz))
 (PARTITION "10010101" START (date '1001-01-01') INCLUSIVE
-	END (date '1001-01-02') EXCLUSIVE 
-WITH (appendonly=true, orientation=column, compresstype=quicklz)	
+    END (date '1001-01-02') EXCLUSIVE 
+WITH (appendonly=true, orientation=column, compresstype=quicklz)    
 )</TablePartitions><BlockSize></BlockSize></PEREntityGP42><PEREntityGP42 ObjectType="2002" CSAOName="PEREntityGP42" CSAOCaption="Entity"><Id>{B55EC0BE-33AB-4284-8BE8-64BC9C414529}</Id><Name>p_background_jobs</Name><Ordinal>0</Ordinal><GlobalOrder>4</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><GenerateCode>0</GenerateCode><BeforeScript></BeforeScript><AfterScript></AfterScript><Notes></Notes><Comments></Comments><Caption>p_background_jobs</Caption><Size>0</Size><DataWarehouseType>0</DataWarehouseType><Relations><Id>{0A19FBB5-69AC-42D6-9175-55261CD5BD65}</Id><Id>{3045EB7E-CD55-4ED2-8105-24DC57FDBCDE}</Id><Id>{D172A664-DF30-40B5-BF72-25F7D7966CC5}</Id><Id>{236A6E18-7623-486B-9085-F63B7337E017}</Id><Id>{32829B6D-0BA6-4253-ABAD-CE5E3859B36C}</Id><Id>{227800F7-EE30-4BE8-A7DB-596BD5AFAA25}</Id></Relations><Attributes><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{56A72955-15E3-44F3-9C5C-7DAF3C3202C3}</Id><Name>p_id</Name><Ordinal>1</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>1</RNOffset><RNLength>4</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments></Comments><DataTypeParam1></DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>1</KeepForeignKey><DefaultValue></DefaultValue><NotNull>1</NotNull><Migrated>1</Migrated><Caption>p_id</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><KeyConstraintItems><Id>{C03127F4-8300-4627-ACEB-1C9739D3EB2C}</Id></KeyConstraintItems><DictType/><Domain/><DataType><Id>{7B281AAA-2405-44B9-957B-79BE34E0B944}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{9C98F73C-FB15-4C28-8016-C3197BA4A556}</Id><Name>background_jobs_id</Name><Ordinal>2</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments>
 
 ETL: background_jobs.id</Comments><DataTypeParam1></DataTypeParam1><DataTypeParam2></DataTypeParam2><KeepForeignKey>0</KeepForeignKey><DefaultValue></DefaultValue><NotNull>0</NotNull><Migrated>0</Migrated><Caption>background_jobs_id</Caption><Unique>0</Unique><OriginalName></OriginalName><CheckConstraint></CheckConstraint><CheckConstraintName></CheckConstraintName><DictType/><Domain/><DataType><Id>{833A0657-262F-4513-BC1B-87A6D0CE5AA5}</Id></DataType><UserDataType/><Default/><KeyConstraint/><ArrDims></ArrDims><IsArray>0</IsArray><BlockSize></BlockSize><CompressLevel></CompressLevel><CompressType></CompressType></PERAttributeGP42><PERAttributeGP42 ObjectType="2003" CSAOName="PERAttributeGP42" CSAOCaption="Attribute"><Id>{C75FA09E-7CF5-4578-A009-70DCA38111EE}</Id><Name>job_type</Name><Ordinal>3</Ordinal><GlobalOrder>0</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><Notes></Notes><Comments>
@@ -955,6 +955,6 @@ from
 select count(1) from pstableau.vw_p_filter_history;    
 
 select * from pstableau.vw_p_filter_history
-limit 100;	
+limit 100;    
 
 ]]></SQL><Caption>vw_p_filter_history</Caption><GenerateSQLOnly>0</GenerateSQLOnly><OrderByText></OrderByText><GroupText></GroupText><WhereText></WhereText><HavingText></HavingText><SelectInViewsAsText>1</SelectInViewsAsText><Distinct>0</Distinct><Schema/><DbOwner/><Category/><Aliases></Aliases><DistinctOnExpressionList></DistinctOnExpressionList></PERViewGP42></Views><Schemas><PERSchemaGP42 ObjectType="2024" CSAOName="PERSchemaGP42" CSAOCaption="Schema"><Id>{6DC6A599-DC15-4D1B-B70C-9C45391F925F}</Id><Name>for_document</Name><Ordinal>0</Ordinal><GlobalOrder>1</GlobalOrder><GalleryItemID>{00000000-0000-0000-0000-000000000000}</GalleryItemID><GalleryID>{00000000-0000-0000-0000-000000000000}</GalleryID><GalleryObjectID>{00000000-0000-0000-0000-000000000000}</GalleryObjectID><RNOffset>0</RNOffset><RNLength>0</RNLength><IgnoreNC>0</IgnoreNC><VerifyState>1</VerifyState><GenerateCode>1</GenerateCode><Notes></Notes><Caption>for_document</Caption><Objects><Id>{7D4A08CA-FCDC-412B-BEB5-820925522BE9}</Id></Objects><DbUserGroupAuthorization><Id>{8A299F62-2F87-47D6-9E10-BDF721B10097}</Id></DbUserGroupAuthorization></PERSchemaGP42></Schemas><RenamerLog><IPERRenamerLogGP42 ObjectType="2041" CSAOName="IPERRenamerLogGP42" CSAOCaption="PER Renamer Log"><Id>{5426B5B7-0160-4F56-8BE3-C6E55EDC0D9E}</Id><Name></Name><Ordinal>0</Ordinal><GlobalOrder>0</GlobalOrder><Items>id;{DED400D0-4C19-4DE1-9ADD-276D81D4BB05};id;{ECCBAA22-858A-40FE-9815-163B38DC7014};h_projects_ok;{550F64D5-E803-494B-8D98-AC0BF2377611};projects_p_id;{D0346CA8-5865-49ED-B105-C689D6613218};workbooks_datasources_p_id;{41183EF9-20EE-42FE-8B95-DA90EC6C3FA8};system_users_p_id;{29FBEC7B-928A-4E79-A062-9B358A660BDC};users_p_id;{7D2F1920-6255-41BE-B6CB-EF00EB15C981};sites_p_id;{36511F19-CF91-428D-AC48-60DCB9E0F712};h_views;{928806A9-5520-4798-884F-79039F9AF55A};h_views_pk;{6D0ED369-D8F4-40D1-AC73-6C95B4B6DF5C};r1;{2B09F80F-151A-438D-B249-5BE2A8552AD6};sum_memory_useage_bytes;{833603E3-A28D-4B15-8A83-E1FBBCD714E6};publisher_system_users_p_id;{9CDE61A6-E857-43D8-B72B-08C66FD988F1};ts_date;{67A5C0BC-53AD-45CF-A85B-6ED7D15C850D};username;{186EFEB1-BD9C-4C47-A14C-BD8EFC8129F2};vw_p_cpu_usage;{7D4A08CA-FCDC-412B-BEB5-820925522BE9};tableau_session;{938FB975-6AC2-447D-A98F-5CB87AD6100E};id;{3B1D4513-73D1-4A46-A3A0-B734C855DAEF};id;{21ED9EEF-F1C7-4110-AC67-D8DB7CE794C1};pid;{086AD467-2FBD-40EE-BEA5-3F0AF671C56E};tid;{20610AE2-C1C0-4170-AC87-E4DA4D06F37C};pid;{25F12CE5-8D39-47C1-8297-69D7557416C4};tid;{9F454B51-BB7A-47D1-ADF5-405F666C84DB};</Items></IPERRenamerLogGP42></RenamerLog></PERModelGP42>

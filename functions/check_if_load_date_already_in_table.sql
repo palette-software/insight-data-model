@@ -1,7 +1,7 @@
 CREATE or replace function check_if_load_date_already_in_table(p_schema_name text, p_table_name text, p_load_date date, p_allow_next_day_overflow bool) returns int
 AS $$
 declare
-	v_sql_cur text;
+    v_sql_cur text;
     v_max_ts timestamp;
     v_load_date timestamp := p_load_date;
     -- 2 hours plus 5 minutes since ts can be a bit bigger than ts_rounded_15_secs
@@ -11,7 +11,7 @@ begin
     execute 'set local search_path = ' || p_schema_name;
     
     v_sql_cur := 'select get_max_ts(''#schema_name#'', ''' || p_table_name || ''')';
-	v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
+    v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
     execute v_sql_cur into v_max_ts;
     
     if v_max_ts = date'1001-01-01' then

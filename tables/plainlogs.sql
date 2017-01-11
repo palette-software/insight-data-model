@@ -1,15 +1,15 @@
 CREATE TABLE plainlogs
 (
-	p_id bigserial,
-	p_filepath text,
-	filename TEXT,
-	host_name TEXT,
-	ts timestamp without time zone,
-	pid INTEGER,
-	line TEXT,
-	elapsed_ms INTEGER,
-	start_ts timestamp without time zone,
-	p_cre_date timestamp without time zone default now()
+    p_id bigserial,
+    p_filepath text,
+    filename TEXT,
+    host_name TEXT,
+    ts timestamp without time zone,
+    pid INTEGER,
+    line TEXT,
+    elapsed_ms INTEGER,
+    start_ts timestamp without time zone,
+    p_cre_date timestamp without time zone default now()
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (p_id)
