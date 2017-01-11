@@ -57,7 +57,9 @@ This workflow is defined in the `workflow_reporting.yml` for the daily load and 
 
 **IMPORTANT** When changes are made in the reporting tables or methods existing installation MUST be considered so migration needs to be created. Those migrations needs to change the function definitions, do the alter tables if necessary and make sure nothing will fail if a system is migrated that already has data loaded with former logic.
 
-## Using the installer:
+The easiest way to develop datamodel is to have a fully installed Palette Insight dev environment and make the SQL function / definition changes in that environment with some proper sql tool (for exampl on windows: aginity workbench; on OSX and Linux: Datagrip) and when ready do the code-changes in the repo. And create the proper migration.
+
+## Using the installer
 
 The ```insight-datamodel-install.sh``` script can be used to install or
 migrate a DataModel version.
