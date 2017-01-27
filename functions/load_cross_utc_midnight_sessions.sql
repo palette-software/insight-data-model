@@ -1,11 +1,11 @@
 CREATE OR REPLACE FUNCTION load_cross_utc_midnight_sessions(p_schema_name text, p_load_date date)
 RETURNS bigint AS
 $BODY$
-declare	
+declare    
     v_num_inserted bigint := 0;    
-begin							
-		
-	execute 'set local search_path = ' || p_schema_name;
+begin                            
+        
+    execute 'set local search_path = ' || p_schema_name;
 
     perform check_if_load_date_already_in_table(p_schema_name, 'p_serverlogs', p_load_date, true);
 
@@ -56,8 +56,8 @@ begin
                                 
     GET DIAGNOSTICS v_num_inserted = ROW_COUNT; 
     
-	return v_num_inserted;
-	
+    return v_num_inserted;
+    
 END;
 $BODY$
 LANGUAGE plpgsql VOLATILE SECURITY INVOKER;

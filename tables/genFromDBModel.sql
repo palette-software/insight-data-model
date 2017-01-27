@@ -67,8 +67,8 @@ SUBPARTITION BY LIST (host_name)
 SUBPARTITION TEMPLATE (SUBPARTITION init VALUES ('init')
 WITH (appendonly=true, orientation=column, compresstype=quicklz))
 (PARTITION "10010101" START (date '1001-01-01') INCLUSIVE
-	END (date '1001-01-02') EXCLUSIVE 
-WITH (appendonly=true, orientation=column, compresstype=quicklz)	
+    END (date '1001-01-02') EXCLUSIVE 
+WITH (appendonly=true, orientation=column, compresstype=quicklz)    
 )
 ;
 
@@ -161,39 +161,39 @@ COMMENT ON COLUMN "p_cpu_usage"."process_name" IS '
 ETL: p_threadinfo.process_name'
 ;
 COMMENT ON COLUMN "p_cpu_usage"."process_owner" IS '  case when process_name in (''backgrounder'',
-							''clustercontroller'',
-							''dataserver'',
-							''filestore'',
-							''httpd'',
-							''postgres'',
-							''searchserver'',
-							''tabadminservice'',
-							''tableau'',
-							''tabprotosrv'',
-							''tabrepo'',
-							''tabsvc'',
-							''tabsystray'',
-							''tdeserver'',
-							''vizportal'',
-							''vizqlserver'',
-							''wgserver'',
-							''zookeeper'') then 
-			''Tableau''
+                            ''clustercontroller'',
+                            ''dataserver'',
+                            ''filestore'',
+                            ''httpd'',
+                            ''postgres'',
+                            ''searchserver'',
+                            ''tabadminservice'',
+                            ''tableau'',
+                            ''tabprotosrv'',
+                            ''tabrepo'',
+                            ''tabsvc'',
+                            ''tabsystray'',
+                            ''tdeserver'',
+                            ''vizportal'',
+                            ''vizqlserver'',
+                            ''wgserver'',
+                            ''zookeeper'') then 
+            ''Tableau''
   else 
-  			''Non-Tableau''
+              ''Non-Tableau''
   end'
 ;
 COMMENT ON COLUMN "p_cpu_usage"."is_allocatable" IS '
 ETL:
- case when process_name in (''dataserver'',							
-							  ''tabprotosrv'',
-							  ''tdeserver'')
-			then ''Y''
-			
-		when  process_name = ''vizqlserver'' and tst.session is not null
-			then ''Y''
+ case when process_name in (''dataserver'',                            
+                              ''tabprotosrv'',
+                              ''tdeserver'')
+            then ''Y''
+            
+        when  process_name = ''vizqlserver'' and tst.session is not null
+            then ''Y''
   else 
-  	''N''
+      ''N''
   end'
 ;
 COMMENT ON COLUMN "p_cpu_usage"."process_level" IS 'Can be process or thread level. If the tid is not -1 then it is a thread level (we have thread information) otherwise it is a process level.
@@ -290,7 +290,7 @@ SUBPARTITION BY LIST (host_name)
 SUBPARTITION TEMPLATE (SUBPARTITION init VALUES ('init')
 WITH (appendonly=true, orientation=column, compresstype=quicklz))
 (PARTITION "10010101" START (date '1001-01-01') INCLUSIVE
-	END (date '1001-01-02') EXCLUSIVE 
+    END (date '1001-01-02') EXCLUSIVE 
 WITH (appendonly=true, orientation=column, compresstype=quicklz)
 )
 
@@ -354,38 +354,38 @@ ETL:
 
 CASE 
 WHEN (lag_ts_int IS NULL OR start_ts_int > lag_ts_int) and tid <> -1 
-	then cpu_time
+    then cpu_time
 WHEN cpu_time-lag_cpu_time>=0
   THEN cpu_time-lag_cpu_time       
-ELSE NULL -- looks like a new thread	'
+ELSE NULL -- looks like a new thread    '
 ;
 COMMENT ON COLUMN "p_threadinfo"."ts_interval_ticks" IS '
 ETL:
   CASE 
-	WHEN (lag_ts_int IS NULL OR start_ts_int > lag_ts_int) and tid <> -1 and (ts_int - start_ts_int) <= 160000000
-		 -- new thread 
-		 -- if lag_ts_int is null then we never see this pid and tid combination during the execution
-		 -- if thread start ts is more recent than the previous records timestamp then it is also a new record
-		 --
-		 -- as a sanity check we make sure that this new interval is smaller than a standard 15secs
-		 -- sampling interval
-		 -- If it is ok, then simply take current measurement timestamp minus thread start timestamp
-		THEN ts_int - start_ts_int			 
-	WHEN (lag_ts_int IS NULL OR (ts_int - lag_ts_int) > 160000000)
-	   -- Thread / process with issues (most probably caused by agent restart or failure)
-	   -- Simply omit the record and analyze later, exclude from reporting
-	   THEN NULL
-	   
-	   
-	WHEN cpu_time-lag_cpu_time>0 AND (ts_int-lag_ts_int) < (cpu_time-lag_cpu_time) AND tid <> -1
-	  THEN NULL -- we have previous value but it''''s bigger than the interval (like 20 secs consumption in 15 secs)
-				-- NULL means we omit this record -- we should have some automation to catch them   		   
-	WHEN cpu_time-lag_cpu_time>=0 AND ts_int-lag_ts_int > 0
-	   -- this looks a normal record
-	   THEN ts_int-lag_ts_int 
-	WHEN cpu_time-lag_cpu_time>=0 AND ts_int-lag_ts_int = 0
-	   -- ts interval cannot be null, this might be some data duplication error
-	   THEN NULL
+    WHEN (lag_ts_int IS NULL OR start_ts_int > lag_ts_int) and tid <> -1 and (ts_int - start_ts_int) <= 160000000
+         -- new thread 
+         -- if lag_ts_int is null then we never see this pid and tid combination during the execution
+         -- if thread start ts is more recent than the previous records timestamp then it is also a new record
+         --
+         -- as a sanity check we make sure that this new interval is smaller than a standard 15secs
+         -- sampling interval
+         -- If it is ok, then simply take current measurement timestamp minus thread start timestamp
+        THEN ts_int - start_ts_int             
+    WHEN (lag_ts_int IS NULL OR (ts_int - lag_ts_int) > 160000000)
+       -- Thread / process with issues (most probably caused by agent restart or failure)
+       -- Simply omit the record and analyze later, exclude from reporting
+       THEN NULL
+       
+       
+    WHEN cpu_time-lag_cpu_time>0 AND (ts_int-lag_ts_int) < (cpu_time-lag_cpu_time) AND tid <> -1
+      THEN NULL -- we have previous value but it''''s bigger than the interval (like 20 secs consumption in 15 secs)
+                -- NULL means we omit this record -- we should have some automation to catch them              
+    WHEN cpu_time-lag_cpu_time>=0 AND ts_int-lag_ts_int > 0
+       -- this looks a normal record
+       THEN ts_int-lag_ts_int 
+    WHEN cpu_time-lag_cpu_time>=0 AND ts_int-lag_ts_int = 0
+       -- ts interval cannot be null, this might be some data duplication error
+       THEN NULL
    ELSE NULL -- what else? I don''''t know, but lets mark it as bad.'
 ;
 COMMENT ON COLUMN "p_threadinfo"."cpu_core_consumption" IS '
@@ -398,17 +398,17 @@ COMMENT ON COLUMN "p_threadinfo"."memory_usage_bytes" IS 'ETL: threadinfo.workin
 ;
 COMMENT ON COLUMN "p_threadinfo"."memory_usage_delta_bytes" IS 'ETL:
   case WHEN lag_working_set IS NULL 
-	  	then working_set
-	  else
-	  	working_set - lag_working_set 
-	  end'
+          then working_set
+      else
+          working_set - lag_working_set 
+      end'
 ;
 COMMENT ON COLUMN "p_threadinfo"."is_thread_level" IS 'ETL:
 case when thread_level 
-	  	then ''Y'' 
-	  else
-	  		''N''
-	  end'
+          then ''Y'' 
+      else
+              ''N''
+      end'
 ;
 
 

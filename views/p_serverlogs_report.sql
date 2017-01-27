@@ -28,16 +28,16 @@ SELECT  s.p_id
        , s.parent_dataserver_username
        , s.p_cre_date
        , s.thread_name
-	   , s.elapsed_ms::double precision / 1000 as elapsed_secs
-	   , s.elapsed_ms::double precision / 1000 / 60 / 60 / 24 as elapsed_days
-	   , s.start_ts
-	   , s.session_start_ts_utc
-	   , s.session_end_ts_utc
-	   , s.site_name_id
-	   , s.project_name_id
-	   , s.workbook_name_id
-	   , s.workbook_rev
-	   , s.publisher_username_id
-	   , s.user_type
+       , s.elapsed_ms::double precision / 1000 as elapsed_secs
+       , s.elapsed_ms::double precision / 1000 / 60 / 60 / 24 as elapsed_days
+       , s.start_ts
+       , s.session_start_ts_utc
+       , s.session_end_ts_utc
+       , s.site_name_id
+       , s.project_name_id
+       , s.workbook_name_id
+       , s.workbook_rev
+       , s.publisher_username_id
+       , s.user_type
        , s.v_truncated
  FROM p_serverlogs s;

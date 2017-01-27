@@ -2,66 +2,66 @@ CREATE OR REPLACE FUNCTION insert_p_serverlogs_from_s_serverlogs(p_schema_name t
 RETURNS bigint AS
 $BODY$
 declare
-	v_sql text;
+    v_sql text;
     v_sql_exec text;
-	v_num_inserted bigint := 0;
+    v_num_inserted bigint := 0;
     v_num_inserted_all bigint := 0;
     v_load_date_txt text := to_char(p_load_date, 'yyyy-mm-dd');
-begin							
-		
-	execute 'set local search_path = ' || p_schema_name;
+begin                            
+        
+    execute 'set local search_path = ' || p_schema_name;
     
     perform check_if_load_date_already_in_table(p_schema_name, 'p_serverlogs', p_load_date, true);
     
     v_sql := 'insert into p_serverlogs
             (
-		        serverlogs_id
-		       , p_filepath
-		       , filename
-		       , host_name
-		       , ts
-		       , process_id
-		       , thread_id
-		       , sev
-		       , req 
-		       , sess
-		       , site
-		       , username
-		       , username_without_domain
-		       , k
-		       , v
-		       , parent_vizql_session
-		       , parent_vizql_destroy_sess_ts
-		       , parent_dataserver_session
-		       , spawned_by_parent_ts
-		       , parent_process_type
-		       , p_cre_date
-		       , parent_vizql_site
-		       , parent_vizql_username
-		       , parent_dataserver_site
-		       , parent_dataserver_username
-		       , process_name
-		       , thread_name
-			   , elapsed_ms
-			   , start_ts
-			   , session_start_ts_utc
-			   , session_end_ts_utc
+                serverlogs_id
+               , p_filepath
+               , filename
+               , host_name
+               , ts
+               , process_id
+               , thread_id
+               , sev
+               , req 
+               , sess
+               , site
+               , username
+               , username_without_domain
+               , k
+               , v
+               , parent_vizql_session
+               , parent_vizql_destroy_sess_ts
+               , parent_dataserver_session
+               , spawned_by_parent_ts
+               , parent_process_type
+               , p_cre_date
+               , parent_vizql_site
+               , parent_vizql_username
+               , parent_dataserver_site
+               , parent_dataserver_username
+               , process_name
+               , thread_name
+               , elapsed_ms
+               , start_ts
+               , session_start_ts_utc
+               , session_end_ts_utc
                , site_id
-   			   , site_name_id
+                  , site_name_id
                , project_id
-   			   , project_name_id
+                  , project_name_id
                , workbook_id
-   			   , workbook_name_id
-   			   , workbook_rev
+                  , workbook_name_id
+                  , workbook_rev
                , publisher_id
-   		   	   , publisher_username_id
-			   , user_type
-			   , session_duration
-			   , session_elapsed_seconds
+                     , publisher_username_id
+               , user_type
+               , session_duration
+               , session_elapsed_seconds
                , v_truncated
-			)
-			
-			select 
+            )
+            
+            select 
                   s.serverlogs_id
                 , s.p_filepath
                 , s.filename
@@ -131,9 +131,9 @@ begin
                                 ');
     
     v_sql_exec := replace(v_sql_exec, '#v_load_date_txt#', v_load_date_txt);    
-	raise notice 'I: %', v_sql_exec;
+    raise notice 'I: %', v_sql_exec;
     
-	execute v_sql_exec;
+    execute v_sql_exec;
     GET DIAGNOSTICS v_num_inserted = ROW_COUNT;            
     v_num_inserted_all := v_num_inserted_all + v_num_inserted;
         
@@ -148,14 +148,14 @@ begin
                             '
     );
     v_sql_exec := replace(v_sql_exec, '#v_load_date_txt#', v_load_date_txt);    
-	raise notice 'I: %', v_sql_exec;
-	execute v_sql_exec;				               
+    raise notice 'I: %', v_sql_exec;
+    execute v_sql_exec;                               
     GET DIAGNOSTICS v_num_inserted = ROW_COUNT;            
     v_num_inserted_all := v_num_inserted_all + v_num_inserted;
             
     
-	return v_num_inserted_all;
-	
+    return v_num_inserted_all;
+    
 END;
 $BODY$
 LANGUAGE plpgsql VOLATILE SECURITY INVOKER;

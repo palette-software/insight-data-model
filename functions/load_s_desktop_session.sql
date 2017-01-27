@@ -2,45 +2,45 @@ CREATE OR REPLACE FUNCTION load_s_desktop_session(p_schema_name text, p_load_dat
 RETURNS bigint AS
 $BODY$
 declare
-	v_sql text;
-	v_num_inserted bigint := 0;		
+    v_sql text;
+    v_num_inserted bigint := 0;        
     v_load_date_txt text := to_char(p_load_date, 'yyyy-mm-dd');
-BEGIN	
+BEGIN    
 
-		execute 'set local search_path = ' || p_schema_name;			
+        execute 'set local search_path = ' || p_schema_name;            
         
         perform check_if_load_date_already_in_table(p_schema_name, 'p_desktop_session', p_load_date, false);
         
-		v_sql := 'INSERT INTO s_desktop_session
-		(
-			dataserver_session, 
-			process_name,
-			host_name,
-			cpu_time_consumption_seconds,
-			session_start_ts,
-			session_end_ts,
-			session_duration,
+        v_sql := 'INSERT INTO s_desktop_session
+        (
+            dataserver_session, 
+            process_name,
+            host_name,
+            cpu_time_consumption_seconds,
+            session_start_ts,
+            session_end_ts,
+            session_duration,
             interactor_id,
-			interactor_friendly_name_id,
-			interactor_user_name_id,
+            interactor_friendly_name_id,
+            interactor_user_name_id,
             publisher_id,
             publisher_friendly_name_id,
             publisher_user_name_id,
             site_id,
-			site_name_id,
+            site_name_id,
             project_id,
-	        project_name_id,
-			num_fatals,
-			num_errors,
-			num_warnings,
-			user_type,
+            project_name_id,
+            num_fatals,
+            num_errors,
+            num_warnings,
+            user_type,
             datasource_id,
             datasource_name
-		)
+        )
         with t_base as 
         (select     
             parent_dataserver_session
-        FROM        		       
+        FROM                       
             p_cpu_usage t
             left outer join (select distinct
                                 dataserver_session
@@ -89,22 +89,22 @@ BEGIN
             t_base b
             inner join   
                     (SELECT  
-                	    host_name as host_name,
+                        host_name as host_name,
                         parent_dataserver_session AS dataserver_session,
                         replace(process_name, ''tdeserver64'', ''tdeserver'') AS process_name,
                         SUM(cpu_time_consumption_seconds) AS cpu_time_consumption_seconds
-                	FROM        		       
-                        p_cpu_usage            		       
-                	WHERE 
+                    FROM                       
+                        p_cpu_usage                           
+                    WHERE 
                         ts_rounded_15_secs >= date''#v_load_date_txt#'' and
                         ts_rounded_15_secs <= date''#v_load_date_txt#'' + interval''26 hours''
-                	GROUP BY
+                    GROUP BY
                         host_name,  
                         parent_dataserver_session, 
                         replace(process_name, ''tdeserver64'', ''tdeserver'')
                     ) datasrv_sess on (b.parent_dataserver_session = datasrv_sess.dataserver_session)
             left outer join (
-        	                SELECT  
+                            SELECT  
                                 t.parent_dataserver_session AS dataserver_session,
                                 t.process_name, 
                                 SUM(CASE WHEN t.sev = ''fatal'' THEN 1 ELSE 0 END) num_fatal,
@@ -117,8 +117,8 @@ BEGIN
                                 min(data_connection_name) AS data_connection_name,
                                 max(f.server_viewerid) as server_viewerid,
                                 min(f.descriptor) as descriptor
-        	                FROM 
-        	                    p_serverlogs t
+                            FROM 
+                                p_serverlogs t
                                 inner join (select parent_dataserver_session,
                                                    min(ts) as session_start_ts,
                                                    max(ts) as session_end_ts,
@@ -129,28 +129,28 @@ BEGIN
                                                 p_serverlogs
                                              where  1 = 1
                                                 and ts >= date''#v_load_date_txt#''
-        						                and ts <= date''#v_load_date_txt#'' + interval''26 hours''
+                                                and ts <= date''#v_load_date_txt#'' + interval''26 hours''
                                                 and parent_vizql_session is null
                                                 and parent_dataserver_session IS NOT NULL
                                                 and parent_dataserver_session not in (''default'', ''-'')
                                             group by
                                                     parent_dataserver_session 
                                             ) f on (t.parent_dataserver_session = f.parent_dataserver_session)
-        	                WHERE 
+                            WHERE 
                                 1 = 1                                
-        						and t.ts >= date''#v_load_date_txt#''
-        						and t.ts <= date''#v_load_date_txt#'' + interval''26 hours''
-        	                GROUP BY 
+                                and t.ts >= date''#v_load_date_txt#''
+                                and t.ts <= date''#v_load_date_txt#'' + interval''26 hours''
+                            GROUP BY 
                                     t.parent_dataserver_session, 
                                     t.process_name
-        	        ) slogs ON (datasrv_sess.dataserver_session = slogs.dataserver_session
+                    ) slogs ON (datasrv_sess.dataserver_session = slogs.dataserver_session
                                 AND datasrv_sess.process_name = slogs.process_name)
             left outer join h_sites sites on (sites.name = slogs.sitename 
                                             and slogs.session_start_ts between sites.p_valid_from and sites.p_valid_to)
             
             left outer join h_system_users su on (su.name = slogs.username
-        						                 and slogs.session_start_ts between su.p_valid_from and su.p_valid_to
-        						  				 )
+                                                 and slogs.session_start_ts between su.p_valid_from and su.p_valid_to
+                                                   )
             left outer join h_extracts e on (1 = 1
                                             and e.descriptor = slogs.descriptor
                                             and slogs.session_start_ts between e.p_valid_from and e.p_valid_to
@@ -174,23 +174,23 @@ BEGIN
             left outer join h_users u_pub on (1 = 1
                                               and u_pub.id = coalesce(ds.owner_id, dc_ds.owner_id)
                                               and u_pub.site_id = sites.id
-        						              and slogs.session_start_ts between u_pub.p_valid_from and u_pub.p_valid_to)                                            
+                                              and slogs.session_start_ts between u_pub.p_valid_from and u_pub.p_valid_to)                                            
             left outer join h_system_users su_pub on (1 = 1
                                                     and su_pub.id = u_pub.system_user_id
-        						                    and slogs.session_start_ts between su_pub.p_valid_from and su_pub.p_valid_to)
+                                                    and slogs.session_start_ts between su_pub.p_valid_from and su_pub.p_valid_to)
         where 1 = 1
             and slogs.session_start_ts >= date''#v_load_date_txt#''
             and slogs.session_start_ts < date''#v_load_date_txt#'' + interval''1 day''
             and coalesce(slogs.server_viewerid, '''') = ''''
-		';
-			
-		v_sql := replace(v_sql, '#v_load_date_txt#', v_load_date_txt);
+        ';
+            
+        v_sql := replace(v_sql, '#v_load_date_txt#', v_load_date_txt);
         
-		raise notice 'I: %', v_sql;
-		execute v_sql;
-		
-		GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
-		return v_num_inserted;
+        raise notice 'I: %', v_sql;
+        execute v_sql;
+        
+        GET DIAGNOSTICS v_num_inserted = ROW_COUNT;
+        return v_num_inserted;
 END;
 $BODY$
 LANGUAGE plpgsql VOLATILE SECURITY INVOKER;
