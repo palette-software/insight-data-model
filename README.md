@@ -1,5 +1,9 @@
 [![Build Status](https://travis-ci.com/palette-software/insight-data-model.svg?token=qWG5FJDvsjLrsJpXgxSJ&branch=master)](https://travis-ci.com/palette-software/insight-data-model)
 
+# Palette Insight Architecture
+
+![GitHub Logo](https://github.com/palette-software/palette-insight/blob/master/insight-system-diagram.png?raw=true)
+
 ## What is insight-data-model?
 
 Insight Datamodel is a set of Greenplum DB table, view and function definitions that are used during the processing of Tableau performance data. This process is called reporting.
