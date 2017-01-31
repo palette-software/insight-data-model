@@ -2,7 +2,7 @@
 
 # Palette Insight Architecture
 
-![GitHub Logo](https://github.com/palette-software/palette-insight/blob/master/insight-system-diagram.png?raw=true)
+![Palette Insight Architecture](https://github.com/palette-software/palette-insight/blob/master/insight-system-diagram.png?raw=true)
 
 ## What is insight-data-model?
 
