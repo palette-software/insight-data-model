@@ -33,6 +33,7 @@ Packager: Palette Developers <developers@palette-software.com>
 
 Requires: palette-greenplum-installer
 Requires: palette-insight-toolkit
+Requires: palette-insight-gp-import
 Requires: palette-insight-reporting-framework
 
 %description
