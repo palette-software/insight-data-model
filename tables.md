@@ -37,10 +37,10 @@
 | :---: | --------- |
 |  | A denormalized version of the built-in background_jobs repository table containing not just external IDs for user and site and such, but their corresponding names as well. This is generated during the reporting job and its purpose is making further reporting loads more effective. |
 
-| `p_cpu_usage` ||
-| :---: | --------- | |
-| | This table is loaded based on p_serverlogs, p_threadinfo_delta and p_http_requests. In this table we have the user and workbook and all other details for every cpu usage record coming from p_threadinfo_delta. For a given p_threadinfo_delta record we try to match it to p_serverlog_records and as such we try to figure out who was doing what when that CPU conspumption occured.|
-| **Notable fields:** | |
+| `p_cpu_usage` | |
+| :---: | --------- |
+|  | This table is loaded based on p_serverlogs, p_threadinfo_delta and p_http_requests. In this table we have the user and workbook and all other details for every cpu usage record coming from p_threadinfo_delta. For a given p_threadinfo_delta record we try to match it to p_serverlog_records and as such we try to figure out who was doing what when that CPU consumption occured. |
+| **Notable fields:** |
 | `ts_rounded_15_secs` | The timestamp the measurement took place rounded to a 15 seconds polling interval. |
 | `cpu_core_consumption` |The actual cpu usage that happened for this record since the previous measurement (15 seconds).|
 | `process_id` | Exact ID of the process. This is unique for a given time for a given machine. |
