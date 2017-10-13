@@ -11,9 +11,9 @@
 | :---: | --------- |
 |  | Aggregated data for Palette Capacity. The table contains cpu and memory measurements for Tableau-related processes aggregated by host_name by process_name. If multiple instances of the same process are running on the same node, their values are summed up in here. The table content is continuously loaded by the scheduled job reporting_delta. The content of the table is kept indefinite and the p_id field can be used for incremental extract refreshes. |
 | **Notable fields:** |
-| `p_id` | Auto-increment id field. Alway bigger than the previous record. | 
+| `p_id` | Auto-increment ID field. Always bigger than the previous record. | 
 | `ts_rounded_15_secs` | The timestamp the measurement took place rounded to a 15 seconds polling interval.
-| `cpu_usage_core_consumption` | The actual cpu usage that happened for this record since the previous measurement. |
+| `cpu_usage_core_consumption` | The actual cpu usage that happened for this record since the previous measurement (15 seconds). |
 | `host_name` |The name of the machine the data is from. |
 | `process_name` | The name of the process the data is referring to. (May be category like Non-Tableau or Palette for non-tableau processes)|
 
@@ -35,23 +35,22 @@
 
 | `p_background_jobs` |  |
 | :---: | --------- |
-|  | A denormalized version of the built-in background_jobs repository table containing not just external ids for user and site and such but their corresponding names as well. This is generated during the reporting job and its purpose is making further reporting loads more effective. |
+|  | A denormalized version of the built-in background_jobs repository table containing not just external IDs for user and site and such, but their corresponding names as well. This is generated during the reporting job and its purpose is making further reporting loads more effective. |
 
 | `p_cpu_usage` ||
-| :---: | --------- |
+| :---: | --------- | |
 | | This table is loaded based on p_serverlogs, p_threadinfo_delta and p_http_requests. In this table we have the user and workbook and all other details for every cpu usage record coming from p_threadinfo_delta. For a given p_threadinfo_delta record we try to match it to p_serverlog_records and as such we try to figure out who was doing what when that CPU conspumption occured.|
-| **Notable fields:** |
-| `ts_rounded_15_secs` | The timestamp the measurement took place rounded to a 15 seconds polling interval.
-|
-| `cpu_core_consumption` |The actual cpu usage that happened for this record since the previous measurement.|
-| `process_id` | Exact id of the process. This is unique for a given time for a given machine. |
-| `thread_id` | id of the thread if the current measurement is referring to a thread, `-1` otherwise. (`-1` means the current row refers to the whole process.)|
+| **Notable fields:** | |
+| `ts_rounded_15_secs` | The timestamp the measurement took place rounded to a 15 seconds polling interval. |
+| `cpu_core_consumption` |The actual cpu usage that happened for this record since the previous measurement (15 seconds).|
+| `process_id` | Exact ID of the process. This is unique for a given time for a given machine. |
+| `thread_id` | ID of the thread if the current measurement is referring to a thread, `-1` otherwise. (`-1` means the current row refers to the whole process.) |
 | `parent_vizql_session` | The Tableau VizQL Session Id that was matched to the current row. This field is the same for all CPU usage associated to this session throughout the Tableau cluster among all monitored processes. |
 
 
 | `p_cpu_usage_bootstrap_rpt` ||
 | :---: | --------- |
-| | This table has the same data as p_cpu_usage_report but limited to records that happened before the Bootstrap action in Tableau has ended. This table is used for the Palette Performance workbook. |
+| | This table has the same data as p_cpu_usage_report but limited to records that happened before the Bootstrap action in Tableau has ended. This table is used for the Palette Performance workbook. (Bootstrap is that part of the session which starts when a user clicks on a view, and lasts until the spinner is spinning and ends when the contents of the view is first shown) |
 | **Notable fields:** |
 | `session_start_ts` | The UTC timestamp of the beginning of the session. |
 | `session_duration` | How long the actual session lasted. |
@@ -60,7 +59,7 @@
 
 | `p_cpu_usage_report` ||
 | :---: | --------- |
-| | A denormalized version of p_cpu_usage. Based on id records in p_cpu_usage the details are filled from Tableau repository tables so that Tableau reporting does not have to deal with joins. |
+| | A denormalized version of p_cpu_usage. Based on ID records in p_cpu_usage the details are filled from Tableau repository tables so that Tableau reporting does not have to deal with joins. |
 
 | `p_desktop_session` ||
 | :---: | --------- |
@@ -72,7 +71,7 @@
 
 | `p_interactor_session` ||
 | :---: | --------- |
-| | Contains aggregated data from p_cpu_usage_report and has a single row of data for each vizql_session - process_type pairs in p_cpu_usage_report. For example if a session (12345) used vizqlserver and dataserver and tdeserver it will have three records for the session (12345), one for each process. This table is the basis of the Palette Chargeback dashboard. |
+| | Contains aggregated data from p_cpu_usage_report and has a single row of data for each vizql_session - process_type pairs in p_cpu_usage_report. For example if a session (12345) used vizqlserver and dataserver and tdeserver, it will have three records for the session (12345), one for each process. This table is the basis of the Palette Chargeback dashboard. |
 | **Notable fields:** |
 | `bootstrap_elapsed_secs` | The length of the bootstrap. |
 | `num_fatals` | Number of fatal severity log lines during the session. |
@@ -90,8 +89,8 @@
 | `filename` | The original filename of the log file from which the given line is |
 | `sev` | Severity of the current log line |
 | `k` | Key (or category) of the current log line |
-| `v` | Actual content of the currnet log line |
-| `elapsed_ms` | Parsed duration of the event descibed in this log line |
+| `v` | Actual content of the current log line |
+| `elapsed_ms` | Parsed duration of the event described in this log line |
 
 | `p_serverlogs_bootstrap_rpt` ||
 | :---: | --------- |
@@ -110,19 +109,19 @@
 | :---: | --------- |
 | | Based on threadinfo raw table. Contains the CPU consumption between two measures in threadinfo for the same process / thread. For the same process / thread there is always exactly 15 seconds time difference between two measures. |
 | **Notable fields:** |
-| `process_id ` | Exact id of the process. This is unique for a given time for a given machine. |
-| `thread_id` | id of the thread if the current measurement is referring to a thread, `-1` otherwise. (`-1` means the current row refers to the whole process.) |
-| `cpu_core_consumption` | The actual cpu usage that happened for this record since the previous measurement. |
+| `process_id ` | Exact ID of the process. This is unique for a given time for a given machine. |
+| `thread_id` | ID of the thread if the current measurement is referring to a thread, `-1` otherwise. (`-1` means the current row refers to the whole process.) |
+| `cpu_core_consumption` | The actual cpu usage that happened for this record since the previous measurement (15 seconds). |
 | `memory_usage_bytes` | The actual memory usage in bytes for this record. |
 | `ts_rounded_15_secs` | The timestamp the measurement took place rounded to a 15 seconds polling interval. |
 
 | `plainlogs` ||
 | :---: | --------- |
-| | There two kind of Tableau Server log files. One set of processes log in JSON format and an other set of them just in plain text files. This table contains the raw log lines from plain text log files. |
+| | There are two kind of Tableau Server log files. One set of the Tableau Server processes log JSON format and an other set of them just plain text files. This table contains the raw log lines from plain text log files. |
 
 | `serverlogs` ||
 | :---: | --------- |
-| | There two kind of Tableau Server log files. One set of processes log in JSON format and an other set of them just in plain text files. This table contains the raw log lines from JSON log files. |
+| | There are two kind of Tableau Server log files. One set of the Tableau Server processes log JSON format and an other set of them just plain text files. This table contains the raw log lines from JSON log files. |
 
 | `threadinfo` ||
 | :---: | --------- |
@@ -132,7 +131,7 @@
 
 | Non-historized repository tables | |
 | :---: | --- |
-|| These tables are polled from the Tableau server node that has the Repository on it. The content of these tables are streamed which means that only changed or newly created records are polled. |
+|| These tables are polled from the Tableau server node that has the Repository on it. The content of these tables are streamed, which means that only changed or newly created records are polled. |
 | **Tables:** |
 || `async_jobs` |
 || `background_jobs` |
@@ -192,7 +191,7 @@
 | :---: | --- |
 || These tables are needed for variouos technical reasons. |
 | **Tables:** |
-| This is needed to handle Tableau sessions running around UTC midnight. As our reporting uses UTC midnight as a separator, this is needed to handle sessions that overlap two days. | `cross_utc_midnight_sessions` |
-| External tables. These tables are used to import data from the csv files sent by the Palette Insight Agents to the database. | `ext_*` |
-| Partitions. Palette Insight utilizes the partitioning feature of Pivotal Greenplum Database and these tables are the actual tables of the partitions. | `_prt_*` |
-| Stage tables. These are loaded during the reporting and after their content is filled that is fully moved to the matching `p_` table.| `s_*` |
+| `cross_utc_midnight_sessions` | This is needed to handle Tableau sessions running around UTC midnight. As our reporting uses UTC midnight as a separator, this is needed to handle sessions that overlap two days. |
+| `ext_*` | External tables. These tables are used to import data from the csv files sent by the Palette Insight Agents to the database. |
+| `_prt_*` | Partitions. Palette Insight utilizes the partitioning feature of Pivotal Greenplum Database and these tables are the actual tables of the partitions. |
+| `s_*` | Stage tables. These are loaded during the reporting and after their content is filled that is moved to the matching `p_` table and the `s_` counterpart is truncated. |
