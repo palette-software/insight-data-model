@@ -117,11 +117,11 @@
 
 | `plainlogs` ||
 | :---: | --------- |
-| | There are two kind of Tableau Server log files. One set of the Tableau Server processes log JSON format and an other set of them just plain text files. This table contains the raw log lines from plain text log files. |
+| | There are two kinds of Tableau Server process log files. One set of them logs in JSON format and the other set of them is just plain text files. This table contains the raw log lines from plain text log files. |
 
 | `serverlogs` ||
 | :---: | --------- |
-| | There are two kind of Tableau Server log files. One set of the Tableau Server processes log JSON format and an other set of them just plain text files. This table contains the raw log lines from JSON log files. |
+| | There are two kinds of Tableau Server process log files. One set of them logs in JSON format and the other set of them is just plain text files. This table contains the raw log lines from plain text log files. |
 
 | `threadinfo` ||
 | :---: | --------- |
