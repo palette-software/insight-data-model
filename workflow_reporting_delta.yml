@@ -36,4 +36,21 @@
     -
       name: p_process_class_agg_report - ins_stage_to_dwh
       query: select ins_stage_to_dwh('{{Schema}}', 'p_process_class_agg_report')
+-
+  name: Load p_high_load_threads
+  transaction: False
+  queries:
+    -
+      name: truncate table s_high_load_threads
+      query: truncate table s_high_load_threads
+    -
+      name: load_s_high_load_threads
+      query: select load_s_high_load_threads('{{Schema}}', {{ThreadHighLoadThreshold}})
+    -
+      name: p_high_load_threads - manage_partitions
+      query: select manage_partitions('{{Schema}}', 'p_high_load_threads')
+    -
+      name: p_high_load_threads - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_high_load_threads')
+
 

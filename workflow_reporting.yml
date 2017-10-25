@@ -222,6 +222,22 @@
       name: p_cpu_usage_bootstrap_rpt - ins_stage_to_dwh
       query: select ins_stage_to_dwh('{{Schema}}', 'p_cpu_usage_bootstrap_rpt')
 -
+  name: Load p_errorlogs
+  transaction: False
+  queries:
+    -
+      name: truncate table s_errorlogs
+      query: truncate table s_errorlogs
+    -
+      name: load_s_errorlogs
+      query: select load_s_errorlogs('{{Schema}}', date'{{LoadDate}}')
+    -
+      name: p_errorlogs - manage_partitions
+      query: select manage_partitions('{{Schema}}', 'p_errorlogs')
+    -
+      name: p_errorlogs - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_erorlogs')
+-
   name: Insert new load date
   transaction: False
   queries:
