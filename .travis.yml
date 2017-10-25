@@ -19,7 +19,7 @@ env:
   - CURRENT_VERSION_FULL_INSTALL_DIR=_root/opt/palette-insight-reporting/full-installs/$TRAVIS_TAG
 
   # DEPLOYMENT DATA
-  - DEPLOY_HOST=rpm.palette-software.com
+  - DEPLOY_HOST=rpm.palette-software.net
   - DEPLOY_PATH=/var/palette-rpm-repo
   - DEPLOY_USER=palette-rpm
 
