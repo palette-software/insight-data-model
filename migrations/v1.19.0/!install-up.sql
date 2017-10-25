@@ -4,39 +4,39 @@ set role palette_palette_updater;
 
 BEGIN;
 
-alter table threadinfo add column read_operation_count BIGINT;
-alter table threadinfo add column write_operation_count BIGINT;
-alter table threadinfo add column other_operation_count BIGINT;
-alter table threadinfo add column read_transfer_count BIGINT;
-alter table threadinfo add column write_transfer_count BIGINT;
-alter table threadinfo add column other_transfer_count BIGINT;
+alter table threadinfo add column read_operation_count BIGINT default null;
+alter table threadinfo add column write_operation_count BIGINT default null;
+alter table threadinfo add column other_operation_count BIGINT default null;
+alter table threadinfo add column read_transfer_count BIGINT default null;
+alter table threadinfo add column write_transfer_count BIGINT default null;
+alter table threadinfo add column other_transfer_count BIGINT default null;
 
-alter table p_threadinfo_delta add column read_operation_count BIGINT;
-alter table p_threadinfo_delta add column read_operation_count_delta BIGINT;
-alter table p_threadinfo_delta add column write_operation_count BIGINT;
-alter table p_threadinfo_delta add column write_operation_count_delta BIGINT;
-alter table p_threadinfo_delta add column other_operation_count BIGINT;
-alter table p_threadinfo_delta add column other_operation_count_delta BIGINT;
-alter table p_threadinfo_delta add column read_transfer_count BIGINT;
-alter table p_threadinfo_delta add column read_transfer_count_delta BIGINT;
-alter table p_threadinfo_delta add column write_transfer_count BIGINT;
-alter table p_threadinfo_delta add column write_transfer_count_delta BIGINT;
-alter table p_threadinfo_delta add column other_transfer_count BIGINT;
-alter table p_threadinfo_delta add column other_transfer_count_delta BIGINT;
+alter table p_threadinfo_delta add column read_operation_count BIGINT default null;
+alter table p_threadinfo_delta add column read_operation_count_delta BIGINT default null;
+alter table p_threadinfo_delta add column write_operation_count BIGINT default null;
+alter table p_threadinfo_delta add column write_operation_count_delta BIGINT default null;
+alter table p_threadinfo_delta add column other_operation_count BIGINT default null;
+alter table p_threadinfo_delta add column other_operation_count_delta BIGINT default null;
+alter table p_threadinfo_delta add column read_transfer_count BIGINT default null;
+alter table p_threadinfo_delta add column read_transfer_count_delta BIGINT default null;
+alter table p_threadinfo_delta add column write_transfer_count BIGINT default null;
+alter table p_threadinfo_delta add column write_transfer_count_delta BIGINT default null;
+alter table p_threadinfo_delta add column other_transfer_count BIGINT default null;
+alter table p_threadinfo_delta add column other_transfer_count_delta BIGINT default null;
 
-alter table s_process_class_agg_report add column read_operation_count BIGINT;
-alter table s_process_class_agg_report add column write_operation_count BIGINT;
-alter table s_process_class_agg_report add column other_operation_count BIGINT;
-alter table s_process_class_agg_report add column read_transfer_count BIGINT;
-alter table s_process_class_agg_report add column write_transfer_count BIGINT;
-alter table s_process_class_agg_report add column other_transfer_count BIGINT;
+alter table s_process_class_agg_report add column read_operation_count BIGINT default null;
+alter table s_process_class_agg_report add column write_operation_count BIGINT default null;
+alter table s_process_class_agg_report add column other_operation_count BIGINT default null;
+alter table s_process_class_agg_report add column read_transfer_count BIGINT default null;
+alter table s_process_class_agg_report add column write_transfer_count BIGINT default null;
+alter table s_process_class_agg_report add column other_transfer_count BIGINT default null;
 
-alter table p_process_class_agg_report add column read_operation_count BIGINT;
-alter table p_process_class_agg_report add column write_operation_count BIGINT;
-alter table p_process_class_agg_report add column other_operation_count BIGINT;
-alter table p_process_class_agg_report add column read_transfer_count BIGINT;
-alter table p_process_class_agg_report add column write_transfer_count BIGINT;
-alter table p_process_class_agg_report add column other_transfer_count BIGINT;
+alter table p_process_class_agg_report add column read_operation_count BIGINT default null;
+alter table p_process_class_agg_report add column write_operation_count BIGINT default null;
+alter table p_process_class_agg_report add column other_operation_count BIGINT default null;
+alter table p_process_class_agg_report add column read_transfer_count BIGINT default null;
+alter table p_process_class_agg_report add column write_transfer_count BIGINT default null;
+alter table p_process_class_agg_report add column other_transfer_count BIGINT default null;
 
 \i 001-up-manage_partitions.sql
 \i 002-up-manage_single_range_partitions.sql
