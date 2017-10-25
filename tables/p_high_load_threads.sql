@@ -1,7 +1,7 @@
 create table p_high_load_threads
 (
 	p_id bigserial,
-  max_tho_p_id bigint,
+    tho_p_id bigint,
 	threadinfo_id bigint,
 	host_name varchar(255),
 	process_name varchar(255),
