@@ -55,7 +55,8 @@ select create_p_errorlogs('palette');
 \i 010-up-s_high_load_threads.sql
 \i 011-up-load_s_high_load_threads.sql
 
-select handle_privileges('palette');
+grant select on p_errorlogs to palette_palette_looker;
+grant select on p_high_load_threads to palette_palette_looker;
 
 insert into db_version_meta(version_number) values ('v1.19.0');
 
