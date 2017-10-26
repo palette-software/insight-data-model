@@ -236,7 +236,7 @@
       query: select manage_partitions('{{Schema}}', 'p_errorlogs')
     -
       name: p_errorlogs - ins_stage_to_dwh
-      query: select ins_stage_to_dwh('{{Schema}}', 'p_erorlogs')
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_errorlogs')
 -
   name: Insert new load date
   transaction: False
