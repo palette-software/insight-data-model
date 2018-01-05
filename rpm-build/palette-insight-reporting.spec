@@ -39,8 +39,9 @@ Requires: palette-insight-reporting-framework
 %description
 Palette Insight Reporting SQL Jobs
 
-%prep
-# noop
+%pre
+# Stop if required palette packages are not installed
+rpm -q palette-greenplum-installer palette-insight-toolkit palette-insight-gp-import palette-insight-reporting-framework
 
 %build
 # noop
