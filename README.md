@@ -37,9 +37,9 @@ Reporting has two separate jobs:
     5. load_s_serverlogs_tdeserver
     6. insert_p_serverlogs_from_s_serverlogs
 
-  2. p_http_request is loaded based on http_request and the following historized Tableau repository tables: h_users, h_system_users, h_workbooks, h_projects, h_sites. This table has all user inforamtion detailed by parsing the workbook name from the currentsheet field of http_request and by the workbook name we are able to get all other information like project and site name.
+  2. p_http_request is loaded based on http_request and the following historized Tableau repository tables: h_users, h_system_users, h_workbooks, h_projects, h_sites. This table has all user information detailed by parsing the workbook name from the currentsheet field of http_request and by the workbook name we are able to get all other information like project and site name.
 
-  3. p_cpu_usage is loaded based on p_serverlogs, p_threadinfo_delta and p_http_requests. In this table we have the user and workbook and all other details for every cpu usage record coming from p_threadinfo_delta. For a given p_threadinfo_delta record we try to match it to p_serverlog_records and as such we try to figure out who was doing what when that CPU conspumption occured.
+  3. p_cpu_usage is loaded based on p_serverlogs, p_threadinfo_delta and p_http_requests. In this table we have the user and workbook and all other details for every cpu usage record coming from p_threadinfo_delta. For a given p_threadinfo_delta record we try to match it to p_serverlog_records and as such we try to figure out who was doing what when that CPU consumption occurred.
     * load_s_cpu_usage_vizql
     * load_s_cpu_usage_rest
     * load_s_cpu_usage_dataserver
@@ -61,7 +61,7 @@ This workflow is defined in the `workflow_reporting.yml` for the daily load and 
 
 **IMPORTANT** When changes are made in the reporting tables or methods existing installation MUST be considered so migration needs to be created. Those migrations needs to change the function definitions, do the alter tables if necessary and make sure nothing will fail if a system is migrated that already has data loaded with former logic.
 
-The easiest way to develop datamodel is to have a fully installed Palette Insight dev environment and make the SQL function / definition changes in that environment with some proper sql tool (for exampl on windows: aginity workbench; on OSX and Linux: Datagrip) and when ready do the code-changes in the repo. And create the proper migration.
+The easiest way to develop datamodel is to have a fully installed Palette Insight dev environment and make the SQL function / definition changes in that environment with some proper sql tool (for example on windows: Aginity Workbench; on OSX and Linux: Datagrip) and when ready do the code-changes in the repo. And create the proper migration.
 
 ## Using the installer
 
