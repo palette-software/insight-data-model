@@ -49,6 +49,9 @@ begin
         WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
         DISTRIBUTED BY (p_id)
         PARTITION BY RANGE (start_ts)
+        SUBPARTITION BY LIST (host_name)
+        SUBPARTITION TEMPLATE (SUBPARTITION init VALUES (''init'')
+            WITH (appendonly=true, orientation=column, compresstype=quicklz))
         (PARTITION "10010101"
             START (date ''1001-01-01'') INCLUSIVE
             END (date ''1001-01-02'') EXCLUSIVE 

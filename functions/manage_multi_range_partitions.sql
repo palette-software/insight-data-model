@@ -24,11 +24,11 @@ BEGIN
         elseif v_table_name in ('serverlogs') then
             v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.ext_serverlogs';
         elseif v_table_name in ('p_serverlogs') then
-            v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.s_serverlogs
-            ';
+            v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.s_serverlogs';
+        elseif v_table_name in ('p_serverlogs_bootstrap_rpt') then
+            v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.s_serverlogs_bootstrap_rpt';
         elseif v_table_name in ('p_high_load_threads') then
-          v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.s_high_load_threads
-            ';
+          v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.s_high_load_threads';
         elseif v_table_name in ('p_threadinfo') then
             v_sql_cur := 'select to_char((select #schema_name#.get_max_ts_date(''#schema_name#'', ''p_threadinfo'')), ''yyyy-mm-dd'')';
             v_sql_cur := replace(v_sql_cur, '#schema_name#', p_schema_name);
@@ -36,8 +36,7 @@ BEGIN
             v_max_ts_date_p_threadinfo := 'date''' || v_max_ts_date_p_threadinfo || '''';
 
             v_sql_cur := 'select distinct host_name::text as host_name from #schema_name#.threadinfo
-                            where ts >= #max_ts_date_p_threadinfo# - interval ''1 hour''
-                        ';
+                            where ts >= #max_ts_date_p_threadinfo# - interval ''1 hour'' ';
             v_sql_cur := replace(v_sql_cur, '#max_ts_date_p_threadinfo#', v_max_ts_date_p_threadinfo);
 
         elseif v_table_name in ('p_threadinfo_delta') then
@@ -108,6 +107,9 @@ BEGIN
             v_sql_cur := 'select distinct ts::date d from #schema_name#.ext_serverlogs';
         elseif v_table_name in ('p_serverlogs') then
             v_sql_cur := 'select distinct ts::date d from #schema_name#.s_serverlogs
+                          order by 1';
+        elseif v_table_name in ('p_serverlogs_bootstrap_rpt') then
+            v_sql_cur := 'select distinct start_ts::date d from #schema_name#.s_serverlogs_bootstrap_rpt
                           order by 1';
         elseif v_table_name in ('p_high_load_threads') then
           v_sql_cur := 'select distinct ts::date d from #schema_name#.s_high_load_threads

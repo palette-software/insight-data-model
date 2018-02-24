@@ -27,8 +27,6 @@ BEGIN
             v_sql_cur := 'select distinct ts_rounded_15_secs::date d from '|| 's' || ltrim(v_table_name, 'p');
         elseif v_table_name in ('p_cpu_usage_bootstrap_rpt') then --month
             v_sql_cur := 'select distinct cpu_usage_ts_rounded_15_secs::date d from '|| 's' || ltrim(v_table_name, 'p');
-        elseif v_table_name in ('p_serverlogs_bootstrap_rpt') then --day
-            v_sql_cur := 'select distinct start_ts::date d from '|| 's' || ltrim(v_table_name, 'p');
         elseif v_table_name in ('plainlogs') then --day
             v_sql_cur := 'select distinct ts::date d from ' || 'ext_plainlogs';
         elseif v_table_name in ('p_http_requests', 'p_background_jobs', 'p_async_jobs') then --month
@@ -79,7 +77,7 @@ BEGIN
                     v_sql := replace(v_sql, '#partition_name#', to_char(rec.d, 'yyyymm'));
                     v_sql := replace(v_sql, '#start_date#', to_char(rec.d, 'yyyy-mm') || '-01');
                     v_sql := replace(v_sql, '#end_date#', to_char(rec.d + interval'1 month', 'yyyy-mm') || '-01');
-                elseif v_table_name in ('plainlogs', 'p_serverlogs_bootstrap_rpt', 'p_errorlogs') then --day
+                elseif v_table_name in ('plainlogs', 'p_errorlogs') then --day
                     v_sql := replace(v_sql, '#partition_name#', to_char(v_last_partition + i, 'yyyymmdd'));
                     v_sql := replace(v_sql, '#start_date#', to_char(v_last_partition + i, 'yyyy-mm-dd'));
                     v_sql := replace(v_sql, '#end_date#', to_char(v_last_partition + i + 1, 'yyyy-mm-dd'));
@@ -98,7 +96,7 @@ BEGIN
                         end if;
                         --exception when duplicate_object
                         --    then null;
-                    elseif v_table_name in ('p_serverlogs_bootstrap_rpt', 'plainlogs', 'p_errorlogs') then --day
+                    elseif v_table_name in ('plainlogs', 'p_errorlogs') then --day
                         if (not does_part_exist(p_schema_name, v_table_name, to_char(v_last_partition + i, 'yyyymmdd'))) then
                               execute v_sql;
                         end if;
