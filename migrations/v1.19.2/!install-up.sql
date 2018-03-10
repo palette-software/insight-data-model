@@ -21,9 +21,13 @@ alter sequence p_serverlogs_bootstrap_rpt_p_id_seq owned by p_serverlogs_bootstr
 
 select copy_p_src_logs_bootstrap('#schema_name#');
 drop function copy_p_src_logs_bootstrap(p_schema_name text);
+
+drop view p_srvlogs_bootstrap_r_multiline;
 drop table p_serverlogs_bootstrap_rpt_orig;
+\i 007-up-p_srvlogs_bootstrap_r_multiline.sql
 
 grant select on p_serverlogs_bootstrap_rpt to palette_palette_looker;
+grant select on p_srvlogs_bootstrap_r_multiline to palette_palette_looker;
 
 insert into db_version_meta(version_number) values ('v1.19.2');
 
