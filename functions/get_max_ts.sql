@@ -14,6 +14,7 @@ begin
                         when p_table_name in ('p_http_requests', 'p_background_jobs', 'p_async_jobs') then 'created_at'
                         when p_table_name in ('t_tde_filename_pids') then 'ts_from'
                         when p_table_name = 'p_load_dates' then 'load_date'
+                        when p_table_name = 'p_cpu_usage_hourly' then 'hour'
                         else 'ts'
                     end;        
         for rec in (select
