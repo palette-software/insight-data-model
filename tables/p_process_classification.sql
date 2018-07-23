@@ -37,3 +37,4 @@ INSERT INTO p_process_classification (process_name, process_class) VALUES ('Pale
 INSERT INTO p_process_classification (process_name, process_class) VALUES ('PaletteInsightWatchdog', 'Palette');
 INSERT INTO p_process_classification (process_name, process_class) VALUES ('PaletteConsoleAgent', 'Palette');
 INSERT INTO p_process_classification (process_name, process_class) VALUES ('PaletteServiceAgent', 'Palette');
+INSERT INTO p_process_classification (process_name, process_class) VALUES ('hyperd', 'Tableau');
