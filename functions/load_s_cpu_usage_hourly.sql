@@ -28,10 +28,13 @@ CREATE OR REPLACE FUNCTION load_s_cpu_usage_hourly(p_schema_name text, p_load_da
             ,interactor_friendly_name_id
             ,interactor_user_name_id
             ,site_id
+            ,site_name
             ,site_name_id
             ,project_id
+            ,project_name
             ,project_name_id
             ,workbook_id
+            ,workbook_name
             ,workbook_name_id
             ,process_category)
 
@@ -53,10 +56,13 @@ CREATE OR REPLACE FUNCTION load_s_cpu_usage_hourly(p_schema_name text, p_load_da
             ,MIN(cpu.interactor_s_user_friendly_name) || '' ('' || MIN(cpu.interactor_s_user_id) || '')'' AS interactor_friendly_name_id
             ,MIN(cpu.interactor_s_user_name) || '' ('' || MIN(cpu.interactor_s_user_id) || '')'' AS interactor_user_name_id
             ,MIN(cpu.site_id) as site_id
+            ,MIN(cpu.site_name) as site_name
             ,MIN(cpu.site_name_id) AS site_name_id
             ,MIN(cpu.project_id) as project_id
+            ,MIN(cpu.project_name) as project_name
             ,MIN(cpu.project_name_id) AS project_name_id
             ,MIN(cpu.workbook_id) as workbook_id
+            ,MIN(cpu.workbook_name) as workbook_name
             ,MIN(cpu.workbook_name_id) AS workbook_name_id
         from
             p_cpu_usage_report cpu
@@ -87,16 +93,19 @@ CREATE OR REPLACE FUNCTION load_s_cpu_usage_hourly(p_schema_name text, p_load_da
             ,cpu.interactor_friendly_name_id
             ,cpu.interactor_user_name_id
             ,cpu.site_id
+            ,cpu.site_name
             ,cpu.site_name_id
             ,cpu.project_id
+            ,cpu.project_name
             ,cpu.project_name_id
             ,cpu.workbook_id
+            ,cpu.workbook_name
             ,cpu.workbook_name_id
             ,case
                 when coalesce(cpu.parent_vizql_session, ''-'') not in (''default'', ''-'')
                 then
                     ''INTERACTION''
-                when cpu.process_name in (''tdeserver'', ''tdeserver64'', ''backgrounder'', ''hyperd'')
+                when cpu.process_name in (''backgrounder'')
                 then
                     ''EXTRACTION''
                 when pclass.process_class = ''Tableau''

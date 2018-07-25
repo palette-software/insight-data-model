@@ -16,10 +16,13 @@ create table p_cpu_usage_hourly
    ,interactor_friendly_name_id text
    ,interactor_user_name_id text
    ,site_id bigint
+   ,site_name text
    ,site_name_id text
    ,project_id bigint
+   ,project_name text
    ,project_name_id text
    ,workbook_id bigint
+   ,workbook_name text
    ,workbook_name_id text
    ,process_category text
    ,p_cre_date timestamp without time zone default now()
