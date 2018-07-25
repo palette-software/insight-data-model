@@ -254,6 +254,22 @@
       name: p_cpu_usage_hourly - ins_stage_to_dwh
       query: select ins_stage_to_dwh('{{Schema}}', 'p_cpu_usage_hourly')
 -
+  name: Load p_background_jobs_hourly
+  transaction: False
+  queries:
+    -
+      name: truncate table s_background_jobs_hourly
+      query: truncate table s_background_jobs_hourly
+    -
+      name: load_s_background_jobs_hourly
+      query: select load_s_background_jobs_hourly('{{Schema}}', date'{{LoadDate}}')
+    -
+      name: p_background_jobs_hourly - manage_partitions
+      query: select manage_partitions('{{Schema}}', 'p_background_jobs_hourly')
+    -
+      name: p_background_jobs_hourly - ins_stage_to_dwh
+      query: select ins_stage_to_dwh('{{Schema}}', 'p_background_jobs_hourly')
+-
   name: Insert new load date
   transaction: False
   queries:
