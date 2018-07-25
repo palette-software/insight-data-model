@@ -33,10 +33,9 @@ BEGIN
             v_sql_cur := 'select distinct created_at::date d from '|| ltrim(v_table_name, 'p_');
         elseif v_table_name in ('p_errorlogs') then --day
             v_sql_cur := 'select distinct ts::date d from ' || 's_errorlogs';
-        elseif v_table_name in ('p_cpu_usage_hourly') then --month
-            v_sql_cur := 'select distinct hour::date d from ' || 's_cpu_usage_hourly';
+        elseif v_table_name in ('p_cpu_usage_hourly', 'p_background_jobs_hourly') then --month
+            v_sql_cur := 'select distinct hour::date d from ' || 's' || ltrim(v_table_name, 'p');
         end if;
-        
         
         open c for execute (v_sql_cur);
         loop
@@ -75,7 +74,7 @@ BEGIN
                     v_sql := replace(v_sql, '#partition_name#', to_char(rec.d, 'yyyy'));
                     v_sql := replace(v_sql, '#start_date#', to_char(rec.d, 'yyyy') || '-01-01');
                     v_sql := replace(v_sql, '#end_date#', to_char(rec.d + interval'1 year', 'yyyy') || '-01-01');
-                elseif v_table_name in ('p_process_class_agg_report', 'p_cpu_usage_bootstrap_rpt', 'p_http_requests', 'p_background_jobs', 'p_async_jobs', 'p_cpu_usage_hourly') then --month
+                elseif v_table_name in ('p_process_class_agg_report', 'p_cpu_usage_bootstrap_rpt', 'p_http_requests', 'p_background_jobs', 'p_async_jobs', 'p_cpu_usage_hourly', 'p_background_jobs_hourly') then --month
                     v_sql := replace(v_sql, '#partition_name#', to_char(rec.d, 'yyyymm'));
                     v_sql := replace(v_sql, '#start_date#', to_char(rec.d, 'yyyy-mm') || '-01');
                     v_sql := replace(v_sql, '#end_date#', to_char(rec.d + interval'1 month', 'yyyy-mm') || '-01');
@@ -92,7 +91,7 @@ BEGIN
                         end if;
                         --exception when duplicate_object
                         --    then null;
-                    elseif v_table_name in ('p_process_class_agg_report', 'p_cpu_usage_bootstrap_rpt', 'p_http_requests', 'p_background_jobs', 'p_async_jobs', 'p_cpu_usage_hourly') then --month
+                    elseif v_table_name in ('p_process_class_agg_report', 'p_cpu_usage_bootstrap_rpt', 'p_http_requests', 'p_background_jobs', 'p_async_jobs', 'p_cpu_usage_hourly', 'p_background_jobs_hourly') then --month
                         if (not does_part_exist(p_schema_name, v_table_name, to_char(rec.d, 'yyyymm'))) then
                               execute v_sql;
                         end if;
