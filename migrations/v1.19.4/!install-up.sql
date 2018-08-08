@@ -19,6 +19,14 @@ alter sequence p_process_class_agg_report_p_id_seq cache 500;
 alter sequence p_threadinfo_delta_p_id_seq cache 500;
 alter sequence threadinfo_p_id_seq cache 500;
 alter sequence serverlogs_p_id_seq cache 500;
+alter sequence async_jobs_p_id_seq cache 500;
+alter sequence background_jobs_p_id_seq cache 500;
+alter sequence countersamples_p_id_seq cache 500;
+alter sequence cross_utc_midnight_sessions_id_seq cache 500;
+alter sequence http_requests_p_id_seq cache 500;
+alter sequence p_high_load_threads_p_id_seq cache 500;
+alter sequence p_threadinfo_p_id_seq cache 500;
+alter sequence plainlogs_p_id_seq cache 500;
 
 
 \i 001-up-load_s_cpu_usage_tdeserver.sql
