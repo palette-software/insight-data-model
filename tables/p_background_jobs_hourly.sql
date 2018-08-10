@@ -18,6 +18,7 @@ create table p_background_jobs_hourly
    ,workbook_datasource_name text
    ,workbook_datasource_name_id text
    ,p_cre_date timestamp without time zone default now()
+   ,wd_type character varying(255)
 )
 WITH (APPENDONLY=TRUE, ORIENTATION=COLUMN, COMPRESSTYPE=QUICKLZ)
 DISTRIBUTED BY (p_id)
