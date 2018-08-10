@@ -36,6 +36,12 @@ alter table p_background_jobs_hourly add column wd_type character varying(255) d
 
 \i 002-up-load_s_background_jobs_hourly.sql
 
+
+\i 003-up-s_cpu_usage_dataserver_slogs.sql
+\i 004-up-s_cpu_usage_dataserver_tri.sql
+
+\i 005-up-load_s_cpu_usage_dataserver.sql
+
 insert into db_version_meta(version_number) values ('v1.19.4');
 
 COMMIT;
