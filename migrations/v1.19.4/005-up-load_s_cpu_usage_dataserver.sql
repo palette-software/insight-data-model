@@ -237,11 +237,11 @@ begin
     						   ,slogs.username
     						   ,slogs.session_start_ts as slog_session_start_ts
     						   ,sites.id as slog_site_id
-    						   ,row_number() over (partition by tri.p_id order by case when slogs.session_start_ts between tri.start_ts and tri.ts 
-    						    													      then 1 
-    						    													  else 2 
-    																			  end asc, 																		  
-    						    													  slogs.session_start_ts desc) as rn
+    						   --,row_number() over (partition by tri.p_id order by case when slogs.session_start_ts between tri.start_ts and tri.ts 
+    						   -- 													      then 1 
+    						   -- 													  else 2 
+    							--												  end asc, 																		  
+    						    --													  slogs.session_start_ts desc) as rn
     							,slogs.parent_vizql_session
     							,slogs.parent_dataserver_session
     							,slogs.spawned_by_parent_ts
@@ -263,7 +263,7 @@ begin
     				   ) thread_with_sess
                        -- This inner join is for replacing commented row_number() logic above.
                        -- Sadly this is much faster
-                       /*inner join (select
+                       inner join (select
                             			tri2.p_id,
                                         coalesce(max(case when slogs.session_start_ts between tri2.start_ts and tri2.ts 
                                                           then slogs.session_start_ts
@@ -284,7 +284,7 @@ begin
                                         tri2.p_id) rn on (1 = 1
                                                         and thread_with_sess.p_id = rn.p_id
                                                         and coalesce(thread_with_sess.slog_session_start_ts, date''1001-01-01'') = coalesce(rn.max_session_start_ts, date''1001-01-01'')
-                                                        ) */
+                                                        )
     				   LEFT OUTER JOIN s_http_requests_with_workbooks http_req_wb ON (http_req_wb.vizql_session = thread_with_sess.parent_vizql_session)
     				   
     				   left outer join h_system_users su on (su.name = thread_with_sess.parent_vizql_username and   												 
@@ -295,7 +295,7 @@ begin
     				   										 thread_with_sess.slog_session_start_ts between u.p_valid_from and u.p_valid_to										 
     				  										 )
     				where
-    					1 = 1 and thread_with_sess.rn = 1
+    					1 = 1 --thread_with_sess.rn = 1
                         and
                         (
                             (ts_rounded_15_secs >= date''#v_load_date_txt#'' and ts_rounded_15_secs < date''#v_load_date_txt#'' + interval''1 day'')
