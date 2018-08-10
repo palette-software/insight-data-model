@@ -31,6 +31,10 @@ alter sequence plainlogs_p_id_seq cache 500;
 
 \i 001-up-load_s_cpu_usage_tdeserver.sql
 
+alter table s_background_jobs_hourly add column wd_type character varying(255) default null;
+alter table p_background_jobs_hourly add column wd_type character varying(255) default null;
+
+\i 002-up-load_s_background_jobs_hourly.sql
 
 insert into db_version_meta(version_number) values ('v1.19.4');
 
