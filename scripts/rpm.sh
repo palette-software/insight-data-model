@@ -53,6 +53,7 @@ cp $SRC_DIR/workflow_reporting_delta.yml _root/etc/palette-insight-server
 # - unzip $SRC_DIR/$FULL_INSTALL_ZIP -d $CURRENT_VERSION_FULL_INSTALL_DIR
 
 # Pack the rpm archvie
+rpmbuild --version
 rpmbuild --quiet -bb --buildroot "$(pwd)/_root" --define "_rpmdir $(pwd)/_build" --define "version $VERSION" --define "buildrelease $PACKAGEVERSION" ${SPEC_FILE}
 
 # Pack it as a zip also
