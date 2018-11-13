@@ -71,7 +71,26 @@ begin
             sl.elapsed_ms,
             sl.start_ts
     from
-            serverlogs sl
+            (select
+                 p_id
+                ,p_filepath
+                ,regexp_replace(filename, ''^native_?'', '''') as filename
+                ,host_name
+                ,ts
+                ,pid
+                ,tid
+                ,sev
+                ,req
+                ,sess
+                ,site
+                ,"user"
+                ,k
+                ,v
+                ,elapsed_ms
+                ,start_ts
+            from
+                serverlogs) sl
+
     where
         substr(sl.filename, 1, 11) = ''vizqlserver'' and
         sl.ts >= date''#v_load_date_txt#'' - interval''2 hours'' and

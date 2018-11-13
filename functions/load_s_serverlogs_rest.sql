@@ -70,11 +70,29 @@ begin
             sl.elapsed_ms,
             sl.start_ts            
     from
-            serverlogs sl
+        (select
+            p_id
+            ,p_filepath
+            ,regexp_replace(filename, ''^native_?'', '''') as filename
+            ,host_name
+            ,ts
+            ,pid
+            ,tid
+            ,sev
+            ,req
+            ,sess
+            ,site
+            ,"user"
+            ,k
+            ,v
+            ,elapsed_ms
+            ,start_ts
+        from
+            serverlogs) sl
     where
-        substr(sl.filename, 1, 11) <> ''tabprotosrv'' and
-        substr(sl.filename, 1, 10) <> ''dataserver'' and
-        substr(sl.filename, 1, 11) <> ''vizqlserver'' and
+        (substr(sl.filename, 1, 11) <> ''tabprotosrv'' or substr(sl.filename, 1, 21) <> ''nativeapi_tabprotosrv'') and
+        (substr(sl.filename, 1, 10) <> ''dataserver'' or substr(sl.filename, 1, 20) <> ''nativeapi_dataserver'') and
+        (substr(sl.filename, 1, 11) <> ''vizqlserver'' or substr(sl.filename, 1, 21) <> ''nativeapi_vizqlserver'') and
         sl.ts >= date''#v_load_date_txt#'' and
         sl.ts < date''#v_load_date_txt#'' + interval''1 day''
     ';                

@@ -216,7 +216,25 @@ begin
                     , s_tabproto.elapsed_ms
                     , s_tabproto.start_ts as log_start_ts
             from
-                serverlogs s_tabproto
+                (select
+                    p_id
+                    ,p_filepath
+                    ,regexp_replace(filename, ''^native_?'', '''') as filename
+                    ,host_name
+                    ,ts
+                    ,pid
+                    ,tid
+                    ,sev
+                    ,req
+                    ,sess
+                    ,site
+                    ,"user"
+                    ,k
+                    ,v
+                    ,elapsed_ms
+                    ,start_ts
+                from
+                    serverlogs) s_tabproto
                 left outer join t_s_spawner s_spawner on (s_tabproto.host_name = s_spawner.spawner_host_name and 
                                                          s_tabproto.pid = s_spawner.spawned_tabproto_process_id and 
                                                          s_tabproto.ts >= s_spawner.spawned_tabproto_process_id_ts and 

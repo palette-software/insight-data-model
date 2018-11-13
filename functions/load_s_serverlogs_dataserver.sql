@@ -110,7 +110,25 @@ begin
                 , s_dataserver.elapsed_ms
                 , s_dataserver.start_ts
         from
-            serverlogs s_dataserver
+            (select
+                p_id
+                ,p_filepath
+                ,regexp_replace(filename, ''^native_?'', '''') as filename
+                ,host_name
+                ,ts
+                ,pid
+                ,tid
+                ,sev
+                ,req
+                ,sess
+                ,site
+                ,"user"
+                ,k
+                ,v
+                ,elapsed_ms
+                ,start_ts
+            from
+                serverlogs) s_dataserver
             left outer join t_s_spawner s_spawner on (s_spawner.spawned_session = substr(s_dataserver.sess, 1, 32))
         where
             substr(s_dataserver.filename, 1, 10) = ''dataserver'' and
