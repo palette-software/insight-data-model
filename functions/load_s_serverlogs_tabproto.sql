@@ -219,7 +219,7 @@ begin
                 (select
                     p_id
                     ,p_filepath
-                    ,regexp_replace(filename, ''^native_?'', '''') as filename
+                    ,regexp_replace(filename, ''^nativeapi_?'', '''') as filename
                     ,host_name
                     ,ts
                     ,pid
