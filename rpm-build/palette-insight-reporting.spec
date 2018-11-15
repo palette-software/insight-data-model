@@ -58,7 +58,8 @@ rpm -q palette-greenplum-installer palette-insight-toolkit palette-insight-gp-im
 # Reject config files already listed or parent directories, then prefix files
 # with "/", then make sure paths with spaces are quoted.
 /opt/palette-insight-reporting
-/etc/palette-insight-server
+/etc/palette-insight-server/workflow_reporting.yml
+/etc/palette-insight-server/workflow_reporting_delta.yml
 %dir /var/log/palette-insight-reporting
 
 %post
