@@ -287,4 +287,4 @@ begin
     return v_num_inserted_all;
 
 END;
-$$ LANGUAGE plpgsql; 
+$$ LANGUAGE plpgsql;
