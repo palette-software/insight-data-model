@@ -265,7 +265,7 @@ begin
                     left outer join t_s_spawner s_spawner on (s_tabproto.host_name = s_spawner.spawner_host_name and 
                                                              s_tabproto.pid = s_spawner.spawned_tabproto_process_id and 
                                                              s_tabproto.ts >= s_spawner.spawned_tabproto_process_id_ts and 
-                                                             s_tabproto.ts >= s_spawner.start_ts)                        
+                                                             s_tabproto.ts >= s_spawner.start_ts)
                 ) a
             where 
                 rn = 1
@@ -286,4 +286,4 @@ begin
     return v_num_inserted_all;
 
 END;
-$$ LANGUAGE plpgsql; 
+$$ LANGUAGE plpgsql;
